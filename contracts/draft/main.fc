@@ -1,0 +1,239 @@
+#include "imports/stdlib.fc";
+(int) tlena(tuple t) asm "TLEN";
+forall X -> X tpopa(tuple t) asm "TPOP";
+
+(int) getPrecedence(int ch) {
+  if ((ch == 43) | (ch == 45)){
+    return (1);
+  }
+  if ((ch == 42) | (ch == 47)) {
+    return (2);
+  }
+  return (0);
+}
+
+(tuple) revert_ls_tuple(tuple tup) {
+  tuple reverted_tuple = null();
+  while (~(null?(tup))){
+    reverted_tuple = cons(tup~list_next(), reverted_tuple);
+  }
+  return reverted_tuple;
+}
+
+(int) ls_tlen(tuple tup) {
+  int i = 0;
+  while (~(null?(tup))){
+    tup~list_next();
+    i += 1;
+  }
+  return i;
+}
+
+(int) calcWithOperator(int ch, int a, int b){
+  int res = 0;
+  if (ch == 43) { ;; +
+    res = a + b;
+  }
+  if (ch == 45){ ;; -
+    res = b - a;
+  }
+  if (ch == 42){ ;; *
+    res = a * b;
+  }
+  if (ch == 47){ ;; /
+    res = b / a;
+  }
+  return res;
+}
+
+(int) default_pow(int num, int pow) {
+  int result = 1;
+  int counter = 0;
+  while (counter < pow) {
+    result *= num;
+    counter += 1;
+  }
+  return result;
+}
+
+
+(int) make_reverse_calculating(tuple cacheBetweenOperators) {
+  var (int r) = ls_tlen(cacheBetweenOperators);
+  int index = -1;
+  int c = 0;
+  int sum = 0;
+  while (c < r) {
+    index = c;
+    var (int q) = cacheBetweenOperators~list_next();
+    var rqwe = default_pow(10, index);
+    sum += (q * rqwe);
+    c += 1;
+  }
+  return sum;
+}
+
+(int) ifActoin(int a) {
+  int res = -1;
+  if ((a != 43) & (a != 45) & (a != 42) & (a != 47) & (a != 40) & (a != 41)) {
+    res = 0;
+  }
+  return res;
+}
+
+(int) ifShortActoin(int a) {
+  int res = -1;
+  if ((a != 43) & (a != 45) & (a != 42) & (a != 47) ) {
+    res = 0;
+  }
+  return res;
+}
+
+(int) someFunc (int a, int b) {
+  int res = -1;
+  if ((b == 40) | (b == 41)){
+    res = 0;
+  } else {
+    if ((a == 42) | (a == 47)) & ((b == 43) | (b == 45)){
+      res = 0;
+    }
+  }
+  return res;
+}
+
+() sendMessage(slice add, cell fuck) impure {
+  cell mssage = begin_cell()
+    .store_uint(0x18, 6)
+    .store_slice(add)
+    .store_coins(0)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1)
+    .store_uint(1, 1)
+    .store_ref(fuck)
+    .end_cell();
+  send_raw_message(mssage, 64);
+}
+
+;; testable
+() recv_internal (cell in_msg, slice in_msg_body) {
+  slice cs = in_msg.begin_parse();
+  cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  in_msg_body~load_uint(32);
+  int isLastUintParsed = 0;
+  int ch = 0;
+  tuple arrA = null();
+  tuple arrN = null();
+  while (((begin_cell().store_slice(in_msg_body).builder_bits() / 8) >= 1) | isLastUintParsed != 0){
+    if (isLastUintParsed == 0){
+      ch = in_msg_body~load_uint(8);
+    } else {
+      isLastUintParsed = 0;
+    }
+    if (~(ifActoin(ch))) { ;; if number
+      int ifNextNum = 1;
+      tuple cacheBetweenOperators = null();
+      while (ifNextNum == 1){
+        if (~(ifActoin(ch))) {
+          cacheBetweenOperators = cons(ch - 48, cacheBetweenOperators);
+          if ((begin_cell().store_slice(in_msg_body).builder_bits() / 8) != 0){
+            ch = in_msg_body~load_uint(8);
+          } else {
+            if (in_msg_body.slice_refs_empty?()){
+              ifNextNum = 0;
+              int final = make_reverse_calculating(cacheBetweenOperators);
+              cacheBetweenOperators = null();
+              arrN = cons(final, arrN);  
+            } else {
+              cell ref = in_msg_body~load_ref();
+              in_msg_body = ref.begin_parse();
+              ch = in_msg_body~load_uint(8);
+            }
+          }
+        } else {
+          ifNextNum = 0;
+          int final = make_reverse_calculating(cacheBetweenOperators);
+          cacheBetweenOperators = null();
+          arrN = cons(final, arrN);  
+          isLastUintParsed = ch;
+        }
+      }
+    } else {
+      if (ch == 40){ ;; if (
+        arrA = cons(ch, arrA);  
+      } else {
+        if (ch == 41){ ;; if )
+          while (car(arrA) != 40){
+            arrN = cons(calcWithOperator(arrA~list_next(), arrN~list_next(), arrN~list_next()), arrN);
+          }
+          arrA~list_next();
+        } else {
+        var (int stack_length_one) = ls_tlen(arrA);
+          if (ifShortActoin(ch)) { ;; if * \ + -
+            if (stack_length_one > 0){
+              var (int asdf) =  car(arrA);
+              while ((stack_length_one > 0) & someFunc(ch, asdf)){ 
+                arrN = cons(calcWithOperator(arrA~list_next(), arrN~list_next(), arrN~list_next()), arrN);
+                stack_length_one = ls_tlen(arrA);
+                if (stack_length_one != 0) {
+                  asdf = car(arrA);
+                }
+              }
+            }
+            arrA = cons(ch, arrA);  
+          }
+        }
+      }
+    }
+    if (((begin_cell().store_slice(in_msg_body).builder_bits() / 8) == 0)){
+      if (in_msg_body.slice_refs_empty?()){
+      } else {
+        cell ref = in_msg_body~load_ref();
+        in_msg_body = ref.begin_parse();
+      }
+    }
+  }
+  ;;(arrN);
+  while (ls_tlen(arrA) > 0){ 
+    arrN = cons(calcWithOperator(arrA~list_next(), arrN~list_next(), arrN~list_next()), arrN);
+  }
+  var (int res) = car(arrN);
+  int negative = 0;
+  if (res < 0){
+    negative = 1;
+  }
+  ;;(res);
+  res = abs(res);
+  ;;(res);
+  int c = 0;
+  int index = 0;
+  while (index == 0) {
+    var rqwe = default_pow(10, c);
+    if ((res - rqwe) < 0){
+      index = c;
+    }
+    c += 1;
+  }
+  ;;(index);
+  int c = 0;
+  int resultNum = 0;
+  int resultOld = 0;
+  builder fuck = begin_cell();
+  fuck~store_uint(0, 32);
+  if (negative == 1){
+    ;;(45);
+    fuck~store_uint(45, 8);
+  }
+  while (index >= 0) {
+    var rqwe = default_pow(10, index);
+    resultNum = res / rqwe;
+   
+   if (c != 0){
+     int ababoba = resultNum - (resultOld * 10) + 48;
+      fuck~store_uint(ababoba, 8);
+      ;;(ababoba - 48);
+   }
+    resultOld = resultNum;
+    c += 1;
+    index = index - 1;
+  }
+  sendMessage(sender_address, fuck.end_cell());
+}
