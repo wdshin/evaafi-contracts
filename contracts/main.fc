@@ -1,23 +1,65 @@
+#include "imports/stdlib.fc";
+
 const op::depo = 0x292eb3bc;
 const op::wthdrwl = 0x4a195ca8;
 
+(int) tln(tuple t) asm "TLEN";
+
 () recv_internal (int b, int val, cell full_msg, slice msg) {
   int op = msg~load_uint(32);
-
+  slice cs = full_msg.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  
+    ~dump(888887);
   if (op == op::depo){
-    ;; TOOD store hash + val in dict
-    ~dump(1);
-    ~dump(op);
+    set_data(begin_cell().store_uint(val, 32).store_slice(msg.slice_last(512)).end_cell());
+    ~dump(val);
+    ~dump(msg.slice_last(512));
+;;    int value = msg~load_coins();
+;;    slice signature = msg~slice_last(1023 - 32);
+
+;;    slice data = load_data().begin_parse();
+
+;;    tuple arr = null();
+    
+;;    while (~(data.slice_empty?())){
+;;      arr = cons(data~load_coins(), arr);
+;;      arr = cons(data~load_slice(), arr);
+;;    }
+    
+;;    arr = cons(val, arr);
+;;    arr = cons(sig, arr);
+    
+;;    builder data = begin_cell();
+    
+;;    while(tln(arr) > 1){
+;;      data.store_coins(arr~list_next());      
+;;      data.store_slice(arr~list_next());      
+;;    }
+;;
+;;    set_data(data.end_cell());
+    
     return();
   }
 
   if (op == op::wthdrwl){
-    ;; TODO check if wallet is the owner of funds // if hash(data) == stored_hash // then send funds
-    ~dump(2);
-    ~dump(op);
+    ;; todo check if wallet is the owner of funds // if hash(data) == stored_hash // then send funds
+    slice data = get_data().begin_parse();
+    int coins = data~load_uint(32);  
+    ;;slice sl = data~load_bits(512);
+    int add = msg~load_uint(256);
+    int hash = msg~load_uint(256);
+    slice ref = msg~load_ref().begin_parse();
+    slice slp = ref~load_bits(512);
+    int res = check_signature(hash, slp, add);
+    ~dump(res);
+    ~dump(hash);
+    ~dump(add);
+    ~dump(slp);
     return();
   }
   
-  ~dump(3);
+  ~dump(18888888888);
   throw(0xffff);
 }
