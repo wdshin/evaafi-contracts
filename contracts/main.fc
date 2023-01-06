@@ -5,17 +5,27 @@ const op::wthdrwl = 0x4a195ca8;
 
 (int) tln(tuple t) asm "TLEN";
 
+() sendpaymenta() inline {
+  ~dump(10);
+
+;;  cell msg = begin_cell()
+;;      .store_uint(0x18, 6)
+;;      .store_slice(sender_address)
+;;      .store_coins(0)
+;;      .store_uint(0, 107)
+;;      .end_cell();
+;;  send_raw_message(msg, 64); ;; pay fees
+}
+
 () recv_internal (int b, int val, cell full_msg, slice msg) {
-  int op = msg~load_uint(32);
   slice cs = full_msg.begin_parse();
   int flags = cs~load_uint(4);
   slice sender_address = cs~load_msg_addr();
   
-    ~dump(888887);
+  int op = msg~load_uint(32);
+  
   if (op == op::depo){
-    set_data(begin_cell().store_uint(val, 32).store_slice(msg.slice_last(512)).end_cell());
-    ~dump(val);
-    ~dump(msg.slice_last(512));
+    set_data(begin_cell().store_uint(val, 32).store_slice(msg~load_bits(512)).end_cell());
 ;;    int value = msg~load_coins();
 ;;    slice signature = msg~slice_last(1023 - 32);
 
@@ -47,19 +57,24 @@ const op::wthdrwl = 0x4a195ca8;
     ;; todo check if wallet is the owner of funds // if hash(data) == stored_hash // then send funds
     slice data = get_data().begin_parse();
     int coins = data~load_uint(32);  
-    ;;slice sl = data~load_bits(512);
+    slice sl = data~load_bits(512);
+   
     int add = msg~load_uint(256);
     int hash = msg~load_uint(256);
-    slice ref = msg~load_ref().begin_parse();
-    slice slp = ref~load_bits(512);
-    int res = check_signature(hash, slp, add);
-    ~dump(res);
-    ~dump(hash);
-    ~dump(add);
-    ~dump(slp);
+    
+    int res = check_signature(hash, sl, add);
+    if (res == -1){
+      cell msg = begin_cell()
+          .store_uint(0x18, 6)
+          .store_slice(sender_address)
+          .store_coins(coins)
+          .store_uint(0, 107)
+          .end_cell();
+      send_raw_message(msg, 64); ;; pay fees
+    }
+
     return();
   }
   
-  ~dump(18888888888);
   throw(0xffff);
 }

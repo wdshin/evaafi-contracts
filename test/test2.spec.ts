@@ -3,7 +3,7 @@ import chaiBN from "chai-bn";
 import BN from "bn.js";
 chai.use(chaiBN(BN));
 
-import { TonClient, WalletContractV4, internal, Cell, toNano, Address, safeSign, beginCell } from "ton";
+import { TonClient,fromNano, WalletContractV4, internal, Cell, toNano, Address, safeSign, beginCell } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import * as main from "../contracts/main";
 import { internalMessage, randomAddress } from "./helpers";
@@ -58,11 +58,10 @@ describe("test", () => {
 
     const add = new Address(0, keyPair.publicKey);
     const sig = sign(sha256_sync('text'), keyPair.secretKey); 
-    console.log(sig.toString('hex'));
 
     const sendIncrement = await contract.sendInternalMessage(
       internalMessage({
-        value: toNano(2),
+        value: toNano(2.69),
         from: add,
         body: beginCell().storeUint(0x292eb3bc, 32).storeBuffer(sig).endCell(),
       }) as any
@@ -70,6 +69,7 @@ describe("test", () => {
 
     console.log(sendIncrement.debugLogs);
     console.log(sendIncrement.gas_consumed);
+
     const sendWith = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(2),
@@ -78,10 +78,12 @@ describe("test", () => {
           .storeUint(0x4a195ca8, 32)
           .storeBuffer(keyPair.publicKey)
           .storeBuffer(sha256_sync("text"))
-          .storeRef(beginCell().storeBuffer(sig).endCell())
           .endCell(),
       }) as any
     );
+    
+    //@ts-ignore
+    console.log('res', fromNano(sendWith.actionList[0].message.info.value.coins));
     console.log(sendWith.debugLogs);
     console.log(sendWith.gas_consumed);
   });
