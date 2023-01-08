@@ -33,4 +33,4 @@ i already have research and smartcontract that done nearly on 25%
 * * $7k in ton for testnet launch (site has been developed & hosted in TON network & connected to contract)
 * * $15k in ton for mainnet launch & audits 
 
-im flexible, so everything is dicussibl
+im flexible, so everything is dicussible
