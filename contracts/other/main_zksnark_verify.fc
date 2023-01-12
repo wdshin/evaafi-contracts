@@ -40,16 +40,17 @@ global tuple P2; ;; p2 created [[] []]
 
 (int) pairing(tuple p1, tuple p2) {
   int elements = p1.tlen();
-  int inputSize = elements * 6;
+  ~dump(elements); ;; 4
+  int inputSize = elements * 6; ;; 24
   tuple input = empty_tuple();
   int i = 0;
   while (i < elements) {
     input~tpush(p1.at(i).at(0));
     input~tpush(p1.at(i).at(1));
     input~tpush(p2.at(i).at(0).at(0));
-    input~tpush(p1.at(i).at(0).at(1));
-    input~tpush(p1.at(i).at(1).at(0));
-    input~tpush(p1.at(i).at(1).at(1));
+    input~tpush(p2.at(i).at(0).at(1));
+    input~tpush(p2.at(i).at(1).at(0));
+    input~tpush(p2.at(i).at(1).at(1));
     i += 1;
   }
   if(~(input.at(0).null?())) {
@@ -96,10 +97,6 @@ global tuple P2; ;; p2 created [[] []]
 }
 
 (int) verify (tuple input, tuple proof) {
-  tuple A = empty_tuple();
-  tuple B = empty_tuple();
-  tuple C = empty_tuple();
-
   tuple  alfa1 = empty_tuple().tpush(3094828775517550525197566774110614793311731901097309624648333207761785087681).tpush(4973361633682654439731710783777857699866244736970939453813554145386550307527);
  
   tuple beta2 = empty_tuple().tpush(empty_tuple().tpush(13499419113223668937021579779117131850345364653480320000177549271557150717374).tpush(11620659399480838044082293331182144703316076720555750892802148027134195201948))
@@ -117,11 +114,11 @@ global tuple P2; ;; p2 created [[] []]
   tuple vk_x = empty_tuple().tpush(0).tpush(0);
   int i = 0;
   while (i < input.tlen()){
-    i += 1;
     vk_x = addition(vk_x, scalar_mul(IC.at(i + 1), input.at(i)));
+    i += 1;
   }
   vk_x = addition(vk_x, IC.at(0));
-  if (~(pairingProd4(neg(proof.at(0)), proof.at(1), alfa1, beta2, vk_x, gamma2, proof.at(2), delta2))){
+  if (pairingProd4(neg(proof.at(0)), proof.at(1), alfa1, beta2, vk_x, gamma2, proof.at(2), delta2) == 1){
     return 1;
   }
   return 0;
@@ -145,7 +142,8 @@ global tuple P2; ;; p2 created [[] []]
   tuple a = empty_tuple().tpush(18318973978715769650065150969310216933781539668378626944013683238814643511695).tpush( 650797098457235942289960802251878484913582123285776499572570550417718789454).tpush(1);
   tuple b = empty_tuple().tpush(empty_tuple().tpush(11175267129886208968425745356416949529141593119962817552867989002267329741960).tpush( 17225452801745099451495633848314691648655898296380638189818509783666942816040)).tpush(empty_tuple().tpush(5034041042370137391058432478280010963572227273077602393098741978555554262538).tpush(1722545280174509945149563384831469164865589829638063818981850978366694)).tpush(empty_tuple().tpush(1).tpush(0));
   tuple c = empty_tuple().tpush(13233501970904012353533386111155639825693540752816863777954917446293220507451).tpush(17074607027279043033480838619539383675233979646031633758889475442569975329442).tpush(1);
-  tuple input = empty_tuple().tpush(7713112592372404476342535432037683616424591277138491596200192981572885523208);
+  tuple input = empty_tuple().tpush(771311259237240435432037683616424591277138491596200192981572885523208);
   int res = verifyProof(a, b, c, input);
+  ~dump(19991239123);
   ~dump(res);
 }

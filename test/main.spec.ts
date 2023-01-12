@@ -61,7 +61,6 @@ describe("test", () => {
         body: beginCell().storeUint(0x292eb3bc, 32).storeBuffer(sig).endCell(),
       }) as any
     );
-    console.log(sendIncrement.logs)
     console.log(sendIncrement.debugLogs);
     console.log(sendIncrement.gas_consumed);
   });
