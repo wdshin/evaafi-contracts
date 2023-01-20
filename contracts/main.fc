@@ -1,0 +1,66 @@
+#include "imports/op-codes.fc"
+
+_ save_data (slice owner_address, slice info, cell borrow, cell lend) impure {
+  cell data = begin_cell()
+    .store_slice(owner_address)
+    .store_slice(info)
+    .store_ref(borrow)
+    .store_ref(lend)
+  .end_cell();
+
+  set_data(data);
+}
+
+(slice, slice, cell, cell) load_data () {
+  slice ds = get_data().begin_parse();
+  slice owner_address = ds~load_msg_addr();
+  slice info = (ds~load_ref()).begin_parse();
+  cell borrow = ds~load_dict();
+  cell lend = ds~load_dict();
+  return (owner_address, info, borrow, lend); 
+}
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  int op = in_msg_body~load_uint(32); 
+  
+  ;;TODO send to swap (to wTON) if its TON
+  if (op == op::transfer_notification()) {
+    ;; IF we recived JETTONs then parse jetton notification data
+    int query_id = in_msg_body~load_uint(64); 
+    int coins = in_msg_body~load_coins(); 
+    int query_id = in_msg_body~load_uint(64); 
+    int from_address = in_msg_body~load_msg_addr(); 
+    int jetton_msg_body = in_msg_body~load_msg_addr(); 
+    int op_jetton = jetton_msg_body~load_uint(32); 
+    int query_id_jetton = jetton_msg_body~load_uint(64); 
+    int jetton_token_id = jetton_msg_body~load_uint(32); 
+    
+    if (op_jetton == op::lend()){
+      ;; if jettons deposit 
+     
+      (slice owner_address, slice info, cell borrow, cell lend) = load_data();
+      
+      var (_, key_addr) = parse_std_addr(from_address);
+      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr);
+      
+      if (~(is_exist?)){ ;;if he DONT have some lend open positions
+        lendsArr = null();
+      }
+     
+      tuple newPosition = empty_tuple();
+      newPosition~tpush(jetton_token_id);
+      newPosition~tpush(now());
+      newPosition~tpush(coins);
+      lendsArr = cons(newPosition, lendsArr);  
+
+      ;; TODO improve efficiency of storage a  rchitecture
+    
+      lend~udict_set_ref(256, key_addr, len);
+      store_data(owner_address, info, borrow, lend); 
+    }                                          
+  }                                            
+  throw(0xffff);                               
+}                                              
+                                               
+                                               
+                                               

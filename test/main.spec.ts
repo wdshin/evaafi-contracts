@@ -43,8 +43,8 @@ describe("test", () => {
   });
 
   const nullifier = genRand('nullifier');
-  const note = genRand('note'); 
-  const seed = Buffer.concat([note, nullifier]); 
+  const note = genRand('note');
+  const seed = Buffer.concat([note, nullifier]);
 
   it("depo and wthdrwl test", async () => {
     let mnemonics = await mnemonicNew();
@@ -53,10 +53,10 @@ describe("test", () => {
 
     //const sig = sign(sha256_sync(seed), keyPair.secretKey);
     const sig = sha256_sync(seed);
-    
+
     const sendIncrement = await contract.sendInternalMessage(
       internalMessage({
-        value: toNano(2.69),
+        value: toNano(0.69),
         from: add,
         body: beginCell().storeUint(0x292eb3bc, 32).storeBuffer(sig).endCell(),
       }) as any
