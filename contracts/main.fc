@@ -1,6 +1,16 @@
 #include "imports/op-codes.fc"
 
 _ save_data (slice owner_address, slice info, cell borrow, cell lend) impure {
+
+  ;; data structure 
+  ;; owner add
+  ;; info - metainfo of protocol contract
+  ;; ref -> borrow
+  ;; ref -> lend
+  ;; lend = {
+  ;;   addressUser1: [... ,lend1, lend2, [token, time, amount], ...]
+  ;; }
+
   cell data = begin_cell()
     .store_slice(owner_address)
     .store_slice(info)
@@ -20,9 +30,34 @@ _ save_data (slice owner_address, slice info, cell borrow, cell lend) impure {
   return (owner_address, info, borrow, lend); 
 }
 
+(int) calculate_lend_apy (tuple lend, tuple borrow) {
+  ;; TODO
+  return (12);
+} 
+
+(int) calculate_lend_apy (int apy, tuple lends_by_token) {
+  ;; TODO
+  return (10000);
+}
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-  int op = in_msg_body~load_uint(32); 
   
+  if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+      return ();
+  }
+  slice cs = in_msg_full.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+
+  if (flags & 1) {
+      ;; TODO: Finish logic of on bounce
+      ;; on_bounce(in_msg_body, msg_value);
+      ;; in theory "throw(0xffff)" will be enougth
+      return ();
+  }
+  
+  int op = in_msg_body~load_uint(32); 
+ 
   ;;TODO send to swap (to wTON) if its TON
   if (op == op::transfer_notification()) {
     ;; IF we recived JETTONs then parse jetton notification data
@@ -41,26 +76,51 @@ _ save_data (slice owner_address, slice info, cell borrow, cell lend) impure {
       (slice owner_address, slice info, cell borrow, cell lend) = load_data();
       
       var (_, key_addr) = parse_std_addr(from_address);
-      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr);
+      ;; get all lends by user add
+      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
       
       if (~(is_exist?)){ ;;if he DONT have some lend open positions
         lendsArr = null();
       }
-     
+
+      ;; generate new lending position 
       tuple newPosition = empty_tuple();
       newPosition~tpush(jetton_token_id);
       newPosition~tpush(now());
       newPosition~tpush(coins);
+      ;; new lending position has been added to list
       lendsArr = cons(newPosition, lendsArr);  
 
       ;; TODO improve efficiency of storage a  rchitecture
-    
+      
+      ;; store
       lend~udict_set_ref(256, key_addr, len);
       store_data(owner_address, info, borrow, lend); 
-    }                                          
+    } 
+
+    if (op == op::withdrawal()){
+      (slice owner_address, slice info, cell borrow, cell lend) = load_data();
+      int jetton_token_id = in_msg_body~load_uint(32);
+      int withdrawal_amount = in_msg_body~load_uint(64);
+      var (_, key_addr) = parse_std_addr(sender_address);
+      ;; get all lends by user add
+      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
+      int i = 0;
+      int len = lendsArr~tlen();
+      tuple lends_by_token = null();
+      while (i < len) {
+        tuple lendPosition = lendsArr.at(i);
+        if (lendPosition.at(0) !== jetton_token_id ){
+          lends_by_token = cons(lendPosition, lends_by_token);  
+        }
+        i += 1;
+      }
+      int apy = calculate_lend_apy(lend, borrow);
+      int max_amount_to_withdrawal = calculate_lend_amount(apy, lends_by_token);
+      if (max_amount_to_withdrawal < withdrawal_amount) {
+        ;; TODO send jetton to address  
+      }
+    }
   }                                            
   throw(0xffff);                               
 }                                              
-                                               
-                                               
-                                               
