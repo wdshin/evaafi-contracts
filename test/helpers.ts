@@ -33,6 +33,9 @@ export function setBalance(contract: SmartContract, balance: BN) {
   });
 }
 
+// copilot cre;ate function that will summ a and b
+//
+
 // helper for end-to-end on-chain tests (normally post deploy) to allow sending InternalMessages to contracts using a wallet
 export async function sendInternalMessageWithWallet(params: { walletContract: WalletContract; secretKey: Buffer; to: Address; value: BN; bounce?: boolean; body?: Cell }) {
   const message = params.body ? new CellMessage(params.body) : undefined;
