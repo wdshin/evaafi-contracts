@@ -16,7 +16,7 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
   cell data = begin_cell()
     .store_slice(admin_address)
     .store_slice(owner_address)
-    .store_slice(info)
+    .store_ref(begin_cell().store_slice(info).end_cell())
     .store_ref(borrow)
     .store_ref(lend)
   .end_cell();
@@ -35,7 +35,6 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
   
   return (admin_address, owner_address, info, borrow, lend); 
 }
-
 
 
 (int) calculate_lend_apy (tuple lend, tuple borrow) {
@@ -81,9 +80,9 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
     ;; IF we recived JETTONs then parse jetton notification data
     int query_id = in_msg_body~load_uint(64); 
     int coins = in_msg_body~load_coins(); 
-    int query_id = in_msg_body~load_uint(64); 
+    ;; /* int query_id = in_msg_body~load_uint(64);  */
     int from_address = in_msg_body~load_msg_addr(); 
-    int jetton_msg_body = in_msg_body~load_msg_addr(); 
+    int jetton_msg_body = in_msg_body~load_ref(); 
     int op_jetton = jetton_msg_body~load_uint(32); 
     int query_id_jetton = jetton_msg_body~load_uint(64); 
     int jetton_token_id = jetton_msg_body~load_uint(32); 
@@ -130,7 +129,9 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
         lendsArr = null();
       }
 
-        var (new_borrow, key_borrow) = borrow~udict_delete(255, key_addr); ;; TODO delete specific users lends  
+      var (new_borrow, key_borrow) = borrow~udict_delete(255, key_addr); ;; TODO delete specific users lends  
+    
+
     ;;  int i = 0;
     ;;  while(i < len){
     ;;    ;;///* int user_to_liquidate = accounts_to_liquidate~udict_get(255, i); */
