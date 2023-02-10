@@ -1,7 +1,7 @@
 import { Cell, beginCell, Address } from "ton";
 
-export function data(params: { ownerAddress: Address; number: number }): Cell {
-  return beginCell().storeAddress(params.ownerAddress).storeUint(params.number, 64).endCell();
+export function data(): Cell {
+  return beginCell().endCell();
 }
 
 function bufferToChunks(buff: Buffer, chunkSize: number) {

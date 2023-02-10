@@ -1,255 +1,194 @@
-#include "imports/op-codes.fc"
+#pragma version >=0.2.0;
+#include "./imports/stdlib.fc";
+#include "./imports/math.fc";
 
-_ save_data (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) impure {
-
-  ;; ------- data structure 
-  ;; admin add
-  ;; owner add
-  ;; info - metainfo of protocol contract
-  ;; ref -> borrow
-  ;; ref -> lend
-  ;; lend = {
-  ;;   addressUser1: [... ,lend1, lend2, [token, time, amount], ...]
-  ;; }
-  ;; -------
-
-  cell data = begin_cell()
-    .store_slice(admin_address)
-    .store_slice(owner_address)
-    .store_ref(begin_cell().store_slice(info).end_cell())
-    .store_ref(borrow)
-    .store_ref(lend)
-  .end_cell();
-
-  set_data(data);
-}
-
-(slice, slice, slice, cell, cell) load_data () {
-  slice ds = get_data().begin_parse();
-   
-  slice admin_address= ds~load_msg_addr();
-  slice owner_address = ds~load_msg_addr();
-  slice info = (ds~load_ref()).begin_parse();
-  cell borrow = ds~load_dict();
-  cell lend = ds~load_dict();
-  
-  return (admin_address, owner_address, info, borrow, lend); 
-}
-
-
-(int) calculate_lend_apy (tuple lend, tuple borrow) {
-  ;; TODO
-  return (12);
-} 
-
-(int)  calculate_lend_amount (int apy, tuple lends_by_token) {
-  ;; TODO
-  return (10000);
-}
-
-(int) calculate_borrow_apy(tuple lend, tuple borrow) {
-  ;; TODO
-  return (12);
-} 
-
-(int)  calculate_borrow_amount (int apy, tuple lends_by_token) {
-  ;; TODO
-  return (10000);
-}
- 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-  
-  if (in_msg_body.slice_empty?()) { ;; ignore empty messages
-      return ();
-  }
-  slice cs = in_msg_full.begin_parse();
-  int flags = cs~load_uint(4);
-  slice sender_address = cs~load_msg_addr();
-
-  if (flags & 1) {
-      ;; TODO: Finish logic of on bounce
-      ;; on_bounce(in_msg_body, msg_value);
-      ;; in theory "throw(0xffff)" will be enougth
-      return ();
-  }
-  
-  int op = in_msg_body~load_uint(32); 
- 
-  ;;TODO send to swap (to wTON) if its TON
-  if (op == op::transfer_notification()) {
-    ;; IF we recived JETTONs then parse jetton notification data
-    int query_id = in_msg_body~load_uint(64); 
-    int coins = in_msg_body~load_coins(); 
-    ;; /* int query_id = in_msg_body~load_uint(64);  */
-    int from_address = in_msg_body~load_msg_addr(); 
-    int jetton_msg_body = in_msg_body~load_ref(); 
-    int op_jetton = jetton_msg_body~load_uint(32); 
-    int query_id_jetton = jetton_msg_body~load_uint(64); 
-    int jetton_token_id = jetton_msg_body~load_uint(32); 
-    
-    if (op_jetton == op::lend()){
-      ;; if jettons deposit 
-     
-      (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-      
-      var (_, key_addr) = parse_std_addr(from_address);
-      ;; get all lends by user add
-      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
-      
-      if (~(is_exist?)){ ;;if he DONT have some lend open positions
-        lendsArr = null();
-      }
-
-      ;; generate new lending position 
-      tuple newPosition = empty_tuple();
-      newPosition~tpush(jetton_token_id);
-      newPosition~tpush(now());
-      newPosition~tpush(coins);
-      ;; new lending position has been added to list
-      lendsArr = cons(newPosition, lendsArr);  
-
-      ;; TODO improve efficiency of storage a  rchitecture
-      
-      ;; store
-      lend~udict_set_ref(256, key_addr, len);
-      store_data(admin_address, owner_address, info, borrow, lend); 
-    } 
-
-    if (op == op::repay()){
-      ;; if jettons repay 
-     
-      (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-      
-      var (_, key_addr) = parse_std_addr(from_address);
-      ;; get all lends by user add
-      var (borrowsArr, _?) = borrow.udict_get?(256, key_addr); ;; search from hashmap by user add
-      var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
-      
-      if (~(is_exist?)){ ;;if he DONT have some lend open positions
-        lendsArr = null();
-      }
-
-      var (new_borrow, key_borrow) = borrow~udict_delete(255, key_addr); ;; TODO delete specific users lends  
-    
-
-    ;;  int i = 0;
-    ;;  while(i < len){
-    ;;    ;;///* int user_to_liquidate = accounts_to_liquidate~udict_get(255, i); */
-    ;;      
-    ;;    ;;var (new_lend, key_lend) = lend~udict_delete(255, user_to_liquidate);^ 
-    ;;    
-    ;;    i += 1;
-    ;;  }
-      
-    ;;  ;; generate new lending position 
-    ;;  tuple newPosition = empty_tuple();
-    ;;  newPosition~tpush(jetton_token_id);
-    ;;  newPosition~tpush(now());
-    ;;  newPosition~tpush(coins);
-    ;;  ;; new lending position has been added to list
-    ;;  lendsArr = cons(newPosition, lendsArr);  
-
-      ;; TODO improve efficiency of storage a  rchitecture
-      
-      ;; store
-      lend~udict_set_ref(256, key_addr, len);
-      store_data(admin_address, owner_address, info, borrow, lend); 
-    }
-  }
- 
-  if (op == op::withdrawal()){
-    (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-    int jetton_token_id = in_msg_body~load_uint(32);
-    int withdrawal_amount = in_msg_body~load_uint(64);
-    var (_, key_addr) = parse_std_addr(sender_address);
-    ;; get all lends by user add
-    var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
-    int i = 0;
-    int len = lendsArr~tlen();
-    tuple lends_by_token = null();
-    while (i < len) {
-      tuple lendPosition = lendsArr.at(i);
-      if (lendPosition.at(0) !== jetton_token_id ){
-        lends_by_token = cons(lendPosition, lends_by_token);  
-      }
-      i += 1;
-    }
-    int apy = calculate_lend_apy(lend, borrow);
-    int max_amount_to_withdrawal = calculate_lend_amount(apy, lends_by_token);
-    ;; TODO check that lender deposit amount is less then amount on whitch user will be liquidated 
-    if (max_amount_to_withdrawal < withdrawal_amount) {
-      ;; TODO send jetton to address  
-    }
-    ;; TODO update store and rm lend positions
-    store_data(admin_address, owner_address, info, borrow, lend); 
-  }
-  
-  if (op == op::borrow()){ ;; TODO rewrite code here getMaxAmountAvailableToBorrow
-    (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-    int jetton_token_id = in_msg_body~load_uint(32);
-    int botrrow_amount = in_msg_body~load_uint(64);
-    var (_, key_addr) = parse_std_addr(sender_address);
-    ;; get all lends by user add
-    var (lendsArr, is_exist?) = lend.udict_get?(256, key_addr); ;; search from hashmap by user add
-    var (borrowsArr, is_exist?) = borrow.udict_get?(256, key_addr); ;; search from hashmap by user add
-    int i = 0;
-    int len = lendsArr~tlen();
-    tuple lends_by_token = null();
-    while (i < len) {
-      tuple lendPosition = lendsArr.at(i);
-      if (lendPosition.at(0) !== jetton_token_id ){
-        lends_by_token = cons(lendPosition, lends_by_token);  
-      }
-      i += 1;
-    }
-    int borrow_apy = calculate_borrow_apy(lend, borrow);
-    int max_amount_to_borrow = calculate_borrow_amount(borrow_apy, user_borrows, user_lends);
-    if (max_amount_to_borrow < withdrawal_amount) {
-      ;; TODO send jetton to address  
-    }
-    ;; TODO update store and add borrow position
-    store_data(admin_address, owner_address, info, borrow, lend); 
-  }
-  
-  if (op == op::liquidate()){
-    (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-    var (_, sender_address_hash) = parse_std_addr(sender_address);
-    var (_, admin_address_hash) = parse_std_addr(admin_address);
-    if (sender_address_hash == admin_address_hash){
-      ;;if sender is admin (our oracle) then
-      int query_id = in_msg_body~load_uint(64); 
-      cell accounts_to_liquidate = in_msg_body~load_dict();
-      int i = 0;
-      (len, user, bool) = accounts_to_liquidate~udict_get_max?(255); 
-      while(i < len){
-        int user_to_liquidate = accounts_to_liquidate~udict_get(255, i);
-         
-        var (new_lend, key_lend) = lend~udict_delete(255, user_to_liquidate); 
-        var (new_borrow, key_borrow) = borrow~udict_delete(255, user_to_liquidate); 
-        
-        i += 1;
-      }
-      ;; TODO swap all jettons from lended positions to jettons that was borrowed
-      store_data(admin_address, owner_address, info, borrow, lend); 
-    } else{
-      ~throw(1); ;;todo correct excode
-    }
-  }
- 
-  throw(0xffff);                               
-}                    
-
-(slice, slice, slice, cell, cell) get_state() method_id { 
-  (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-  return (admin_address, owner_address, info, borrow, lend); 
 }
 
-(cell) get_borrows() method_id { 
-  (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-  return (borrow); 
+(cell) serializeAssetsConfig() inline {
+  slice assetTonConfig = begin_cell()
+      .store_slice(my_address())
+      .store_slice(my_address())
+      .store_uint(8, 8)
+      .store_ref(begin_cell()
+          .store_uint(8300, 16)
+          .store_uint(9000, 16)
+          .store_uint(500, 16)
+          .store_uint(15854895991, 64)
+          .store_uint(25000000000, 64)
+          .store_uint(187500000000, 64)
+          .store_uint(10000000000, 64)
+          .store_uint(100000000000, 64)
+          .store_uint(800000000000000000, 64)
+        .end_cell())
+    .end_cell().begin_parse();
+  
+  slice assetUsdtConfig = begin_cell()
+      .store_slice(my_address())
+      .store_slice(my_address())
+      .store_uint(6, 8)
+      .store_ref(begin_cell()
+          .store_uint(8000, 16)
+          .store_uint(8500, 16)
+          .store_uint(700, 16)
+          .store_uint(20611364789, 64)
+          .store_uint(32500000000, 64)
+          .store_uint(243750000000, 64)
+          .store_uint(13000000000, 64)
+          .store_uint(130000000000, 64)
+          .store_uint(900000000000000000, 64)
+        .end_cell())
+    .end_cell().begin_parse();
+  
+  cell assetsConfig = new_dict();
+
+  assetsConfig~udict_set(16, 0, assetTonConfig);
+  assetsConfig~udict_set(16, 1, assetUsdtConfig);
+
+  return assetsConfig;
 }
 
-(cell) get_lends() method_id { 
-  (slice admin_address, slice owner_address, slice info, cell borrow, cell lend) = load_data();
-  return (lend); 
+(int) getAssetPrice (int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 2000000000;
+  } else {
+    return 1000000000;
+  }
 }
+
+(tuple) getAssetRates (int assetAddress) method_id  {
+  if (assetAddress == 1){
+    tuple result = empty_tuple();
+    result~tpush(5781378709);
+    result~tpush(7075835695);
+    return result;
+  } else {
+    tuple result = empty_tuple();
+    result~tpush(6305519440);
+    result~tpush(7579176176);
+    return result;
+  }
+}
+
+(int) getAssetReserves (int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 1000000000;
+  } else {
+    return 15000000;
+  }
+}
+
+(int) getAccontAssetSupply (slice userAddress, int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 20400000000;
+  } else {
+    return 0;
+  }
+}
+
+(int) getAccontAssetBorrow (slice userAddress, int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 0;
+  } else {
+    return 403000000;
+  }
+}
+
+(int) getAvailableToBorrow (slice userAddress) method_id {
+  return 400000000000;
+}
+
+(tuple) getAssetTotals (int assetAddress) method_id {
+  if (assetAddress == 1){
+    tuple result = empty_tuple();
+    result~tpush(40200000000);
+    result~tpush(35300000000);
+    return result;
+  } else {
+    tuple result = empty_tuple();
+    result~tpush(505000000);
+    result~tpush(403000000);
+    return result;
+  }
+}
+
+(cell) getConfig () method_id {
+  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+  cell serializedAssetsConfig = serializeAssetsConfig();
+  return (begin_cell()
+        .store_ref(serializedAssetsConfig)
+        .store_uint(1, 8)
+        .store_slice(my_address())
+      .end_cell());
+}
+
+(tuple) updateFrontVariables (slice userAddress) method_id {
+
+  tuple assetsPrice = empty_tuple();
+  assetsPrice~tpush(2000000000);
+  assetsPrice~tpush(1000000000);
+
+  tuple assetRates = empty_tuple();
+  
+  tuple assetRates1 = empty_tuple();
+  assetRates1~tpush(5781378709);
+  assetRates1~tpush(6305519440);
+  assetRates~tpush(assetRates1);
+  
+  tuple assetRates2 = empty_tuple();
+  assetRates2~tpush(7075835695);
+  assetRates2~tpush(7579176176);
+  assetRates~tpush(assetRates2);
+
+  tuple assetReserves = empty_tuple();
+  assetReserves~tpush(1000000000);
+  assetReserves~tpush(15000000);
+
+  tuple supply = empty_tuple();
+  supply~tpush(20400000000);
+  supply~tpush(0);
+  
+  tuple borrow = empty_tuple();
+  borrow~tpush(0);
+  borrow~tpush(403000000);
+  
+  tuple total = empty_tuple();
+  
+  tuple asset1Total = empty_tuple();
+  asset1Total~tpush(40200000000);
+  asset1Total~tpush(505000000);
+  total~tpush(asset1Total);
+  
+  tuple asset2Total = empty_tuple();
+  asset2Total~tpush(35300000000);
+  asset2Total~tpush(403000000);
+  total~tpush(asset2Total);
+  
+  cell serializedAssetsConfig = serializeAssetsConfig();
+  cell config = begin_cell()
+        .store_ref(serializedAssetsConfig)
+        .store_uint(1, 8)
+        .store_slice(my_address())
+      .end_cell();
+  
+  tuple result = empty_tuple();
+  result~tpush(assetsPrice);
+  result~tpush(assetRates);
+  result~tpush(assetReserves);
+  result~tpush(supply);
+  result~tpush(borrow);
+  result~tpush(400000000000);
+  result~tpush(total);
+  result~tpush(config);
+  
+  return result;
+}
+
+(int) test () method_id {
+  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+  ~dump(1);
+  return (1);
+}
+
+;;()
+;; TODO one united method for all assets

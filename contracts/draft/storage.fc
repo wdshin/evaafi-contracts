@@ -1,0 +1,261 @@
+;;import '.math.fc'
+
+(cell) storage::serializeAssetsConfig () inline {
+  ;;assetsConfig: [
+  ;;  ...,
+  ;;  {
+  ;;    asset: address,
+  ;;    oracle: address,
+  ;;    decimals: uint8,
+  ;;    collateralFactor: uint16,
+  ;;    liquidationThreshold: uint16,
+  ;;    liquidationPenalty: uint16,
+  ;;    baseBorrowRate: uint64, ;; ? maybe 16
+  ;;    borrowRateSLopeLow: uint64,
+  ;;    borrowRateSlopeHigh: uint64,
+  ;;    supplyRateSlopeLow: uint64,
+  ;;    supplyRateSlopeHigh: uint64,
+  ;;    targetUtilization: uint64
+  ;;  },
+  ;;  ...
+  ;;]
+
+  ;;slice assetTonConfig = begin_cell()
+  ;;    .store_slice(assetAddress)
+  ;;    .store_slice(oracleAddress)
+  ;;    .store_uint(decimals, 8)
+  ;;    .store_uint(collateralFactor, 16)
+  ;;    .store_uint(liquidationThreshold, 16)
+  ;;    .store_uint(baseBorrowRate, 16)
+  ;;    .store_uint(borrowRateSlopeLow,16)
+  ;;    .store_uint(borrowRateSlopeHigh,16)
+  ;;    .store_uint(supplyRateSlopeLow,16)
+  ;;    .store_uint(supplyRateSlopeHigh,16)
+  ;;  .end_cell()
+  
+  slice assetTonConfig = begin_cell()
+      .store_slice(my_address())
+      .store_slice(my_address())
+      .store_uint(0, 8)
+      .store_ref(begin_cell()
+          .store_uint(0, 16)
+          .store_uint(0, 16)
+          .store_uint(0, 16)
+          .store_uint(0, 64)
+          .store_uint(0, 64)
+          .store_uint(0, 64)
+          .store_uint(0, 64)
+          .store_uint(0, 64)
+          .store_uint(0, 64)
+        end_cell())
+    .end_cell().begin_parse();
+
+  cell assetsConfig = begin_cell().end_cell();
+
+  assetsConfig~udict_set(16, 0, assetTonConfig);
+  assetsConfig~udict_set(16, 1, assetTonConfig);
+
+  return assetsConfig;
+}
+
+(cell) storage::serializeAssetsData () inline {
+  ;;assetsData: [
+  ;;  ...,
+  ;;  {
+  ;;    asset: address,
+  ;;    sRate: uint64,
+  ;;    bRate: uint64,
+  ;;    totalSupply: uint64,
+  ;;    totalBorrow: uint64,
+  ;;    lastAccural: timestamp
+  ;;  },
+  ;;  ...
+  ;;]
+  
+  slice assetTonData = begin_cell()
+      .store_slice(my_address())
+      .store_uint(0, 64)
+      .store_uint(0, 64)
+      .store_uint(0, 64)
+      .store_uint(0, 64)
+      .store_uint(0, 64)
+    .end_cell().begin_parse();
+
+  cell assetsConfig = begin_cell().end_cell();
+
+  assetsData~udict_set(16, 0, assetTonData);
+  assetsData~udict_set(16, 1, assetTonData);
+
+  return assetsData;
+}
+
+(cell) storage::serializeUsersSupplies () inline {
+  ;;usersSupplies: [
+  ;; ...,
+  ;; address(as key): [btcTotalAmount, ethTotalAmount, ...]
+  ;; ...
+  ;;]
+
+  ;;tuple user1Supplies = null();
+  ;;tuple user2Supplies = null();
+  ;;tuple user3Supplies = null();
+
+  cell user1Supplies = begin_cell().end_cell();
+  user1Supplies~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user1Supplies~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  
+  cell user2Supplies = begin_cell().end_cell();
+  user2Supplies~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user2Supplies~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+
+  cell user3Supplies = begin_cell().end_cell();
+  user3Supplies~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user3Supplies~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  
+  cell usresSupplies = begin_cell().end_cell();
+  
+  usresSupplies~udict_set(64, 0, user1Supplies);
+  usresSupplies~udict_set(64, 1, user2Supplies);
+  usresSupplies~udict_set(64, 2, user3Supplies);
+
+  return usresSupplies;
+}
+
+(cell) storage::serializeUsersBorrows () inline {
+  ;;usersBorrows: [
+  ;; ...,
+  ;; address(as key): [btcTotalAmount, ethTotalAmount, ...]
+  ;; ...
+  ;;]
+  cell user1Borrows = begin_cell().end_cell();
+  user1Borrows~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user1Borrows~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  
+  cell user2Borrows = begin_cell().end_cell();
+  user2Borrows~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user2Borrows~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+
+  cell user3Borrows = begin_cell().end_cell();
+  user3Borrows~udict_set(16, 0, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  user3Borrows~udict_set(16, 1, begin_cell().store_uint(0, 64).end_cell().begin_parse());
+  
+  cell usresBorrows = begin_cell().end_cell();
+  
+  usresBorrows~udict_set(64, 0, user1Borrows);
+  usresBorrows~udict_set(64, 1, user2Borrows);
+  usresBorrows~udict_set(64, 2, user3Borrows);
+
+  return usresBorrows;
+}
+
+() storage::save () impure inline {
+  ;;poolStorage: {
+  ;;  config: {
+  ;;    assetsConfig: [],
+  ;;    ifActive: bool,
+  ;;    admin: address
+  ;;  },
+  ;;  data: {
+  ;;    assetsData: [],
+  ;;    usersSupplies: [],
+  ;;    userBorrows: []
+  ;;  }
+  ;;}
+  ;;cell data = begin_cell()
+  ;;  .store_ref(
+  ;;    begin_cell()
+  ;;      .store_ref(serializedAssetsConfig)
+  ;;      .store_uint(ifActive)
+  ;;      .store_address(admin)
+  ;;    .end_cell())
+  ;;  .store_ref(
+  ;;    begin_cell()
+  ;;      .store_ref(serializedAssetsData)
+  ;;      .store_ref(serializedUsersSupplies)
+  ;;      .store_ref(serializedUsersBorrows)
+  ;;    .end_cell())
+  ;;.end_cell();
+
+  cell serializedAssetsConfig = serializeAssetsConfig();
+  cell serializedAssetsData = serializeAssetsData();
+  cell serializedUsersSupplies = serializeUsersSupplies();
+  cell serializedUsersBorrows = serializeUsersBorrows();
+
+  cell data = begin_cell()
+    .store_ref(
+      begin_cell()
+        .store_ref(serializedAssetsConfig)
+        .store_uint(-1, 8)
+        .store_slice(my_address())
+      .end_cell())
+    .store_ref(
+      begin_cell()
+        .store_ref(serializedAssetsData)
+        .store_ref(serializedUsersSupplies)
+        .store_ref(serializedUsersBorrows)
+      .end_cell())
+  .end_cell();
+
+  set_data(data);
+}
+
+(cell, cell) storage::load() inline {
+  slice ds = get_data().begin_parse();
+  cell marketConfig = ds~load_ref();
+  cell assetConfig = ds~load_ref();
+  cell serializedAssetsData = aassetsConfig~load_ref();
+  return (marketConfig, serializedAssetsData);
+}
+
+;;(slice, slice, slice, slice, cell, cell, cell) storage::load_data() inline {
+;;        slice ds = get_data().begin_parse();
+;;        slice owner_address = ds~load_msg_addr();
+;;        slice info = (ds~load_ref()).begin_parse();
+;;        cell borrow = ds~load_dict();
+;;        cell lend = ds~load_dict();
+;;        cell algebra = ds~load_uint(64);
+;;        return (owner_address, info~load_msg_addr(), info~load_msg_addr(), info~load_msg_addr(), info~load_msg_addr(), borrow, lend, algebra);
+;;}
+
+(int) getAssetPrice (slice assetAddress) method_id {
+  return 2.81 * 10.math::exp(9);
+}
+
+(tuple) getAssetRates (slice assetAddress) method_id  {
+  tuple result = empty_tuple();
+  result~tpush(16969 * 10.math::exp(18));
+  result~tpush(1777 * 10.math::exp(18));
+  return result;
+}
+
+(int) getAssetReserves (slice assetAddress) method_id {
+  return 333 * 10.math::exp(18);
+}
+
+(int) getAccontAssetSupply (slice userAddress, slice assetAddress) method_id {
+  return 119 * 10.math::exp(18);
+}
+
+(int) getAvaliableToBorrow (slice userAddress) method_id {
+  return 123 * 10.math::exp(18);
+}
+
+(tuple) getAssetTotals (slice assetAddress) method_id {
+  tuple result = empty_tuple();
+  result~tpush(188889 * 10.math::exp(18));
+  result~tpush(155557 * 10.math::exp(18));
+  return result;
+}
+
+(cell) getConfig () method_id {
+  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+ 
+  cell serializedAssetsConfig = serializeAssetsConfig();
+  return begin_cell()
+        .store_ref(serializedAssetsConfig)
+        .store_uint(-1, 8)
+        .store_slice(my_address())
+      .end_cell());
+}
+
+;; TODO one united method for all assets
