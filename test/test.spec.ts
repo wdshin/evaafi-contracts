@@ -70,17 +70,17 @@ describe("test", () => {
     console.log(add.toString()
     )
     console.log('------2')
-    // const sendIncrement = await contract.invokeGetMethod('getConfig', []);
-    const sendIncremenat = await contract.invokeGetMethod('updateFrontVariables', [{
-      type: 'cell_slice',
-      value: beginCell().storeAddress(add).endCell().toBoc({ idx: false }).toString('base64')
-    }]);
+    const sendIncrement = await contract.invokeGetMethod('test', []);
+    // const sendIncremenat = await contract.invokeGetMethod('updateFrontVariables', [{
+    //   type: 'cell_slice',
+    //   value: beginCell().storeAddress(add).endCell().toBoc({ idx: false }).toString('base64')
+    // }]);
     console.log(beginCell().storeAddress(add).endCell().toBoc({ idx: false }).toString('base64')
     )
     console.log('------')
-    console.log(sendIncremenat.result[0]?.toString());
-    console.log(sendIncremenat.debugLogs);
-    console.log(sendIncremenat.gas_consumed);
+    console.log(sendIncrement.result[0]?.toString());
+    console.log(sendIncrement.debugLogs);
+    console.log(sendIncrement.gas_consumed);
     console.log('------')
   });
 });

@@ -1,0 +1,146 @@
+#pragma version >=0.2.0;
+#include "../imports/stdlib.fc";
+#include "../imports/math.fc";
+#include "storage.fc";
+
+(int) getAssetPrice (int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 2000000000;
+  } else {
+    return 1000000000;
+  }
+}
+
+(tuple) getAssetRates (int assetAddress) method_id  {
+  if (assetAddress == 1){
+    tuple result = empty_tuple();
+    result~tpush(5781378709);
+    result~tpush(7075835695);
+    return result;
+  } else {
+    tuple result = empty_tuple();
+    result~tpush(6305519440);
+    result~tpush(7579176176);
+    return result;
+  }
+}
+
+(int) getAssetReserves (int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 1000000000;
+  } else {
+    return 15000000;
+  }
+}
+
+(int) getAccontAssetSupply (slice userAddress, int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 20400000000;
+  } else {
+    return 0;
+  }
+}
+
+(int) getAccontAssetBorrow (slice userAddress, int assetAddress) method_id {
+  if (assetAddress == 1){
+    return 0;
+  } else {
+    return 403000000;
+  }
+}
+
+(int) getAvailableToBorrow (slice userAddress) method_id {
+  return 400000000000;
+}
+
+(tuple) getAssetTotals (int assetAddress) method_id {
+  if (assetAddress == 1){
+    tuple result = empty_tuple();
+    result~tpush(40200000000);
+    result~tpush(35300000000);
+    return result;
+  } else {
+    tuple result = empty_tuple();
+    result~tpush(505000000);
+    result~tpush(403000000);
+    return result;
+  }
+}
+
+(cell) getConfig () method_id {
+  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+  cell serializedAssetsConfig = storage::serializeAssetsConfig();
+  return (begin_cell()
+        .store_ref(serializedAssetsConfig)
+        .store_uint(1, 8)
+        .store_slice(my_address())
+      .end_cell());
+}
+
+;;(tuple) updateFrontVariables (slice userAddress) method_id {
+;;
+;;  tuple assetsPrice = empty_tuple();
+;;  assetsPrice~tpush(2000000000);
+;;  assetsPrice~tpush(1000000000);
+;;
+;;  tuple assetRates = empty_tuple();
+;;  
+;;  tuple assetRates1 = empty_tuple();
+;;  assetRates1~tpush(5781378709);
+;;  assetRates1~tpush(6305519440);
+;;  assetRates~tpush(assetRates1);
+;;  
+;;  tuple assetRates2 = empty_tuple();
+;;  assetRates2~tpush(7075835695);
+;;  assetRates2~tpush(7579176176);
+;;  assetRates~tpush(assetRates2);
+;;
+;;  tuple assetReserves = empty_tuple();
+;;  assetReserves~tpush(1000000000);
+;;  assetReserves~tpush(15000000);
+;;
+;;  tuple supply = empty_tuple();
+;;  supply~tpush(20400000000);
+;;  supply~tpush(0);
+;;  
+;;  tuple borrow = empty_tuple();
+;;  borrow~tpush(0);
+;;  borrow~tpush(403000000);
+;;  
+;;  tuple total = empty_tuple();
+;;  
+;;  tuple asset1Total = empty_tuple();
+;;  asset1Total~tpush(40200000000);
+;;  asset1Total~tpush(505000000);
+;;  total~tpush(asset1Total);
+;;  
+;;  tuple asset2Total = empty_tuple();
+;;  asset2Total~tpush(35300000000);
+;;  asset2Total~tpush(403000000);
+;;  total~tpush(asset2Total);
+;;  
+;;  cell serializedAssetsConfig = storage::serializeAssetsConfig();
+;;  cell config = begin_cell()
+;;        .store_ref(serializedAssetsConfig)
+;;        .store_uint(1, 8)
+;;        .store_slice(my_address())
+;;      .end_cell();
+;;  
+;;  tuple result = empty_tuple();
+;;  result~tpush(assetsPrice);
+;;  result~tpush(assetRates);
+;;  result~tpush(assetReserves);
+;;  result~tpush(supply);
+;;  result~tpush(borrow);
+;;  result~tpush(400000000000);
+;;  result~tpush(total);
+;;  result~tpush(config);
+;;  
+;;  return result;
+;;}
+
+(int) test () method_id {
+  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+  ~dump(1);
+  return (1);
+}
