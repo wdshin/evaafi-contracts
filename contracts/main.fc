@@ -2,6 +2,7 @@
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
 #include "lib/get-methods.fc";
+#include "lib/logic.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 	throw(0xffff); 

@@ -1,0 +1,69 @@
+#include "../imports/stdlib.fc";
+#include "../imports/constants.fc";
+
+(int) presentValueCalc (int index, int principalValue) {
+  return principalValue * index / base_index_scale;
+}
+
+(int) principalValueSupplyCalc (int sRate, int presentValue) {
+  return presentValue * base_index_scale / sRate;
+}
+
+(int) principalValueBorrowCalc (int bRate, int presentValue) {
+  return (presentValue * base_index_scale + bRate - 1) / bRate;
+}
+
+(int) presentValue(int sRate, int bRate, int principalValue) {
+  if (principalValue >= 0) {
+    return presentValueCalc(sRate, principalValue);
+  } else {
+    return - presentValueCalc(bRate, - principalValue);
+  }
+}
+
+(int) principalValue(int sRate, int bRate, int presentValue) {
+  if (presentValue >= 0) {
+    return principalValueSupplyCalc(sRate, presentValue);
+  } else {
+    return - principalValueBorrowCalc(bRate, - presentValue);
+  }
+}
+
+(int, int) calcSupplyPrincipals (int oldPrincipal, int newPrincipal) {
+  if (newPrincipal < oldPrincipal) {
+    return (0, 0);
+  }
+  if (newPrincipal <= 0) {
+    return (newPrincipal - oldPrincipal, 0);
+  } else {
+    if (oldPrincipal >= 0) {
+      return (0, newPrincipal - oldPrincipal);
+    } else {
+      return (- oldPrincipal, newPrincipal);
+    }
+  }
+}
+
+(int, int) calcWithdrawPrincipals (oldPrincipal, newPrincipal) {
+  if (newPrincipal > oldPrincipal){
+    return (0, 0);
+  }
+
+  if (newPrincipal >= 0){
+    return (oldPrincipal - newPrincipal, 0);
+  } else {
+    if (oldPrincipal <= 0) {
+      return (0, oldPrincipal - newPrincipal);
+    } else {
+      return (oldPrincipal, - newPrincipal);
+    }
+  }
+}
+
+(int, int) getAssetRates (slice asset) {
+
+}
+
+(int) accureInterest (slice asset) {
+
+}

@@ -2,6 +2,7 @@
 #include "../imports/stdlib.fc";
 #include "../imports/math.fc";
 #include "storage.fc";
+#include "logic.fc";
 
 (int) getAssetPrice (int assetAddress) method_id {
   if (assetAddress == 1){
@@ -141,6 +142,6 @@
 
 (int) test () method_id {
   ;;(cell marketConfig, cell serializedAssetsData) = store::load();
-  ~dump(1);
+  ;;~dump(abc(- 19));
   return (1);
 }
