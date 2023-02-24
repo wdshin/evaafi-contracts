@@ -1,1 +1,2 @@
 int constants::base_index_scale() asm "0xDE0B6B3A7640000 PUSHINT";
+int constants::factor_scale() asm "0xDE0B6B3A7640000 PUSHINT";

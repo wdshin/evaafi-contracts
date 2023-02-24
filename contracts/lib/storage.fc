@@ -1,39 +1,20 @@
 #include "../imports/stdlib.fc";
 
 (cell) storage::serializeAssetsConfig () inline {
-  ;;assetsConfig: [
-  ;;  ...,
-  ;;  {
-  ;;    asset: address,
-  ;;    oracle: address,
-  ;;    decimals: uint8,
-  ;;    collateralFactor: uint16,
-  ;;    liquidationThreshold: uint16,
-  ;;    liquidationPenalty: uint16,
-  ;;    baseBorrowRate: uint64, ;; ? maybe 16
-  ;;    borrowRateSLopeLow: uint64,
-  ;;    borrowRateSlopeHigh: uint64,
-  ;;    supplyRateSlopeLow: uint64,
-  ;;    supplyRateSlopeHigh: uint64,
-  ;;    targetUtilization: uint64
-  ;;  },
-  ;;  ...
-  ;;]
-  
   slice assetTonConfig = begin_cell()
-      .store_slice(my_address())
-      .store_slice(my_address())
-      .store_uint(8, 8)
+      .store_slice(my_address()) ;; asset
+      .store_slice(my_address()) ;; oracle
+      .store_uint(8, 8) ;; decimals
       .store_ref(begin_cell()
-          .store_uint(8300, 16)
-          .store_uint(9000, 16)
-          .store_uint(500, 16)
-          .store_uint(15854895991, 64)
-          .store_uint(25000000000, 64)
-          .store_uint(187500000000, 64)
-          .store_uint(10000000000, 64)
-          .store_uint(100000000000, 64)
-          .store_uint(800000000000000000, 64)
+          .store_uint(8300, 16) ;;collateralFactor
+          .store_uint(9000, 16) ;;liquidationThreshold
+          .store_uint(500, 16) ;;liquidationPenalty
+          .store_uint(15854895991, 64) ;;baseBorrowRate
+          .store_uint(25000000000, 64) ;;borrowRateSLopeLow
+          .store_uint(187500000000, 64) ;;borrowRateSlopeHigh
+          .store_uint(10000000000, 64) ;;supplyRateSlopeLow
+          .store_uint(100000000000, 64) ;;supplyRateSlopeHigh
+          .store_uint(800000000000000000, 64) ;;targetUtilization
         .end_cell())
     .end_cell().begin_parse();
   
@@ -63,37 +44,25 @@
 }
 
 (cell) storage::serializeAssetsData () inline {
-  ;;assetsData: [
-  ;;  ...,
-  ;;  {
-  ;;    asset: address,
-  ;;    sRate: uint64,
-  ;;    bRate: uint64,
-  ;;    totalSupply: uint64,
-  ;;    totalBorrow: uint64,
-  ;;    lastAccural: timestamp
-  ;;  },
-  ;;  ...
-  ;;]
   
   slice assetTonData = begin_cell()
-      .store_slice(my_address())
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
+      .store_slice(my_address()) ;;asset / todo add asset name somehow
+      .store_uint(2000000000, 64) ;;price
+      .store_uint(1000454300000000000, 64) ;;sRate
+      .store_uint(1000678000000000000, 64) ;;bRate
+      .store_uint(40000000000, 64) ;;totalSupplyPrincipal
+      .store_uint(35000000000, 64) ;;totalBorrowPrincipal
+      .store_uint(now(), 64) ;;lastAccural
     .end_cell().begin_parse();
 
   slice assetUsdtData = begin_cell()
-      .store_slice(my_address())
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
-      .store_uint(0, 64)
+      .store_slice(my_address()) ;; todo add asset name somehow
+      .store_uint(1000000000, 64)
+      .store_uint(1000134550000000000, 64)
+      .store_uint(1000432100000000000, 64)
+      .store_uint(50000000000, 64)
+      .store_uint(40000000000, 64)
+      .store_uint(now(), 64)
     .end_cell().begin_parse();
   
   cell assetsData = new_dict();
@@ -107,11 +76,11 @@
 () storage::save () impure inline {
   ;;poolStorage: {
   ;;  config: {
-  ;;    assetsConfig: [],
+  ;;    assetsConfig: dict,
   ;;    ifActive: bool,
   ;;    admin: address
   ;;  },
-  ;;  assetsData: [],
+  ;;  assetsData: dict,
   ;;}
 
   cell serializedAssetsConfig = storage::serializeAssetsConfig();

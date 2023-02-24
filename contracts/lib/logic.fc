@@ -1,16 +1,17 @@
 #include "../imports/stdlib.fc";
 #include "../imports/constants.fc";
+#include "storage.fc";
 
 (int) presentValueCalc (int index, int principalValue) {
-  return principalValue * index / base_index_scale;
+  return principalValue * index / constants::base_index_scale();
 }
 
 (int) principalValueSupplyCalc (int sRate, int presentValue) {
-  return presentValue * base_index_scale / sRate;
+  return presentValue * constants::base_index_scale() / sRate;
 }
 
 (int) principalValueBorrowCalc (int bRate, int presentValue) {
-  return (presentValue * base_index_scale + bRate - 1) / bRate;
+  return (presentValue * constants::base_index_scale() + bRate - 1) / bRate;
 }
 
 (int) presentValue(int sRate, int bRate, int principalValue) {
@@ -61,7 +62,33 @@
 }
 
 (int, int) getAssetRates (slice asset) {
+  (cell marketConfig, cell assetData) = storage::load();
+  ;;assetData
+  ;;  uint totalSupply_ = presentValueCalc(assetData.asset.sRate, assetData.asset.totalSupplyPrincipal);
+  ;;      uint totalBorrow_ = presentValueCalc(assetData.asset.bRate, assetData.asset.totalBorrowPrincipal);
+  ;; int totalSupply = presentValueCalc(asset)
+  int utilization = 0;
+  int supplyRate = 0;
+  int borrowRate = 0;
+ 
+  if (totalSupply == 0) {
+    utilization = 0;
+  } else {
+    utilization = totalBorrow * constants::factor_scale() / totalSupply;
+  }
+ 
+  if (utilization <= targetUtilization) {
+    supplyRate = mulFactor(supplyPerSecondInterestRateSlopeLow, utilization);
+  } else {
+    supplyRate = mulFactor(supplyPerSecondInterestRateSlopeLow, targetUtilization) + mulFactor(supplyPerSecondInterestRateSlopeHight, (utilization - targetUtilization));
+  }
 
+  if (utilization <= targetUtilization){
+    borrowRate = borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, utilization); 
+  } else {
+    borrowRate = borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, targetUtilization) + mulFactor(borrowPerSecondInterestRateSlopeHigh, (utilization - targetUtilization));
+  }
+  return (supplyRate, borrowRate)
 }
 
 (int) accureInterest (slice asset) {
