@@ -1,0 +1,25 @@
+#include "../imports/stdlib.fc";
+#include "../imports/constants.fc";
+#include "storage.fc";
+
+;; helpers
+(slice) getAssetByAddress (cell assetData, slice assetAddress) {
+  int i = 0;
+  int lastId = dict_get_max(assetData, 16);
+  while (i > lastId) {
+    slice item = assetData~dict_get(16, i).begin_parse();
+    slice itemAddr = item.load_msg_addr();
+
+    var (wc0, itemAddrHash) = parse_std_addr(itemAddr);
+    var (wc1, assetAddrHash) = parse_std_addr(assetAddress);
+    
+    if (itemAddrHash == assetAddrHash) {
+      return item;
+    }
+    i += 1;
+  }
+}
+
+(int) mulFactor (int A, int B) {
+  return (A * B);
+}

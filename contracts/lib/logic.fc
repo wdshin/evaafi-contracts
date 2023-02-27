@@ -1,6 +1,7 @@
 #include "../imports/stdlib.fc";
 #include "../imports/constants.fc";
 #include "storage.fc";
+#include "helpers.fc";
 
 (int) presentValueCalc (int index, int principalValue) {
   return principalValue * index / constants::base_index_scale();
@@ -61,12 +62,20 @@
   }
 }
 
-(int, int) getAssetRates (slice asset) {
+
+(int, int) getAssetRates (slice assetAddress) {
   (cell marketConfig, cell assetData) = storage::load();
-  ;;assetData
-  ;;  uint totalSupply_ = presentValueCalc(assetData.asset.sRate, assetData.asset.totalSupplyPrincipal);
-  ;;      uint totalBorrow_ = presentValueCalc(assetData.asset.bRate, assetData.asset.totalBorrowPrincipal);
-  ;; int totalSupply = presentValueCalc(asset)
+  slice asset = getAssetByAddress(assetData, assetAddress);
+  asset~load_msg_addr();
+  asset~load_uint(64);
+ 
+  int assetSRate = asset~load_uint(64);
+  int assetBRate = asset~load_uint(64);
+  int totalSupplyPrincipal = asset~load_uint(64);
+  int totalBorrowPrincipal = asset~load_uint(64);
+  int totalSupply = presentValueCalc(assetSRate, totalSupplyPrincipal);
+  int totalBorrow = presentValueCalc(assetBRate, totalBorrowPrincipal);
+  
   int utilization = 0;
   int supplyRate = 0;
   int borrowRate = 0;
@@ -88,9 +97,143 @@
   } else {
     borrowRate = borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, targetUtilization) + mulFactor(borrowPerSecondInterestRateSlopeHigh, (utilization - targetUtilization));
   }
+ 
   return (supplyRate, borrowRate)
 }
 
-(int) accureInterest (slice asset) {
-
+(int, int) getUpdatedRates (slice asset, int timeElapsed) {
+  if (timeElapsed > 0) {
+    int sRate = 0; ;; TODO maybe not 0
+    int bRate = 0;
+    (int supplyRate, int borrowRate) = getAssetRates(asset);
+    ;; TODO check here
+    sRate += mulFactor(sRate, supplyRate * timeElapsed); ;; TODO re-check here
+    bRate += mulFactor(bRate, borrowRate * timeElapsed);
+  }
+  return (sRate, bRate);
 }
+
+(int) accureInterest (slice asset) {
+  slice asset = getAssetByAddress(assetData, assetAddress);
+  asset~load_msg_addr();
+  asset~load_uint(64);
+ 
+  asset~load_uint(64);
+  asset~load_uint(64);
+  asset~load_uint(64);
+  asset~load_uint(64);
+  int lastAccural = asset~load_uint(64);
+  int timeElapsed = now() - lastAccural;
+  if (timeElapsed > 0) {
+    (int sRate, int bRate) = getUpdatedRates(asset, timeElapsed);
+    lastAccural = now();
+    ;; TODO save to storage
+    ;;//нужно сохранить в сторадж lastAccrualTime, sRate, bRate в assetData_
+  }
+}
+
+;;TODO user asset store on user SC 
+tuple userAssets = empty_tuple();
+userAssets~tpush(10);
+userAssets~tpush(10);
+
+(int) isLiquidatable (cell assetConfig, cell assetData) {
+  int borrow_amount = 0;
+  int borrow_limit = 0;
+
+  int i = 0;
+  while (i > userAssets~tlen()) {
+    slice item = assetData~dict_get(16, i).begin_parse();
+    asset~load_msg_addr();
+    int price = asset~load_uint(64);
+    int assetSRate = asset~load_uint(64);
+    int assetBRate = asset~load_uint(64);
+    int totalSupplyPrincipal = asset~load_uint(64);
+    int totalBorrowPrincipal = asset~load_uint(64);
+    
+    if (userAssets.at(i) < 0) {
+      borrow_amount += presentValueCalc(assetBRate, - userAssets.at(i) * price);
+    } else {
+      if (userAssets.at(i) > 0) {
+        borrow_limit += presentValueCalc(assetSRate, userAssets.at(i) * price * liquidationThreshold);
+      }
+    }
+    i += 1;
+  }
+
+  return (borrow_limit < borrow_amount);
+}
+
+(int) getAvaliableToBorrow(cell assetConfig, cell assetData) {
+  int borrow_limit = 0;
+  int borrow_amount = 0;
+
+  int i = 0;
+  while (i > userAssets~tlen()) {
+    if (userAssets.at(i) > 0) {
+      slice item = assetData~dict_get(16, i).begin_parse();
+      asset~load_msg_addr();
+      int price = asset~load_uint(64);
+      int assetSRate = asset~load_uint(64);
+
+      slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
+      itemConfig~load_msg_addr();
+      itemConfig~load_msg_addr();
+      itemConfig~load_uint(8);
+      cell itemConfigData = itemConfig~load_ref();
+      int collateralFactor = itemConfigData~load_uint(16);
+
+      borrow_limit += presentValueCalc(assetSRate, userAssets.at(i) * price * collateralFactor);
+    }
+    i += 1;
+  }
+
+  return borrow_limit;
+}
+
+(int) isBorrowCollateralized (cell assetConfig, cell assetData, cell user) {
+
+  int borrow_amount = 0;
+  int borrow_limit = 0;
+
+  int i = 0;
+  while (i > userAssets~tlen()) {
+    slice item = assetData~dict_get(16, i).begin_parse();
+    asset~load_msg_addr();
+    int price = asset~load_uint(64);
+    int assetSRate = asset~load_uint(64);
+    int assetBRate = asset~load_uint(64);
+    int totalSupplyPrincipal = asset~load_uint(64);
+    int totalBorrowPrincipal = asset~load_uint(64);
+   
+    slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
+    itemConfig~load_msg_addr();
+    itemConfig~load_msg_addr();
+    itemConfig~load_uint(8);
+    cell itemConfigData = itemConfig~load_ref();
+    int collateralFactor = itemConfigData~load_uint(16);
+   
+    if (userAssets.at(i) < 0) {
+      borrow_amount += presentValueCalc(assetBRate, - userAssets.at(i) * price);
+    } else {
+      if (userAssets.at(i) > 0) {
+        borrow_limit += presentValueCalc(assetSRate, userAssets.at(i) * price * collateralFactor);
+      }
+    }
+    i += 1;
+  }
+
+  return (borrow_limit < borrow_amount);
+}
+
+() supply () {
+  ;; TODO on recive internal
+}
+
+() withdraw () {
+  ;; TODO on recive internal
+}
+
+;; TODO getters
+;; TODO liquidate
+;; TODO withdrawReserves
