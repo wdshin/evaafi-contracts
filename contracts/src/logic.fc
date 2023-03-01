@@ -1,7 +1,12 @@
 #include "../imports/stdlib.fc";
 #include "../imports/constants.fc";
-#include "storage.fc";
-#include "helpers.fc";
+#include "main/storage.fc";
+#include "main/helpers.fc";
+
+;;TODO user asset store on user SC 
+tuple userAssets = empty_tuple();
+userAssets~tpush(10);
+userAssets~tpush(10);
 
 (int) presentValueCalc (int index, int principalValue) {
   return principalValue * index / constants::base_index_scale();
@@ -131,11 +136,6 @@
     ;;//нужно сохранить в сторадж lastAccrualTime, sRate, bRate в assetData_
   }
 }
-
-;;TODO user asset store on user SC 
-tuple userAssets = empty_tuple();
-userAssets~tpush(10);
-userAssets~tpush(10);
 
 (int) isLiquidatable (cell assetConfig, cell assetData) {
   int borrow_amount = 0;

@@ -1,6 +1,6 @@
 #include "../imports/stdlib.fc";
 #include "../imports/constants.fc";
-#include "storage.fc";
+#include "main/storage.fc";
 
 ;; helpers
 (slice) getAssetByAddress (cell assetData, slice assetAddress) {

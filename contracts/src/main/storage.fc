@@ -1,4 +1,4 @@
-#include "../imports/stdlib.fc";
+#include "../../imports/stdlib.fc";
 
 (cell) storage::serializeAssetsConfig () inline {
   slice assetTonConfig = begin_cell()

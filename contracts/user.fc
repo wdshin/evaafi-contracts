@@ -1,8 +1,8 @@
 #pragma version >=0.2.0;
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
-#include "src/main/get-methods.fc";
-#include "src/main/storage.fc";
+#include "src/user/get-methods.fc";
+#include "src/user/storage.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 	throw(0xffff); 
