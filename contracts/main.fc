@@ -6,7 +6,38 @@
 #include "src/main/get-methods.fc";
 #include "src/main/storage.fc";
 #include "src/logic.fc";
-#include "src/helpers.fc";
+#include "src/utils.fc";
+
+(cell) calculate_user_init_state(slice sender_address) {
+  return begin_cell()
+    .store_slice(my_address())
+    .store_slice(sender_address)
+    .store_ref(begin_cell().end_cell())
+    .end_cell(); 
+}
+
+(slice) calculate_user_address (cell state_init) {
+  return begin_cell().store_uint(4, 3)
+    .store_int(workchain(), 8)
+    .store_uint(cell_hash(state_init), 256)
+    .end_cell()
+    .begin_parse();
+}
+
+() init_user (slice sender_address) impure {
+  cell state_init = calculate_user_init_state( sender_address);
+  slice to_wallet_address = calculate_user_address(state_init);
+ 
+  var msg = begin_cell()
+              .store_uint(0x18, 6)
+              .store_slice(to_wallet_address)
+              .store_coins(start_balance)
+              .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+              .store_ref(state_init)
+              .store_ref(begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
+
+  send_raw_message(msg.end_cell(), 1); ;; pay transfer fees separately, revert on errors
+}
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   if (in_msg_body.slice_empty?()) { ;; ignore empty messages
@@ -31,19 +62,57 @@
   int query_id = in_msg_body~load_uint(64);
 
   if (op == op::initMaster()) {
-    ;; todo/admin
+    var (wc, admin_addr_hash) = parse_std_addr(admin);
+    throw_unless(103, addr_hash == admin_addr_hash);
+    cell newAssetConfig = in_msg_body~load_ref();
+    cell newAssetData = in_msg_body~load_ref();
+    storage::save(meta, userContractCode, newAssetsConfig, ifActive, admin, newAssetData);
+    return();
   }
   
   if (op == op::initUser()) {
-    ;; todo/anyone/to user
+    init_user(sender_address); 
+    return();
   }
   
   if (op == op::updatePrice()) {
-    ;; todo/oracle 
+    cell assetName = in_msg_body~load_msg_addr();
+    var (assetConfig, is_asset_existing?) = assetsConfig.udict_get?(255, assetName);
+    throw_unless(100, is_asset_existing?);
+    slice whiteListedOrale = assetsConfig~load_msg_addr();
+    var (wc, oracle_addr_hash) = parse_std_addr(whiteListedOrale);
+    throw_unless(103, addr_hash == oracle_addr_hash);
+    var (assetData, _) = assetData.udict_get?(255, assetName);
+    int newPrice = in_msg_body~load_uint(64);
+
+    assetData~load_uint(64);
+    int sRate = assetData~load_uint(64);
+    int bRate = assetData~load_uint(64);
+    int totalSupplyPrincipal = assetData~load_uint(64);
+    int totalBorrowPrincipal = assetData~load_uint(64);
+    int lastAccural = assetData~load_uint(64);
+
+    cell updatedAsset = begin_cell()
+        .store_int(newPrice, 64)
+        .store_int(sRate, 64)
+        .store_int(bRate, 64)
+        .store_int(totalSupplyPrincipal, 64)
+        .store_int(totalBorrowPrincipal, 64)
+        .store_int(now(), 64) ;; todo need to ask if we need now of we can use old lastAccural
+      .end_cell();
+
+    assetsData~dict_set(255, assetName, updatedAsset);
+    storage::save(meta, userContractCode, assetsConfig, ifActive, admin, assetData);
+    return();
   }
   
   if (op == op::updateConfig()) {
-    ;; todo/admin
+    ;;todo update not only asset config but config of entire market (isActive & meta too)
+    var (wc, admin_addr_hash) = parse_std_addr(admin);
+    throw_unless(103, addr_hash == admin_addr_hash);
+    cell newAssetConfig = in_msg_body~load_ref();
+    storage::save(meta, userContractCode, newAssetsConfig, ifActive, admin, assetData);
+    return();
   }
   
   if (op == op::withdraw()) {
@@ -73,7 +142,7 @@
     ;; todo logic for wrapping tons 
   }
 
-  if (op == op::unWrap()) {
+  if (op == op::unwrap()) {
     ;; todo logic for unwrapping tons
   }
 

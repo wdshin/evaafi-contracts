@@ -1,73 +1,26 @@
-(cell) storage::serializeAssetsConfig () inline {
-  slice assetTonConfig = begin_cell()
-      .store_slice(my_address()) ;; oracle
-      .store_uint(8, 8) ;; decimals
-      .store_ref(begin_cell()
-          .store_uint(8300, 16) ;;collateralFactor
-          .store_uint(9000, 16) ;;liquidationThreshold
-          .store_uint(500, 16) ;;liquidationPenalty
-          .store_uint(15854895991, 64) ;;baseBorrowRate
-          .store_uint(25000000000, 64) ;;borrowRateSLopeLow
-          .store_uint(187500000000, 64) ;;borrowRateSlopeHigh
-          .store_uint(10000000000, 64) ;;supplyRateSlopeLow
-          .store_uint(100000000000, 64) ;;supplyRateSlopeHigh
-          .store_uint(800000000000000000, 64) ;;targetUtilization
-        .end_cell())
-    .end_cell().begin_parse();
-  
-  slice assetUsdtConfig = begin_cell()
-      .store_slice(my_address())
-      .store_uint(6, 8)
-      .store_ref(begin_cell()
-          .store_uint(8000, 16)
-          .store_uint(8500, 16)
-          .store_uint(700, 16)
-          .store_uint(20611364789, 64)
-          .store_uint(32500000000, 64)
-          .store_uint(243750000000, 64)
-          .store_uint(13000000000, 64)
-          .store_uint(130000000000, 64)
-          .store_uint(900000000000000000, 64)
-        .end_cell())
-    .end_cell().begin_parse();
-  
-  cell assetsConfig = new_dict();
-
-  assetsConfig~dict_set(255, my_address(), assetTonConfig);
-  assetsConfig~dict_set(255, 1, assetUsdtConfig);
-
-  return assetsConfig;
-}
-
-(cell) storage::serializeAssetsData () inline {
-  
-  slice assetTonData = begin_cell()
-      .store_slice(my_address()) ;;asset / todo add asset name somehow
-      .store_uint(2000000000, 64) ;;price
-      .store_uint(1000454300000000000, 64) ;;sRate
-      .store_uint(1000678000000000000, 64) ;;bRate
-      .store_uint(40000000000, 64) ;;totalSupplyPrincipal
-      .store_uint(35000000000, 64) ;;totalBorrowPrincipal
-      .store_uint(now(), 64) ;;lastAccural
-    .end_cell().begin_parse();
-
-  slice assetUsdtData = begin_cell()
-      .store_slice(my_address()) ;; todo add asset name somehow
-      .store_uint(1000000000, 64)
-      .store_uint(1000134550000000000, 64)
-      .store_uint(1000432100000000000, 64)
-      .store_uint(50000000000, 64)
-      .store_uint(40000000000, 64)
-      .store_uint(now(), 64)
-    .end_cell().begin_parse();
-  
-  cell assetsData = new_dict();
-
-  assetsData~udict_set(16, 0, assetTonData);
-  assetsData~udict_set(16, 1, assetUsdtData);
-
-  return assetsData;
-}
+;; slice assetTonConfig = begin_cell()
+;;     .store_slice(my_address()) ;; oracle
+;;     .store_uint(8, 8) ;; decimals
+;;     .store_ref(begin_cell()
+;;         .store_uint(8300, 16) ;;collateralFactor
+;;         .store_uint(9000, 16) ;;liquidationThreshold
+;;         .store_uint(500, 16) ;;liquidationPenalty
+;;         .store_uint(15854895991, 64) ;;baseBorrowRate
+;;         .store_uint(25000000000, 64) ;;borrowRateSLopeLow
+;;         .store_uint(187500000000, 64) ;;borrowRateSlopeHigh
+;;         .store_uint(10000000000, 64) ;;supplyRateSlopeLow
+;;         .store_uint(100000000000, 64) ;;supplyRateSlopeHigh
+;;         .store_uint(800000000000000000, 64) ;;targetUtilization
+;;       .end_cell())
+;;   .end_cell().begin_parse();
+;; slice assetTonData = begin_cell()
+;;     .store_uint(2000000000, 64) ;;price
+;;     .store_uint(1000454300000000000, 64) ;;sRate
+;;     .store_uint(1000678000000000000, 64) ;;bRate
+;;     .store_uint(40000000000, 64) ;;totalSupplyPrincipal
+;;     .store_uint(35000000000, 64) ;;totalBorrowPrincipal
+;;     .store_uint(now(), 64) ;;lastAccural
+;;   .end_cell().begin_parse();
 
 () storage::save (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) impure {
   cell data = begin_cell()
@@ -81,7 +34,6 @@
       .end_cell())
     .store_ref(assetsData) ;;assetsData / dict / can be changed
   .end_cell();
-
   set_data(data);
 }
 

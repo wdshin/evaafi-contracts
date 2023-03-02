@@ -6,3 +6,5 @@ int op::updateConfig() asm "0x PUSHINT";
 int op::supply() asm "0x PUSHINT";
 int op::withdrawal() asm "0x PUSHINT";
 int op::liquidate() asm "0x PUSHINT";
+int op::wrap() asm "0x PUSHINT";
+int op::unwrap() asm "0x PUSHINT";
