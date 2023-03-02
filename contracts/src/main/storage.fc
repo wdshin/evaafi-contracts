@@ -1,8 +1,5 @@
-#include "../../imports/stdlib.fc";
-
 (cell) storage::serializeAssetsConfig () inline {
   slice assetTonConfig = begin_cell()
-      .store_slice(my_address()) ;; asset
       .store_slice(my_address()) ;; oracle
       .store_uint(8, 8) ;; decimals
       .store_ref(begin_cell()
@@ -20,7 +17,6 @@
   
   slice assetUsdtConfig = begin_cell()
       .store_slice(my_address())
-      .store_slice(my_address())
       .store_uint(6, 8)
       .store_ref(begin_cell()
           .store_uint(8000, 16)
@@ -37,8 +33,8 @@
   
   cell assetsConfig = new_dict();
 
-  assetsConfig~udict_set(16, 0, assetTonConfig);
-  assetsConfig~udict_set(16, 1, assetUsdtConfig);
+  assetsConfig~dict_set(255, my_address(), assetTonConfig);
+  assetsConfig~dict_set(255, 1, assetUsdtConfig);
 
   return assetsConfig;
 }
@@ -73,36 +69,31 @@
   return assetsData;
 }
 
-() storage::save () impure inline {
-  ;;poolStorage: {
-  ;;  config: {
-  ;;    assetsConfig: dict,
-  ;;    ifActive: bool,
-  ;;    admin: address
-  ;;  },
-  ;;  assetsData: dict,
-  ;;}
-
-  cell serializedAssetsConfig = storage::serializeAssetsConfig();
-  cell serializedAssetsData = storage::serializeAssetsData();
-
+() storage::save (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) impure {
   cell data = begin_cell()
+    .store_ref(meta) ;; metaData / boc / init
+    .store_ref(userContractCode) ;; userContractCode / boc / init
     .store_ref(
       begin_cell()
-        .store_ref(serializedAssetsConfig)
-        .store_uint(-1, 8)
-        .store_slice(my_address())
+        .store_ref(assetsConfig) ;; assetsConfig / dict / admin will upload
+        .store_uint(ifActive, 8) ;; ifActive / bool / admin can change
+        .store_slice(admin) ;; admin address / slice / init
       .end_cell())
-    .store_ref(serializedAssetsData)
+    .store_ref(assetsData) ;;assetsData / dict / can be changed
   .end_cell();
 
   set_data(data);
 }
 
-(cell, cell) storage::load() inline {
+(cell, cell, cell, int, slice, cell) storage::load () inline {
   slice ds = get_data().begin_parse();
+  cell meta = ds~load_ref();
+  cell userContractCode = ds~load_ref();
   cell marketConfig = ds~load_ref();
+  cell assetsConfig = marketConfig~load_ref();
+  int ifActive = marketConfig~load_uint(8);
+  slice admin = marketConfig~load_msg_addr();
   cell assetData = ds~load_ref();
-  return (marketConfig, assetData);
+  return (meta, userContractCode, assetsConfig, ifActive, admin, assetData);
 }
 

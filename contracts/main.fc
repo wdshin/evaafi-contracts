@@ -1,9 +1,76 @@
 #pragma version >=0.2.0;
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
+#include "imports/op-codes.fc";
+#include "imports/constants.fc";
 #include "src/main/get-methods.fc";
 #include "src/main/storage.fc";
+#include "src/logic.fc";
+#include "src/helpers.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-	throw(0xffff); 
+  if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+    return ();
+  }
+
+  slice cs = in_msg_full.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  var (wc, addr_hash) = parse_std_addr(sender_address);
+
+  if (flags & 1) {
+    ;; TODO: Finish logic of on bounce
+    ;; on_bounce(in_msg_body, msg_value);
+    ;; in theory "throw(0xffff)" will be enougth
+		throw(0xffff); 
+  }
+
+  (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) = storage::load();
+	
+  int op = in_msg_body~load_uint(32);
+  int query_id = in_msg_body~load_uint(64);
+
+  if (op == op::initMaster()) {
+    ;; todo/admin
+  }
+  
+  if (op == op::initUser()) {
+    ;; todo/anyone/to user
+  }
+  
+  if (op == op::updatePrice()) {
+    ;; todo/oracle 
+  }
+  
+  if (op == op::updateConfig()) {
+    ;; todo/admin
+  }
+  
+  if (op == op::withdraw()) {
+    ;; todo/anyone/to user
+  }
+  
+  if (op == op::transfer_notification()) {
+    int query_id = in_msg_body~load_uint(64); 
+    int coins = in_msg_body~load_coins(); 
+    int query_id = in_msg_body~load_uint(64); 
+    int from_address = in_msg_body~load_msg_addr(); 
+    int jetton_msg_body = in_msg_body~load_msg_addr(); 
+    int op_jetton = jetton_msg_body~load_uint(32); 
+    int query_id_jetton = jetton_msg_body~load_uint(64); 
+    int jetton_token_id = jetton_msg_body~load_uint(32); 
+    
+    if (op_jetton == op::liquidate()) {
+      ;; todo/anyone/to user/jetton
+    }
+    
+    if (op_jetton == op::supply()) {
+      ;; todo/anyone/to user/jetton
+    }
+  }
+  
+  throw(0xffff); 
 }
+
+;; todo send to treasure and send from treasure (to cammunicating with jettons) logic or smth
+;; todo ton to wTON wrapper

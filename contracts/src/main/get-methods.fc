@@ -1,9 +1,3 @@
-#pragma version >=0.2.0;
-#include "../../imports/stdlib.fc";
-#include "../../imports/math.fc";
-#include "storage.fc";
-#include "../logic.fc";
-
 (int) getAssetPrice (int assetAddress) method_id {
   if (assetAddress == 1){
     return 2000000000;

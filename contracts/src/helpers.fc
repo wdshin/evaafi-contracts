@@ -1,7 +1,3 @@
-#include "../imports/stdlib.fc";
-#include "../imports/constants.fc";
-#include "main/storage.fc";
-
 ;; helpers
 (slice) getAssetByAddress (cell assetData, slice assetAddress) {
   int i = 0;

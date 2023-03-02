@@ -1,9 +1,51 @@
 #pragma version >=0.2.0;
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
+#include "imports/op-codes.fc";
+#include "imports/constants.fc";
 #include "src/user/get-methods.fc";
 #include "src/user/storage.fc";
+#include "src/logic.fc";
+#include "src/helpers.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-	throw(0xffff); 
+  if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+    return ();
+  }
+
+  slice cs = in_msg_full.begin_parse();
+  int flags = cs~load_uint(4);
+  slice sender_address = cs~load_msg_addr();
+  var (wc, addr_hash) = parse_std_addr(sender_address);
+
+  if (flags & 1) {
+    ;; TODO: Finish logic of on bounce
+    ;; on_bounce(in_msg_body, msg_value);
+    ;; in theory "throw(0xffff)" will be enougth
+		throw(0xffff); 
+  }
+
+  (slice master, slice user, cell userPrincipals) = storage::load();
+	
+  int op = in_msg_body~load_uint(32);
+  int query_id = in_msg_body~load_uint(64);
+
+  if (op == op::initUser()) {
+    ;; todo/from master
+  }
+  
+  if (op == op::withdraw()) {
+    ;; todo/from master
+  }
+  
+  if (op == op::liquidate()) {
+    ;; todo/from master 
+  }
+  
+  if (op == op::supply()) {
+    ;; todo/from master 
+  }
+  
+  throw(0xffff); 
 }
+

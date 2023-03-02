@@ -1,13 +1,3 @@
-#include "../imports/stdlib.fc";
-#include "../imports/constants.fc";
-#include "main/storage.fc";
-#include "main/helpers.fc";
-
-;;TODO user asset store on user SC 
-tuple userAssets = empty_tuple();
-userAssets~tpush(10);
-userAssets~tpush(10);
-
 (int) presentValueCalc (int index, int principalValue) {
   return principalValue * index / constants::base_index_scale();
 }
@@ -66,7 +56,6 @@ userAssets~tpush(10);
     }
   }
 }
-
 
 (int, int) getAssetRates (slice assetAddress) {
   (cell marketConfig, cell assetData) = storage::load();
@@ -225,15 +214,3 @@ userAssets~tpush(10);
 
   return (borrow_limit < borrow_amount);
 }
-
-() supply () {
-  ;; TODO on recive internal
-}
-
-() withdraw () {
-  ;; TODO on recive internal
-}
-
-;; TODO getters
-;; TODO liquidate
-;; TODO withdrawReserves
