@@ -69,6 +69,14 @@
     }
   }
   
+  if (op == op::wrap()) {
+    ;; todo logic for wrapping tons 
+  }
+
+  if (op == op::unWrap()) {
+    ;; todo logic for unwrapping tons
+  }
+
   throw(0xffff); 
 }
 
