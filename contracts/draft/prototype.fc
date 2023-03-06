@@ -130,12 +130,12 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
         lendsArr = null();
       }
 
-        var (new_borrow, key_borrow) = borrow~udict_delete(255, key_addr); ;; TODO delete specific users lends  
+        var (new_borrow, key_borrow) = borrow~udict_delete(256, key_addr); ;; TODO delete specific users lends  
     ;;  int i = 0;
     ;;  while(i < len){
-    ;;    ;;///* int user_to_liquidate = accounts_to_liquidate~udict_get(255, i); */
+    ;;    ;;///* int user_to_liquidate = accounts_to_liquidate~udict_get(256, i); */
     ;;      
-    ;;    ;;var (new_lend, key_lend) = lend~udict_delete(255, user_to_liquidate);^ 
+    ;;    ;;var (new_lend, key_lend) = lend~udict_delete(256, user_to_liquidate);^ 
     ;;    
     ;;    i += 1;
     ;;  }
@@ -219,12 +219,12 @@ _ save_data (slice admin_address, slice owner_address, slice info, cell borrow, 
       int query_id = in_msg_body~load_uint(64); 
       cell accounts_to_liquidate = in_msg_body~load_dict();
       int i = 0;
-      (len, user, bool) = accounts_to_liquidate~udict_get_max?(255); 
+      (len, user, bool) = accounts_to_liquidate~udict_get_max?(256); 
       while(i < len){
-        int user_to_liquidate = accounts_to_liquidate~udict_get(255, i);
+        int user_to_liquidate = accounts_to_liquidate~udict_get(256, i);
          
-        var (new_lend, key_lend) = lend~udict_delete(255, user_to_liquidate); 
-        var (new_borrow, key_borrow) = borrow~udict_delete(255, user_to_liquidate); 
+        var (new_lend, key_lend) = lend~udict_delete(256, user_to_liquidate); 
+        var (new_borrow, key_borrow) = borrow~udict_delete(256, user_to_liquidate); 
         
         i += 1;
       }

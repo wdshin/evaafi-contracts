@@ -1,8 +1,9 @@
 const int op::transfer_notification = 0x7362d09c;
-const int op::initMaster = ;
-const int op::initUser = ;
-const int op::updatePrice = ;
-const int op::updateConfig = ;
+;; todo
+const int op::init_master =  ;
+const int op::init_user = ;
+const int op::update_price = ;
+const int op::update_config = ;
 const int op::supply = ;
 const int op::withdrawal = ;
 const int op::liquidate = ;

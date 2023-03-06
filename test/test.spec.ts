@@ -18,7 +18,7 @@ const genRand = (str: string) => {
   const random = new Prando(str);
   const hash = Buffer.alloc(32);
   for (let i = 0; i < hash.length; i++) {
-    hash[i] = random.nextInt(0, 255);
+    hash[i] = random.nextInt(0, 256);
   }
 
   console.log(hash.length);

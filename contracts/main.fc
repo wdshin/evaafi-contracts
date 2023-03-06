@@ -25,7 +25,7 @@
 }
 
 () init_user (slice sender_address) impure {
-  cell state_init = calculate_user_init_state( sender_address);
+  cell state_init = calculate_user_init_state(sender_address);
   slice to_wallet_address = calculate_user_address(state_init);
  
   var msg = begin_cell()
@@ -57,7 +57,7 @@
 		throw(0xffff); 
   }
 
-  (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) = storage::load();
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     process_incoming_ton();
@@ -71,46 +71,46 @@
 
   int query_id = in_msg_body~load_uint(64);
 
-  if (op == op::initMaster) {
+  if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
-    cell newAssetConfig = in_msg_body~load_ref();
-    cell newAssetData = in_msg_body~load_ref();
-    storage::save(meta, userContractCode, newAssetsConfig, ifActive, admin, newAssetData);
+    cell new_assets_config = in_msg_body~load_ref();
+    cell new_asset_data = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, new_asset_data);
     return();
   }
   
-  if (op == op::initUser) {
+  if (op == op::init_user) {
     init_user(sender_address); 
     return();
   }
   
-  if (op == op::updatePrice) {
-    cell assetName = in_msg_body~load_msg_addr();
-    var (assetConfig, is_asset_existing?) = assetsConfig.udict_get?(255, assetName);
+  if (op == op::update_price) {
+    cell asset_name = in_msg_body~load_msg_addr();
+    var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_name);
     throw_unless(100, is_asset_existing?);
-    slice whiteListedOracle = assetsConfig~load_msg_addr();
-    var (wc, oracle_addr_hash) = parse_std_addr(whiteListedOracle);
+    slice wl_oracle = asset_config_item~load_msg_addr();
+    var (wc, oracle_addr_hash) = parse_std_addr(wl_oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (assetData, _) = assetData.udict_get?(255, assetName); ;; ?????!! assetsData ??
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_name); ;; ?????!! assets_data ??  / fixed
     int newPrice = in_msg_body~load_uint(64);
 
-    var (_, _, sRate, bRate, totalSupplyPrincipal, totalBorrowPrincipal, lastAccural) = unpack_asset_data(assetData);
+    var (_, _, sRate, bRate, total_supply_principal, totalBorrowPrincipal, lastAccural) = unpack_asset_data(asset_data_item);
 
-    cell updatedAsset = pack_asset_data(newPrice, sRate, bRate, totalSupplyPrincipal, totalBorrowPrincipal, now());
+    cell updatedAsset = pack_asset_data(newPrice, sRate, bRate, total_supply_principal, totalBorrowPrincipal, now());
     ;; todo need to ask if we need now of we can use old lastAccural
 
-    assetsData~dict_set(255, assetName, updatedAsset);
-    storage::save(meta, userContractCode, assetsConfig, ifActive, admin, assetsData);
+    assets_data~dict_set(256, asset_name, updatedAsset);
+    storage::save(meta, user_contract_code, assets_config, if_active, admin, assets_data);
     return();
   }
   
-  if (op == op::updateConfig) {
+  if (op == op::update_config) {
     ;;todo update not only asset config but config of entire market (isActive & meta too)
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
-    cell newAssetConfig = in_msg_body~load_ref();
-    storage::save(meta, userContractCode, newAssetsConfig, ifActive, admin, assetData);
+    cell new_assets_config = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, asset_data);
     return();
   }
   
@@ -123,7 +123,7 @@
     int coins = in_msg_body~load_coins(); 
     int query_id = in_msg_body~load_uint(64); 
     int from_address = in_msg_body~load_msg_addr(); 
-    int jetton_msg_body = in_msg_body~load_msg_addr(); 
+    int jetton_msg_body = in_msg_body~load_msg_addr(); ;; check how we get body here 
     int op_jetton = jetton_msg_body~load_uint(32); 
     int query_id_jetton = jetton_msg_body~load_uint(64); 
     int jetton_token_id = jetton_msg_body~load_uint(32); 
@@ -135,9 +135,13 @@
     if (op_jetton == op::supply) {
       ;; todo/anyone/to user/jetton
     }
+
+    ;; todo bounce user jetton if no op codes / maybe liquidate will be not in transfer_notification
   }
-  
-  if (op == op::wrap) {
+
+  ;; todo recive native ton ;; without wraps / unwraps
+
+  if (op == op::wrap()) {
     ;; todo logic for wrapping tons 
   }
 
