@@ -1,10 +1,11 @@
-int op::transfer_notification() asm "0x7362d09c PUSHINT";
-int op::initMaster() asm "0x696e69744d PUSHINT";
-int op::initUser() asm "0x696e697455 PUSHINT";
-int op::updatePrice() asm "0x75706461746550 PUSHINT";
-int op::updateConfig() asm "0x75706461746543 PUSHINT";
-int op::supply() asm "0x737570706c79 PUSHINT";
-int op::withdrawal() asm "0x7769746864726177 PUSHINT";
-int op::liquidate() asm "0x6c6971756964617465 PUSHINT";
-int op::wrap() asm "0x77726170 PUSHINT";
-int op::unwrap() asm "0x756e77726170 PUSHINT";
+const int op::transfer_notification = 0x7362d09c;
+;; todo
+const int op::init_master =  ;
+const int op::init_user = ;
+const int op::update_price = ;
+const int op::update_config = ;
+const int op::supply = ;
+const int op::withdrawal = ;
+const int op::liquidate = ;
+const int op::wrap = ;
+const int op::unwrap = ;

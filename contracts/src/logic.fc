@@ -60,13 +60,10 @@
 (int, int) getAssetRates (slice assetAddress) {
   (cell marketConfig, cell assetData) = storage::load();
   slice asset = getAssetByAddress(assetData, assetAddress);
-  asset~load_msg_addr();
-  asset~load_uint(64);
- 
-  int assetSRate = asset~load_uint(64);
-  int assetBRate = asset~load_uint(64);
-  int totalSupplyPrincipal = asset~load_uint(64);
-  int totalBorrowPrincipal = asset~load_uint(64);
+
+  var (_, _, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(asset);
+
+
   int totalSupply = presentValueCalc(assetSRate, totalSupplyPrincipal);
   int totalBorrow = presentValueCalc(assetBRate, totalBorrowPrincipal);
   
@@ -92,7 +89,7 @@
     borrowRate = borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, targetUtilization) + mulFactor(borrowPerSecondInterestRateSlopeHigh, (utilization - targetUtilization));
   }
  
-  return (supplyRate, borrowRate)
+  return (supplyRate, borrowRate);
 }
 
 (int, int) getUpdatedRates (slice asset, int timeElapsed) {
@@ -109,14 +106,8 @@
 
 (int) accureInterest (slice asset) {
   slice asset = getAssetByAddress(assetData, assetAddress);
-  asset~load_msg_addr();
-  asset~load_uint(64);
- 
-  asset~load_uint(64);
-  asset~load_uint(64);
-  asset~load_uint(64);
-  asset~load_uint(64);
-  int lastAccural = asset~load_uint(64);
+  int lastAccural = asset_data_last_accural(asset);
+
   int timeElapsed = now() - lastAccural;
   if (timeElapsed > 0) {
     (int sRate, int bRate) = getUpdatedRates(asset, timeElapsed);
@@ -133,12 +124,7 @@
   int i = 0;
   while (i > userAssets~tlen()) {
     slice item = assetData~dict_get(16, i).begin_parse();
-    asset~load_msg_addr();
-    int price = asset~load_uint(64);
-    int assetSRate = asset~load_uint(64);
-    int assetBRate = asset~load_uint(64);
-    int totalSupplyPrincipal = asset~load_uint(64);
-    int totalBorrowPrincipal = asset~load_uint(64);
+    var (_, price, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(item);
     
     if (userAssets.at(i) < 0) {
       borrow_amount += presentValueCalc(assetBRate, - userAssets.at(i) * price);
@@ -161,16 +147,10 @@
   while (i > userAssets~tlen()) {
     if (userAssets.at(i) > 0) {
       slice item = assetData~dict_get(16, i).begin_parse();
-      asset~load_msg_addr();
-      int price = asset~load_uint(64);
-      int assetSRate = asset~load_uint(64);
+      var (_, price, assetSRate, _, _, _) = unpack_asset_data(item);
 
       slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
-      itemConfig~load_msg_addr();
-      itemConfig~load_msg_addr();
-      itemConfig~load_uint(8);
-      cell itemConfigData = itemConfig~load_ref();
-      int collateralFactor = itemConfigData~load_uint(16);
+      int collateralFactor = item_config_collateral_factor(itemConfig);
 
       borrow_limit += presentValueCalc(assetSRate, userAssets.at(i) * price * collateralFactor);
     }
@@ -188,19 +168,11 @@
   int i = 0;
   while (i > userAssets~tlen()) {
     slice item = assetData~dict_get(16, i).begin_parse();
-    asset~load_msg_addr();
-    int price = asset~load_uint(64);
-    int assetSRate = asset~load_uint(64);
-    int assetBRate = asset~load_uint(64);
-    int totalSupplyPrincipal = asset~load_uint(64);
-    int totalBorrowPrincipal = asset~load_uint(64);
+
+    var (_, price, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(item);
    
     slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
-    itemConfig~load_msg_addr();
-    itemConfig~load_msg_addr();
-    itemConfig~load_uint(8);
-    cell itemConfigData = itemConfig~load_ref();
-    int collateralFactor = itemConfigData~load_uint(16);
+    int collateralFactor = item_config_collateral_factor(itemConfig);
    
     if (userAssets.at(i) < 0) {
       borrow_amount += presentValueCalc(assetBRate, - userAssets.at(i) * price);

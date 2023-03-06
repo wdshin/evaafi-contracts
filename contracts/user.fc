@@ -25,16 +25,20 @@
 		throw(0xffff); 
   }
 
-  (slice master, slice user, cell userPrincipals) = storage::load();
+  (slice master, slice user, cell user_principals) = storage::load();
 	
   int op = in_msg_body~load_uint(32);
   int query_id = in_msg_body~load_uint(64);
 
-  if (op == op::withdraw()) {
+  if (op == op::withdraw) {
     ;; todo/from master
   }
    
-  if (op == op::supply()) {
+  if (op == op::liquidate) {
+    ;; todo/from master 
+  }
+  
+  if (op == op::supply) {
     ;; todo/from master 
   }
   

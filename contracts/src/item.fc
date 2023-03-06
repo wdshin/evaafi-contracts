@@ -1,0 +1,14 @@
+
+(slice, slice, int, cell) unpack_item_config(slice item_config) {
+    return (
+		item_config~load_msg_addr(),
+		item_config~load_msg_addr(),
+		item_config~load_uint(8),
+		item_config~load_ref() ;; itemConfigData
+	);
+}
+
+int item_config_collateral_factor(slice item_config) {
+	cell item_config_data = item_config~load_ref();
+	return item_config.preload_uint(16);
+}

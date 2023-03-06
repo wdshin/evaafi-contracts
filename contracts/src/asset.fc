@@ -1,0 +1,38 @@
+cell pack_asset_data(
+	int price, int sRate, int bRate,
+	int totalSupplyPrincipal, int totalBorrowPrincipal,
+	int lastAccural
+) {
+	return begin_cell()
+		.store_int(price, 64)
+		.store_int(sRate, 64)
+		.store_int(bRate, 64)
+		.store_int(totalSupplyPrincipal, 64)
+		.store_int(totalBorrowPrincipal, 64)
+		.store_int(lastAccural, 64)
+		.end_cell();
+}
+
+;; !!! because of that "some_address" functions to pack and unpack actually don't yet correspond to each other
+(slice, int, int, int, int, int) unpack_asset_data(slice asset_data) {
+    slice some_address = asset_data~load_msg_addr(); ;; ??? What is this?
+    int price = asset_data~load_uint(64);
+    int assetSRate = asset_data~load_uint(64);
+    int assetBRate = asset_data~load_uint(64);
+    int totalSupplyPrincipal = asset_data~load_uint(64);
+    int totalBorrowPrincipal = asset_data~load_uint(64);
+	int lastAccural = asset_data~load_uint(64);
+	
+	return (
+		some_address, price,
+		assetSRate, assetBRate,
+		totalSupplyPrincipal, totalBorrowPrincipal,
+		lastAccural
+	);
+}
+
+int asset_data_last_accural(slice asset_data) {
+	asset_data~load_msg_addr();
+	asset_data~skip_bits(64 * 5);
+	return asset_data.preload_uint(64);
+}
