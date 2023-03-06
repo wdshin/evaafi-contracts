@@ -13,6 +13,7 @@
 ;;         .store_uint(800000000000000000, 64) ;;targetUtilization
 ;;       .end_cell())
 ;;   .end_cell().begin_parse();
+
 ;; slice assetTonData = begin_cell()
 ;;     .store_uint(2000000000, 64) ;;price
 ;;     .store_uint(1000454300000000000, 64) ;;sRate
@@ -22,7 +23,7 @@
 ;;     .store_uint(now(), 64) ;;lastAccural
 ;;   .end_cell().begin_parse();
 
-() storage::save (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) impure {
+() storage::save (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetsData) impure {
   cell data = begin_cell()
     .store_ref(meta) ;; metaData / boc / init
     .store_ref(userContractCode) ;; userContractCode / boc / init
@@ -42,9 +43,10 @@
   cell meta = ds~load_ref();
   cell userContractCode = ds~load_ref();
   cell marketConfig = ds~load_ref();
-  cell assetsConfig = marketConfig~load_ref();
-  int ifActive = marketConfig~load_uint(8);
-  slice admin = marketConfig~load_msg_addr();
+  slice unpackedMarkedConfig = marketConfig.begin_parse();
+  cell assetsConfig = unpackedMarkedConfig~load_ref();
+  int ifActive = unpackedMarkedConfig~load_uint(8);
+  slice admin = unpackedMarkedConfig~load_msg_addr();
   cell assetData = ds~load_ref();
   return (meta, userContractCode, assetsConfig, ifActive, admin, assetData);
 }

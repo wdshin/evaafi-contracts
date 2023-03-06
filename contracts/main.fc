@@ -25,7 +25,7 @@
 }
 
 () init_user (slice sender_address) impure {
-  cell state_init = calculate_user_init_state( sender_address);
+  cell state_init = calculate_user_init_state(sender_address);
   slice to_wallet_address = calculate_user_address(state_init);
  
   var msg = begin_cell()
@@ -124,7 +124,7 @@
     int coins = in_msg_body~load_coins(); 
     int query_id = in_msg_body~load_uint(64); 
     int from_address = in_msg_body~load_msg_addr(); 
-    int jetton_msg_body = in_msg_body~load_msg_addr(); 
+    int jetton_msg_body = in_msg_body~load_msg_addr(); ;; check how we get body here 
     int op_jetton = jetton_msg_body~load_uint(32); 
     int query_id_jetton = jetton_msg_body~load_uint(64); 
     int jetton_token_id = jetton_msg_body~load_uint(32); 
@@ -136,8 +136,12 @@
     if (op_jetton == op::supply()) {
       ;; todo/anyone/to user/jetton
     }
+
+    ;; todo bounce user jetton if no op codes / maybe liquidate will be not in transfer_notification
   }
-  
+
+  ;; todo recive native ton ;; without wraps / unwraps
+
   if (op == op::wrap()) {
     ;; todo logic for wrapping tons 
   }

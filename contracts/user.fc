@@ -33,15 +33,15 @@
   if (op == op::withdraw()) {
     ;; todo/from master
   }
-  
-  if (op == op::liquidate()) {
-    ;; todo/from master 
-  }
-  
+   
   if (op == op::supply()) {
     ;; todo/from master 
   }
   
+  if (op == op::liquidate()) {
+    ;; todo/from master 
+  }
+ 
   throw(0xffff); 
 }
 

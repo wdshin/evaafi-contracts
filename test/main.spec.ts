@@ -15,11 +15,11 @@ import { hex as userHex } from "../build/user.compiled.json";
 
 import Prando from "prando";
 
-const op = { //todo
-  initMaster: 0x0,
-  initUser: 0x0,
-  updatePrice: 0x0,
-  updateConfig: 0x0,
+const op = { // todo
+  initMaster: ,
+  initUser: ,
+  updatePrice: ,
+  updateConfig: ,
 }
 
 describe("test", () => {
@@ -80,7 +80,7 @@ describe("test", () => {
         .storeUint(187500000000, 64)
         .storeUint(10000000000, 64)
         .storeUint(100000000000, 64)
-        .storeUint(800000000000 * 1000000, 64)
+        .storeUint(800000000000 * 1000000, 64) // todo move to BN
         .endCell())
       .endCell()
 
@@ -103,9 +103,9 @@ describe("test", () => {
     assetConfig.storeCell(randomAddress('ton').toBuffer(), tonConfigCell)
     assetConfig.storeCell(randomAddress('usdt').toBuffer(), usdtConfigCell)
 
-    const init = await contract.sendInternalMessage(
+    const initMaster = await contract.sendInternalMessage(
       internalMessage({
-        value: toNano(0.69),
+        value: toNano(0),
         from: randomAddress('admin'),
         body: beginCell()
           .storeUint(op.initMaster, 32)
@@ -116,19 +116,15 @@ describe("test", () => {
       }) as any
     );
 
-    console.log(init.debugLogs);
-    console.log(init.gas_consumed);
+    console.log(initMaster.debugLogs);
+    console.log(initMaster.gas_consumed);
   });
 
   it("init user", async () => {
-    let mnemonics = await mnemonicNew();
-    let keyPair = await mnemonicToPrivateKey(mnemonics);
-    const add = new Address(0, keyPair.publicKey);
-
     const tx = await contract.sendInternalMessage(
       internalMessage({
-        value: toNano(0.69),
-        from: add,
+        value: toNano(0),
+        from: randomAddress('admin'),
         body: beginCell()
           .storeUint(op.initUser, 32)
           .storeUint(0, 64)
@@ -144,7 +140,7 @@ describe("test", () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: randomAddress('admin'),
+        from: randomAddress('oracle'),
         body: beginCell()
           .storeUint(op.updatePrice, 32)
           .storeUint(0, 64)

@@ -62,15 +62,15 @@
   }
 }
 
-(cell) getConfig () method_id {
-  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
-  cell serializedAssetsConfig = storage::serializeAssetsConfig();
-  return (begin_cell()
-        .store_ref(serializedAssetsConfig)
-        .store_uint(1, 8)
-        .store_slice(my_address())
-      .end_cell());
-}
+;;(cell) getConfig () method_id {
+;;  ;;(cell marketConfig, cell serializedAssetsData) = store::load();
+;;  cell serializedAssetsConfig = storage::serializeAssetsConfig();
+;;  return (begin_cell()
+;;        .store_ref(serializedAssetsConfig)
+;;        .store_uint(1, 8)
+;;        .store_slice(my_address())
+;;      .end_cell());
+;;}
 
 ;;(tuple) updateFrontVariables (slice userAddress) method_id {
 ;;
