@@ -58,13 +58,13 @@
 }
 
 (int, int) getAssetRates (slice assetAddress) {
-  (cell marketConfig, cell assetData) = storage::load();
-  slice asset = getAssetByAddress(assetData, assetAddress);
+  (cell marketConfig, cell asset_data) = storage::load();
+  slice asset = getAssetByAddress(asset_data, assetAddress);
 
-  var (_, _, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(asset);
+  var (_, _, assetSRate, assetBRate, total_supply_principal, totalBorrowPrincipal) = unpack_asset_data(asset);
 
 
-  int totalSupply = presentValueCalc(assetSRate, totalSupplyPrincipal);
+  int totalSupply = presentValueCalc(assetSRate, total_supply_principal);
   int totalBorrow = presentValueCalc(assetBRate, totalBorrowPrincipal);
   
   int utilization = 0;
@@ -105,7 +105,7 @@
 }
 
 (int) accureInterest (slice asset) {
-  slice asset = getAssetByAddress(assetData, assetAddress);
+  slice asset = getAssetByAddress(asset_data, assetAddress);
   int lastAccural = asset_data_last_accural(asset);
 
   int timeElapsed = now() - lastAccural;
@@ -113,18 +113,18 @@
     (int sRate, int bRate) = getUpdatedRates(asset, timeElapsed);
     lastAccural = now();
     ;; TODO save to storage
-    ;;//нужно сохранить в сторадж lastAccrualTime, sRate, bRate в assetData_
+    ;;//нужно сохранить в сторадж lastAccrualTime, sRate, bRate в asset_data_
   }
 }
 
-(int) isLiquidatable (cell assetConfig, cell assetData) {
+(int) isLiquidatable (cell assetConfig, cell asset_data) {
   int borrow_amount = 0;
   int borrow_limit = 0;
 
   int i = 0;
   while (i > userAssets~tlen()) {
-    slice item = assetData~dict_get(16, i).begin_parse();
-    var (_, price, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(item);
+    slice item = asset_data~dict_get(16, i).begin_parse();
+    var (_, price, assetSRate, assetBRate, total_supply_principal, totalBorrowPrincipal) = unpack_asset_data(item);
     
     if (userAssets.at(i) < 0) {
       borrow_amount += presentValueCalc(assetBRate, - userAssets.at(i) * price);
@@ -139,14 +139,14 @@
   return (borrow_limit < borrow_amount);
 }
 
-(int) getAvaliableToBorrow(cell assetConfig, cell assetData) {
+(int) getAvaliableToBorrow(cell assetConfig, cell asset_data) {
   int borrow_limit = 0;
   int borrow_amount = 0;
 
   int i = 0;
   while (i > userAssets~tlen()) {
     if (userAssets.at(i) > 0) {
-      slice item = assetData~dict_get(16, i).begin_parse();
+      slice item = asset_data~dict_get(16, i).begin_parse();
       var (_, price, assetSRate, _, _, _) = unpack_asset_data(item);
 
       slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
@@ -160,16 +160,16 @@
   return borrow_limit;
 }
 
-(int) isBorrowCollateralized (cell assetConfig, cell assetData, cell user) {
+(int) isBorrowCollateralized (cell assetConfig, cell asset_data, cell user) {
 
   int borrow_amount = 0;
   int borrow_limit = 0;
 
   int i = 0;
   while (i > userAssets~tlen()) {
-    slice item = assetData~dict_get(16, i).begin_parse();
+    slice item = asset_data~dict_get(16, i).begin_parse();
 
-    var (_, price, assetSRate, assetBRate, totalSupplyPrincipal, totalBorrowPrincipal) = unpack_asset_data(item);
+    var (_, price, assetSRate, assetBRate, total_supply_principal, totalBorrowPrincipal) = unpack_asset_data(item);
    
     slice itemConfig = assetConfig~dict_get(16, i).begin_parse();
     int collateralFactor = item_config_collateral_factor(itemConfig);

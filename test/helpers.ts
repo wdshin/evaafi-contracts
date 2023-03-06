@@ -9,7 +9,7 @@ export function randomAddress(seed: string, workchain?: number) {
   const random = new Prando(seed);
   const hash = Buffer.alloc(32);
   for (let i = 0; i < hash.length; i++) {
-    hash[i] = random.nextInt(0, 255);
+    hash[i] = random.nextInt(0, 256);
   }
   return new Address(workchain ?? 0, hash);
 }
@@ -32,9 +32,6 @@ export function setBalance(contract: SmartContract, balance: BN) {
     balance: balance.toNumber(),
   });
 }
-
-// copilot cre;ate function that will summ a and b
-//
 
 // helper for end-to-end on-chain tests (normally post deploy) to allow sending InternalMessages to contracts using a wallet
 export async function sendInternalMessageWithWallet(params: { walletContract: WalletContract; secretKey: Buffer; to: Address; value: BN; bounce?: boolean; body?: Cell }) {

@@ -74,9 +74,9 @@
   if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
-    cell newAssetConfig = in_msg_body~load_ref();
-    cell newasset_data = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, newassets_config, if_active, admin, newasset_data);
+    cell new_assets_config = in_msg_body~load_ref();
+    cell new_asset_data = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, new_asset_data);
     return();
   }
   
@@ -86,13 +86,13 @@
   }
   
   if (op == op::update_price) {
-    cell assetName = in_msg_body~load_msg_addr();
-    var (assetConfig, is_asset_existing?) = assets_config.udict_get?(256, assetName);
+    cell asset_name = in_msg_body~load_msg_addr();
+    var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_name);
     throw_unless(100, is_asset_existing?);
-    slice whiteListedOracle = assets_config~load_msg_addr();
-    var (wc, oracle_addr_hash) = parse_std_addr(whiteListedOracle);
+    slice wl_oracle = asset_config_item~load_msg_addr();
+    var (wc, oracle_addr_hash) = parse_std_addr(wl_oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (asset_data_item, _) = asset_data.udict_get?(256, assetName); ;; ?????!! assets_data ??
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_name); ;; ?????!! assets_data ??  / fixed
     int newPrice = in_msg_body~load_uint(64);
 
     var (_, _, sRate, bRate, total_supply_principal, totalBorrowPrincipal, lastAccural) = unpack_asset_data(asset_data_item);
@@ -100,7 +100,7 @@
     cell updatedAsset = pack_asset_data(newPrice, sRate, bRate, total_supply_principal, totalBorrowPrincipal, now());
     ;; todo need to ask if we need now of we can use old lastAccural
 
-    assets_data~dict_set(256, assetName, updatedAsset);
+    assets_data~dict_set(256, asset_name, updatedAsset);
     storage::save(meta, user_contract_code, assets_config, if_active, admin, assets_data);
     return();
   }
@@ -109,8 +109,8 @@
     ;;todo update not only asset config but config of entire market (isActive & meta too)
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
-    cell newAssetConfig = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, newassets_config, if_active, admin, asset_data);
+    cell new_assets_config = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, asset_data);
     return();
   }
   

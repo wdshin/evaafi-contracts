@@ -1,28 +1,24 @@
-import chai, { expect } from "chai";
-import chaiBN from "chai-bn";
-import BN from "bn.js";
-chai.use(chaiBN(BN));
-
-import { beginDict, TonClient, fromNano, WalletContractV4, internal, Cell, toNano, Address, safeSign, beginCell } from "ton";
+import { beginDict, Cell, toNano, beginCell } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import * as main from "../contracts/main";
 import { internalMessage, randomAddress } from "./helpers";
-import { mnemonicNew, mnemonicToPrivateKey, sha256_sync } from "ton-crypto";
-import { sign, signVerify } from "ton-crypto";
 
 import { hex } from "../build/main.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 
-import Prando from "prando";
-
 const op = { // todo
-  initMaster: ,
-  initUser: ,
-  updatePrice: ,
-  updateConfig: ,
+  transfer_notification = 0x7362d09c,
+  init_master: ,
+  init_user: ,
+  update_price: ,
+  update_config: ,
+  supply: ,
+  withdrawal: ,
+  liquidate: ,
+  wrap: ,
+  unwrap: ,
 }
 
-describe("test", () => {
+describe("evaa master sc tests", () => {
   let contract: SmartContract;
 
   beforeEach(async () => {
@@ -44,8 +40,8 @@ describe("test", () => {
       }
     );
 
-    const assetData = beginDict(255);
-    const assetConfig = beginDict(255);
+    const asset_data = beginDict(256);
+    const assetConfig = beginDict(256);
 
     const tonDataCell = beginCell()
       .storeUint(2000000000, 64)
@@ -65,8 +61,8 @@ describe("test", () => {
       .storeUint((new Date()).getTime() * 1000, 64)
       .endCell()
 
-    assetData.storeCell(randomAddress('ton').toBuffer(), tonDataCell)
-    assetData.storeCell(randomAddress('usdt').toBuffer(), usdtDataCell)
+    asset_data.storeCell(randomAddress('ton').toBuffer(), tonDataCell)
+    asset_data.storeCell(randomAddress('usdt').toBuffer(), usdtDataCell)
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -103,21 +99,21 @@ describe("test", () => {
     assetConfig.storeCell(randomAddress('ton').toBuffer(), tonConfigCell)
     assetConfig.storeCell(randomAddress('usdt').toBuffer(), usdtConfigCell)
 
-    const initMaster = await contract.sendInternalMessage(
+    const init_master = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
         from: randomAddress('admin'),
         body: beginCell()
-          .storeUint(op.initMaster, 32)
+          .storeUint(op.init_master, 32)
           .storeUint(0, 64)
           .storeRef(assetConfig.endCell())
-          .storeRef(assetData.endCell())
+          .storeRef(asset_data.endCell())
           .endCell(),
       }) as any
     );
 
-    console.log(initMaster.debugLogs);
-    console.log(initMaster.gas_consumed);
+    console.log(init_master.debugLogs);
+    console.log(init_master.gas_consumed);
   });
 
   it("init user", async () => {
@@ -126,7 +122,7 @@ describe("test", () => {
         value: toNano(0),
         from: randomAddress('admin'),
         body: beginCell()
-          .storeUint(op.initUser, 32)
+          .storeUint(op.init_user, 32)
           .storeUint(0, 64)
           .endCell(),
       }) as any
@@ -142,7 +138,7 @@ describe("test", () => {
         value: toNano(0),
         from: randomAddress('oracle'),
         body: beginCell()
-          .storeUint(op.updatePrice, 32)
+          .storeUint(op.update_price, 32)
           .storeUint(0, 64)
           .storeUint(100, 64) // new price
           .endCell(),
@@ -153,7 +149,7 @@ describe("test", () => {
   });
 
   it("update master config", async () => {
-    const assetConfig = beginDict(255);
+    const assetConfig = beginDict(256);
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -196,7 +192,7 @@ describe("test", () => {
         value: toNano(0),
         from: randomAddress('admin'),
         body: beginCell()
-          .storeUint(op.updateConfig, 32)
+          .storeUint(op.update_config, 32)
           .storeUint(0, 64)
           .storeRef(assetConfig.endCell())
           .endCell(),
@@ -208,3 +204,47 @@ describe("test", () => {
   });
 });
 
+
+
+describe("evaa user sc tests", () => {
+  let contract: SmartContract;
+
+  beforeEach(async () => {
+    contract = await SmartContract.fromCell(
+      Cell.fromBoc(hex)[0] as any, // code cell from build output
+      beginCell() //todo
+        .endCell(),
+      {
+        debug: true,
+      }
+    );
+
+    const init_master = await contract.sendInternalMessage(
+      internalMessage({
+        value: toNano(0),
+        from: randomAddress('master'),
+        body: beginCell() //todo
+       .endCell(),
+      }) as any
+    );
+
+    console.log(init_master.debugLogs);
+    console.log(init_master.gas_consumed);
+  });
+
+  it("init user", async () => {
+    const tx = await contract.sendInternalMessage(
+      internalMessage({
+        value: toNano(0),
+        from: randomAddress('admin'),
+        body: beginCell()
+          .storeUint(op.init_user, 32)
+          .storeUint(0, 64)
+          .endCell(),
+      }) as any
+    );
+
+    console.log(tx.debugLogs);
+    console.log(tx.gas_consumed);
+  });
+});

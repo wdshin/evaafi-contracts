@@ -18,22 +18,22 @@
 ;;     .store_uint(2000000000, 64) ;;price
 ;;     .store_uint(1000454300000000000, 64) ;;sRate
 ;;     .store_uint(1000678000000000000, 64) ;;bRate
-;;     .store_uint(40000000000, 64) ;;totalSupplyPrincipal
+;;     .store_uint(40000000000, 64) ;;total_supply_principal
 ;;     .store_uint(35000000000, 64) ;;totalBorrowPrincipal
 ;;     .store_uint(now(), 64) ;;lastAccural
 ;;   .end_cell().begin_parse();
 
-() storage::save (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetsData) impure {
+() storage::save (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell assets_data) impure {
   cell data = begin_cell()
-    .store_ref(meta) ;; metaData / boc / init
-    .store_ref(userContractCode) ;; userContractCode / boc / init
+    .store_ref(meta) ;; meta_data 
+    .store_ref(user_contract_code) ;; user_contract_code
     .store_ref(
       begin_cell()
-        .store_ref(assetsConfig) ;; assetsConfig / dict / admin will upload
-        .store_uint(ifActive, 8) ;; ifActive / bool / admin can change
-        .store_slice(admin) ;; admin address / slice / init
+        .store_ref(assets_config) ;; assets_config
+        .store_uint(if_active, 8) ;; if_active
+        .store_slice(admin) ;; admin_address 
       .end_cell())
-    .store_ref(assetsData) ;;assetsData / dict / can be changed
+    .store_ref(assets_data) ;;assets_data
   .end_cell();
   set_data(data);
 }
@@ -41,13 +41,13 @@
 (cell, cell, cell, int, slice, cell) storage::load () inline {
   slice ds = get_data().begin_parse();
   cell meta = ds~load_ref();
-  cell userContractCode = ds~load_ref();
+  cell user_contract_code = ds~load_ref();
   cell marketConfig = ds~load_ref();
   slice unpackedMarkedConfig = marketConfig.begin_parse();
-  cell assetsConfig = unpackedMarkedConfig~load_ref();
-  int ifActive = unpackedMarkedConfig~load_uint(8);
+  cell assets_config = unpackedMarkedConfig~load_ref();
+  int if_active = unpackedMarkedConfig~load_uint(8);
   slice admin = unpackedMarkedConfig~load_msg_addr();
-  cell assetData = ds~load_ref();
-  return (meta, userContractCode, assetsConfig, ifActive, admin, assetData);
+  cell asset_data = ds~load_ref();
+  return (meta, user_contract_code, assets_config, if_active, admin, asset_data);
 }
 
