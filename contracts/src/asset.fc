@@ -1,0 +1,22 @@
+
+
+(slice, int, int, int, int, int) unpack_asset_data(slice asset_data) {
+    slice some_address = asset~load_msg_addr(); ;; ??? What is this?
+    int price = asset~load_uint(64);
+    int assetSRate = asset~load_uint(64);
+    int assetBRate = asset~load_uint(64);
+    int totalSupplyPrincipal = asset~load_uint(64);
+    int totalBorrowPrincipal = asset~load_uint(64);
+	
+	return (
+		some_address, price,
+		assetSRate, assetBRate,
+		totalSupplyPrincipal, totalBorrowPrincipal
+	);
+}
+
+int asset_data_last_accural(slice asset_data) {
+	asset_data~load_msg_addr();
+	asset_data~skip_bits(64 * 5);
+	return asset_data.preload_uint(64);
+}
