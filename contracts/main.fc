@@ -39,10 +39,11 @@
   send_raw_message(msg.end_cell(), 1); ;; pay transfer fees separately, revert on errors
 }
 
+() process_incoming_ton() impure {
+  ;; TODO
+}
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-  if (in_msg_body.slice_empty?()) { ;; ignore empty messages
-    return ();
-  }
 
   slice cs = in_msg_full.begin_parse();
   int flags = cs~load_uint(4);
@@ -57,11 +58,20 @@
   }
 
   (cell meta, cell userContractCode, cell assetsConfig, int ifActive, slice admin, cell assetData) = storage::load();
-	
+
+  if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
+    process_incoming_ton();
+    return ();
+  }
+
   int op = in_msg_body~load_uint(32);
+  if (op == 0) { ;; TON incoming (with comment)
+    process_incoming_ton();
+  }
+
   int query_id = in_msg_body~load_uint(64);
 
-  if (op == op::initMaster()) {
+  if (op == op::initMaster) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
     cell newAssetConfig = in_msg_body~load_ref();
@@ -70,43 +80,32 @@
     return();
   }
   
-  if (op == op::initUser()) {
+  if (op == op::initUser) {
     init_user(sender_address); 
     return();
   }
   
-  if (op == op::updatePrice()) {
+  if (op == op::updatePrice) {
     cell assetName = in_msg_body~load_msg_addr();
     var (assetConfig, is_asset_existing?) = assetsConfig.udict_get?(255, assetName);
     throw_unless(100, is_asset_existing?);
-    slice whiteListedOrale = assetsConfig~load_msg_addr();
-    var (wc, oracle_addr_hash) = parse_std_addr(whiteListedOrale);
+    slice whiteListedOracle = assetsConfig~load_msg_addr();
+    var (wc, oracle_addr_hash) = parse_std_addr(whiteListedOracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (assetData, _) = assetData.udict_get?(255, assetName);
+    var (assetData, _) = assetData.udict_get?(255, assetName); ;; ?????!! assetsData ??
     int newPrice = in_msg_body~load_uint(64);
 
-    assetData~load_uint(64);
-    int sRate = assetData~load_uint(64);
-    int bRate = assetData~load_uint(64);
-    int totalSupplyPrincipal = assetData~load_uint(64);
-    int totalBorrowPrincipal = assetData~load_uint(64);
-    int lastAccural = assetData~load_uint(64);
+    var (_, _, sRate, bRate, totalSupplyPrincipal, totalBorrowPrincipal, lastAccural) = unpack_asset_data(assetData);
 
-    cell updatedAsset = begin_cell()
-        .store_int(newPrice, 64)
-        .store_int(sRate, 64)
-        .store_int(bRate, 64)
-        .store_int(totalSupplyPrincipal, 64)
-        .store_int(totalBorrowPrincipal, 64)
-        .store_int(now(), 64) ;; todo need to ask if we need now of we can use old lastAccural
-      .end_cell();
+    cell updatedAsset = pack_asset_data(newPrice, sRate, bRate, totalSupplyPrincipal, totalBorrowPrincipal, now());
+    ;; todo need to ask if we need now of we can use old lastAccural
 
     assetsData~dict_set(255, assetName, updatedAsset);
-    storage::save(meta, userContractCode, assetsConfig, ifActive, admin, assetData);
+    storage::save(meta, userContractCode, assetsConfig, ifActive, admin, assetsData);
     return();
   }
   
-  if (op == op::updateConfig()) {
+  if (op == op::updateConfig) {
     ;;todo update not only asset config but config of entire market (isActive & meta too)
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
@@ -115,11 +114,11 @@
     return();
   }
   
-  if (op == op::withdraw()) {
+  if (op == op::withdraw) {
     ;; todo/anyone/to user
   }
   
-  if (op == op::transfer_notification()) {
+  if (op == op::transfer_notification) {
     int query_id = in_msg_body~load_uint(64); 
     int coins = in_msg_body~load_coins(); 
     int query_id = in_msg_body~load_uint(64); 
@@ -129,20 +128,20 @@
     int query_id_jetton = jetton_msg_body~load_uint(64); 
     int jetton_token_id = jetton_msg_body~load_uint(32); 
     
-    if (op_jetton == op::liquidate()) {
+    if (op_jetton == op::liquidate) {
       ;; todo/anyone/to user/jetton
     }
     
-    if (op_jetton == op::supply()) {
+    if (op_jetton == op::supply) {
       ;; todo/anyone/to user/jetton
     }
   }
   
-  if (op == op::wrap()) {
+  if (op == op::wrap) {
     ;; todo logic for wrapping tons 
   }
 
-  if (op == op::unwrap()) {
+  if (op == op::unwrap) {
     ;; todo logic for unwrapping tons
   }
 
