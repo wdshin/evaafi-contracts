@@ -75,3 +75,18 @@ repeat(degree - 1) {
 (int) math::log2(int x) asm "UBITSIZE DEC";
 
 (int) math::mod (int x, int y) asm "MOD";
+
+(int) binpow (int n, int e) {
+    if (e == 0) {
+        return 1;
+    }
+    if (e == 1) {
+        return n;
+    }
+    int p = binpow(n, e / 2);
+    p *= p;
+    if ((e % 2) == 1) {
+        p *= n;
+    }
+    return p;
+}

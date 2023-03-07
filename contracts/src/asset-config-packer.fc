@@ -1,0 +1,49 @@
+(slice, int, int, int, int, int, int, int, int, int, int) unpack_asset_config(slice asset_config) {
+	slice oracle = asset_config~load_msg_addr();
+	int decimals = asset_config~load_uint(8);
+	cell asset_config_params_packed = asset_config~load_ref();
+	slice asset_config_params = asset_config_params_packed.begin_parse();
+	int collateral_factor = asset_config_params~load_uint(16);
+	int liquidation_threshold = asset_config_params~load_uint(16);
+	int liquidation_penalty = asset_config_params~load_uint(16);
+	int base_borrow_rate = asset_config_params~load_uint(64);
+	int borrow_rate_slope_low = asset_config_params~load_uint(64);
+	int borrow_rate_slope_high = asset_config_params~load_uint(64);
+	int supply_rate_slope_low = asset_config_params~load_uint(64);
+	int supply_rate_slope_high = asset_config_params~load_uint(64);
+	int target_utilization = asset_config_params~load_uint(64);
+
+    return (
+		oracle, decimals,
+		collateral_factor, liquidation_threshold,
+		liquidation_penalty, base_borrow_rate,
+		borrow_rate_slope_low, borrow_rate_slope_high,
+		supply_rate_slope_low, supply_rate_slope_high,
+		target_utilization
+	);
+}
+
+cell pack_asset_config(
+		slice oracle, int decimals,
+		int collateral_factor,
+		int liquidation_threshold, int liquidation_penalty,
+		int base_borrow_rate, int borrow_rate_slope_low,
+		int borrow_rate_slope_high, int supply_rate_slope_low,
+		int supply_rate_slope_high, int target_utilization
+) {
+	return begin_cell()
+		.store_slice(oracle)
+		.store_uint(decimals, 8) 
+		.store_ref(begin_cell()
+			.store_uint(collateral_factor, 16) 
+			.store_uint(liquidation_threshold, 16) 
+			.store_uint(liquidation_penalty, 16)
+			.store_uint(base_borrow_rate, 64) 
+			.store_uint(borrow_rate_slope_low, 64) 
+			.store_uint(borrow_rate_slope_high, 64) 
+			.store_uint(supply_rate_slope_low, 64) 
+			.store_uint(supply_rate_slope_high, 64) 
+			.store_uint(target_utilization, 64)
+		.end_cell())
+	.end_cell();
+}

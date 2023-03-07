@@ -7,31 +7,31 @@ function presentValueCalc(uint64 index_, uint104 principalValue_) internal pure 
 
 
 
-function principalValueSupplyCalc(uint64 sRate_, uint104 presentValue_) internal pure returns (uint104) {
-    return uint104((uint(presentValue_) * BASE_INDEX_SCALE) / sRate_);
+function principalValueSupplyCalc(uint64 s_rate_, uint104 presentValue_) internal pure returns (uint104) {
+    return uint104((uint(presentValue_) * BASE_INDEX_SCALE) / s_rate_);
 }
 
 /**
     * @dev The present value projected backward by the borrow index (rounded up)
     */
-function principalValueBorrowCalc(uint64 bRate_, uint104 presentValue_) internal pure returns (uint104) {
-    return uint104((uint(presentValue_) * BASE_INDEX_SCALE + bRate_ - 1) / bRate_);
+function principalValueBorrowCalc(uint64 b_rate_, uint104 presentValue_) internal pure returns (uint104) {
+    return uint104((uint(presentValue_) * BASE_INDEX_SCALE + b_rate_ - 1) / b_rate_);
 }
 
 
-function presentValue(tuple (sRate, bRate),int104 principalValue_) internal view returns (int256) {
+function presentValue(tuple (s_rate, b_rate),int104 principalValue_) internal view returns (int256) {
     if (principalValue_ >= 0) {
-        return signed256(presentValueCalc(sRate, uint104(principalValue_)));
+        return signed256(presentValueCalc(s_rate, uint104(principalValue_)));
     } else {
-        return -signed256(presentValueCalc(bRate, uint104(-principalValue_)));
+        return -signed256(presentValueCalc(b_rate, uint104(-principalValue_)));
     }
 }
 
-function principalValue(tuple (sRate, bRate), int256 presentValue_) internal view returns (int104) {
+function principalValue(tuple (s_rate, b_rate), int256 presentValue_) internal view returns (int104) {
     if (presentValue_ >= 0) {
-        return signed104(principalValueSupplyCalc(sRate, uint256(presentValue_)));
+        return signed104(principalValueSupplyCalc(s_rate, uint256(presentValue_)));
     } else {
-        return -signed104(principalValueBorrowCalc(bRate, uint256(-presentValue_)));
+        return -signed104(principalValueBorrowCalc(b_rate, uint256(-presentValue_)));
     }
 }
 
@@ -68,13 +68,13 @@ function calcWithdrawPrincipals(int104 oldPrincipal, int104 newPrincipal) intern
 
 function getAssetRates(asset) {
     //все переменные участвующие в рассчете ставки берутся из ассет конфига для соответствующего ассета
-    uint totalSupply_ = presentValueCalc(asset_data.asset.sRate, asset_data.asset.total_supply_principal);
+    uint totalSupply_ = presentValueCalc(asset_data.asset.s_rate, asset_data.asset.total_supply_principal);
 
-    uint totalBorrow_ = presentValueCalc(asset_data.asset.bRate, asset_data.asset.totalBorrowPrincipal);
+    uint total_borrow_ = presentValueCalc(asset_data.asset.b_rate, asset_data.asset.total_borrow_principal);
     if (totalSupply_ == 0) {
         utilization =  0;
     } else {
-        utilization =  totalBorrow_ * FACTOR_SCALE / totalSupply_;
+        utilization =  total_borrow_ * FACTOR_SCALE / totalSupply_;
     }
     if (utilization <= targetUtilization) {
         //  interestRateSlopeLow * utilization
@@ -95,13 +95,13 @@ function getAssetRates(asset) {
 
 ////accruedRates
 function getUpdatedRates(address asset, uint timeElapsed) returns (uint64, uint64) {
-    //нужно получить по ключу ассета текущие sRate, bRate (в коде sRate_, bRate_)
+    //нужно получить по ключу ассета текущие s_rate, b_rate (в коде s_rate_, b_rate_)
     if (timeElapsed > 0) {
         (uint supplyRate, uint borrowRate) = getAssetRates(asset);
-        sRate_ += safe64(mulFactor(sRate_, supplyRate * timeElapsed)); // sRate_ * supplyRate * timeElapsed
-        bRate_ += safe64(mulFactor(bRate_, borrowRate * timeElapsed));
+        s_rate_ += safe64(mulFactor(s_rate_, supplyRate * timeElapsed)); // s_rate_ * supplyRate * timeElapsed
+        b_rate_ += safe64(mulFactor(b_rate_, borrowRate * timeElapsed));
     }
-    return (sRate_, bRate_);
+    return (s_rate_, b_rate_);
 }
 
 
@@ -110,9 +110,9 @@ function accrueInterest(address asset) internal {
     uint40 now_ = getNowInternal();
     uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
     if (timeElapsed > 0) {
-        (sRate, bRate) = getUpdatedRates(asset, timeElapsed);
+        (s_rate, b_rate) = getUpdatedRates(asset, timeElapsed);
         lastAccrualTime = now_;
-    //нужно сохранить в сторадж lastAccrualTime, sRate, bRate в asset_data_
+    //нужно сохранить в сторадж lastAccrualTime, s_rate, b_rate в asset_data_
     }
 }
 
@@ -122,9 +122,9 @@ function isLiquidatable(assetConfig_, asset_data_) override public view returns 
     borrow_limit = 0 
     for asset in assets:
         if asset.principal<0: 
-            borrow_amount += presentValueCalc(asset_data_.bRate, -user.asset.principal*asset_data_.price
+            borrow_amount += presentValueCalc(asset_data_.b_rate, -user.asset.principal*asset_data_.price
         else if asset.principal>0:
-            borrow_limit += presentValueCalc(asset_data_.sRate, user.asset.principal * asset_data_.price * assetConfig_.liquidationThreshold
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * assetConfig_.liquidationThreshold
     return borrow_limit < borrow_amount
 }
 
@@ -133,7 +133,7 @@ function getAvailableToBorrow(assetConfig_, asset_data_) {
     borrow_limit = 0 
     for asset in assets:
         if asset.principal>0: 
-            borrow_limit += presentValueCalc(asset_data_.sRate, user.asset.principal * asset_data_.price * assetConfig_.collateralFactor
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * assetConfig_.collateralFactor
     return borrow_limit 
 }
 
@@ -143,11 +143,18 @@ function isBorrowCollateralized(assetConfig_, asset_data_, user_) returns (bool)
     borrow_limit = 0 
     for asset in assets:
         if asset.principal<0: 
-            borrow_amount += presentValueCalc(asset_data_.bRate, -user_.asset.principal)*asset_data_.price
+            borrow_amount += presentValueCalc(asset_data_.b_rate, -user_.asset.principal)*asset_data_.price
         else if asset.principal>0:
-            borrow_limit += presentValueCalc(asset_data_.sRate, user_.asset.principal) * asset_data_.price * assetConfig_.collateralFactor
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user_.asset.principal) * asset_data_.price * assetConfig_.collateralFactor
     return borrow_limit < borrow_amount
 }
+
+
+// ---------------------------------------------------------------- code below needed to be implemented in utils.fc
+// ---------------------------------------------------------------- code below needed to be implemented in utils.fc
+// ---------------------------------------------------------------- code below needed to be implemented in utils.fc
+// ---------------------------------------------------------------- code below needed to be implemented in utils.fc
+
 
 function supply()  {
     //user, amount, asset берутся из транзакции
@@ -155,13 +162,13 @@ function supply()  {
         accrueInterest(asset);
 
         int104 dstPrincipal = User.asset.principal;
-        int256 dstBalance = presentValue((sRate,bRate), dstPrincipal) + signed256(amount);
-        int104 dstPrincipalNew = principalValue((sRate,bRate), dstBalance);
+        int256 dstBalance = presentValue((s_rate,b_rate), dstPrincipal) + signed256(amount);
+        int104 dstPrincipalNew = principalValue((s_rate,b_rate), dstBalance);
 
         (uint104 repayAmount, uint104 supplyAmount) = calcSupplyPrincipals(dstPrincipal, dstPrincipalNew);
 
         asset_data.asset.total_supply_principal += supplyAmount;
-        asset_data.asset.totalBorrowPrincipal -= repayAmount;
+        asset_data.asset.total_borrow_principal -= repayAmount;
 
         user.asset.principal = dstPrincipalNew;
 
@@ -175,8 +182,8 @@ function withdraw(address src, uint256 amount, address asset)  {
         accrueInterest(asset);
 
         int104 srcPrincipal = User.asset.principal;
-        int256 srcBalance = presentValue((sRate,bRate), srcPrincipal) - signed256(amount);
-        int104 srcPrincipalNew = principalValue((sRate,bRate), srcBalance);
+        int256 srcBalance = presentValue((s_rate,b_rate), srcPrincipal) - signed256(amount);
+        int104 srcPrincipalNew = principalValue((s_rate,b_rate), srcBalance);
 
         if (srcBalance < 0) {
             if (!isBorrowCollateralized(assetConfig, asset_data)) revert NotCollateralized();
@@ -185,7 +192,7 @@ function withdraw(address src, uint256 amount, address asset)  {
         (uint104 withdrawAmount, uint104 borrowAmount) = calcWithdrawPrincipals(srcPrincipal, srcPrincipalNew);
 
         asset_data.asset.total_supply_principal -= withdrawAmount;
-        asset_data.asset.totalBorrowPrincipal += borrowAmount;
+        asset_data.asset.total_borrow_principal += borrowAmount;
 
         user.asset.principal = dstPrincipalNew;
 
@@ -204,9 +211,9 @@ function withdrawReserves(address asset, address to, uint amount) override exter
 
 function getAccountAssetBalance(asset, ratesTuple) {
     if (user.userPrincipal.asset >= 0) {
-        return signed256(presentValueCalc(ratesTuple.sRate, uint104(user.userPrincipal.asset)));
+        return signed256(presentValueCalc(ratesTuple.s_rate, uint104(user.userPrincipal.asset)));
     } else {
-        return -signed256(presentValueCalc(ratesTuple.bRate, uint104(-user.userPrincipal.asset)));
+        return -signed256(presentValueCalc(ratesTuple.b_rate, uint104(-user.userPrincipal.asset)));
     }
 }
 
@@ -214,10 +221,10 @@ function getAccountAssetBalance(asset, ratesTuple) {
 function getAssetTotals(address asset) {
     uint40 now_ = getNowInternal();
     uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
-    (sRate, bRate) = getUpdatedRates(asset, timeElapsed)
-    totalSupply = presentValueCalc(asset_data.Asset.sRate, asset_data.Asset.total_supply_principal)
-    totalBorrow = presentValueCalc(asset_data.Asset.bRate, asset_data.Asset.totalBorrowPrincipal)
-    return (totalSupply, totalBorrow)
+    (s_rate, b_rate) = getUpdatedRates(asset, timeElapsed)
+    totalSupply = presentValueCalc(asset_data.Asset.s_rate, asset_data.Asset.total_supply_principal)
+    total_borrow = presentValueCalc(asset_data.Asset.b_rate, asset_data.Asset.total_borrow_principal)
+    return (totalSupply, total_borrow)
 }
 
 //децимал соответствует децималу коллатерала
@@ -235,11 +242,11 @@ function getCollateralQuote(address borrowToken, address collateralToken, uint a
 
 
 function getAssetReserves(asset) override public view returns (int) {
-    (uint64 sRate, uint64 bRate) = accruedInterestIndices(getNowInternal() - asset_data.asset.lastAccrualTime);
+    (uint64 s_rate, uint64 b_rate) = accruedInterestIndices(getNowInternal() - asset_data.asset.lastAccrualTime);
     uint balance = ERC20(baseToken).balanceOf(address(this));
-    uint totalSupply_ = presentValueSupply(sRate, asset_data.asset.total_supply_principal);
-    uint totalBorrow_ = - presentValueBorrow(bRate, asset_data.asset.totalBorrowPrincipal);
-    return signed256(balance) - signed256(totalSupply_) + signed256(totalBorrow_);
+    uint totalSupply_ = presentValueSupply(s_rate, asset_data.asset.total_supply_principal);
+    uint total_borrow_ = - presentValueBorrow(b_rate, asset_data.asset.total_borrow_principal);
+    return signed256(balance) - signed256(totalSupply_) + signed256(total_borrow_);
 }
 
 
@@ -253,24 +260,24 @@ function liquidate(borrower: address, collateralToken: address, minCollateralAmo
 
         collateralPrincipal = userData.collateralToken
 
-        collateralBalance = presentValueCalc((sRate,bRate), collateralPrincipal)
+        collateralBalance = presentValueCalc((s_rate,b_rate), collateralPrincipal)
 
         if (collateralAmount > collateralBalance) revert NotEnoughCollateral();
 
         newCollateralBalance = collateralBalance - collateralAmount
 
-        newCollateralPrincipal = principalValue((collateralToken.sRate,collateralToken.bRate), newCollateralBalance);
+        newCollateralPrincipal = principalValue((collateralToken.s_rate,collateralToken.b_rate), newCollateralBalance);
 
         collateralTokenLiquidationPrincipal = newCollateralPrincipal - collateralPrincipal
 
         
         debtTokenPrincipal = userData.transferredToken
 
-        debtTokenBalance = presentValue((transferredToken.sRate,transferredToken.bRate), userData.transferredToken)
+        debtTokenBalance = presentValue((transferredToken.s_rate,transferredToken.b_rate), userData.transferredToken)
 
         newDebtTokenBalance = debtTokenBalance + amountTransferred
 
-        newDebtTokenPrincipal = principalValue((sRate,bRate), newDebtTokenBalance);
+        newDebtTokenPrincipal = principalValue((s_rate,b_rate), newDebtTokenBalance);
 
         (uint104 repayAmount, uint104 supplyAmount) = calcSupplyPrincipals(debtTokenPrincipal, newDebtTokenPrincipal);
 
@@ -283,7 +290,7 @@ function liquidate(borrower: address, collateralToken: address, minCollateralAmo
 
 
         asset_data.transferredToken.total_supply_principal += supplyAmount;
-        asset_data.transferredToken.totalBorrowPrincipal -= repayAmount;
+        asset_data.transferredToken.total_borrow_principal -= repayAmount;
         asset_data.collateralToken.total_supply_principal -= collateralTokenLiquidationPrincipal;           
 
         ERC20(asset).transfer(caller, safe128(collateralAmount))

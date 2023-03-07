@@ -1,0 +1,6 @@
+(slice, int) unpack_user_asset_principal_item(slice user_asset_principal_item) {
+    return (
+		user_asset_principal_item~load_msg_addr(),
+		user_asset_principal_item~load_uint(64)
+	);
+}

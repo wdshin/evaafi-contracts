@@ -1,22 +1,183 @@
-;; Dont need this:
+(int) present_value_calc (int index, int principal_value) {
+  return principal_value * index / constants::base_index_scale;
+}
 
-;; (slice) getAssetByAddress (cell asset_data, slice assetAddress) {
-;;   int i = 0;
-;;   int lastId = dict_get_max(asset_data, 16);
-;;   while (i > lastId) {
-;;     slice item = asset_data~dict_get(16, i).begin_parse();
-;;     slice itemAddr = item.load_msg_addr();
+(int) principal_value_supply_calc (int s_rate, int present_value) {
+  return present_value * constants::base_index_scale / s_rate;
+}
 
-;;     var (wc0, itemAddrHash) = parse_std_addr(itemAddr);
-;;     var (wc1, assetAddrHash) = parse_std_addr(assetAddress);
-    
-;;     if (itemAddrHash == assetAddrHash) {
-;;       return item;
-;;     }
-;;     i += 1;
-;;   }
-;; }
+(int) principal_value_borrow_calc (int b_rate, int present_value) {
+  return (present_value * constants::base_index_scale + b_rate - 1) / b_rate;
+}
 
-;; (int) mulFactor (int A, int B) {
-;;   return (A * B);
-;; }
+(int) present_value(int s_rate, int b_rate, int principal_value) {
+  if (principal_value >= 0) {
+    return present_value_calc(s_rate, principal_value);
+  } else {
+    return - present_value_calc(b_rate, - principal_value);
+  }
+}
+
+(int) principal_value(int s_rate, int b_rate, int present_value) {
+  if (present_value >= 0) {
+    return principal_value_supply_calc(s_rate, present_value);
+  } else {
+    return - principal_value_borrow_calc(b_rate, - present_value);
+  }
+}
+
+(int, int) calc_supply_principals (int old_principal, int new_principal) {
+  if (new_principal < old_principal) {
+    return (0, 0);
+  }
+  if (new_principal <= 0) {
+    return (new_principal - old_principal, 0);
+  } else {
+    if (old_principal >= 0) {
+      return (0, new_principal - old_principal);
+    } else {
+      return (- old_principal, new_principal);
+    }
+  }
+}
+
+(int, int) calc_withdraw_principals (old_principal, new_principal) {
+  if (new_principal > old_principal){
+    return (0, 0);
+  }
+  if (new_principal >= 0){
+    return (old_principal - new_principal, 0);
+  } else {
+    if (old_principal <= 0) {
+      return (0, old_principal - new_principal);
+    } else {
+      return (old_principal, - new_principal);
+    }
+  }
+}
+
+(int, int) get_asset_rates (slice asset_address) {
+  var (_, _, _, _, _, asset_data) = storage::load();
+  var (_, asset_address_hash) = parse_std_addr(asset_address);
+  var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+  var (_, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+  int total_supply = present_value_calc(asset_s_rate, total_supply_principal);
+  int total_borrow = present_value_calc(asset_b_rate, total_borrow_principal);
+  int utilization = 0;
+  int supply_rate = 0;
+  int borrow_rate = 0;
+  if (total_supply == 0) {
+    utilization = 0;
+  } else {
+    utilization = total_borrow * constants::factor_scale() / total_supply;
+  }
+  if (utilization <= target_utilization) {
+    supply_rate = mul_factor(supply_per_second_interest_rate_slope_low, utilization);
+  } else {
+    supply_rate = mul_factor(supply_per_second_interest_rate_slope_low, target_utilization) + mul_factor(supply_per_second_interest_rate_slope_hight, (utilization - target_utilization));
+  }
+  if (utilization <= target_utilization){
+    borrow_rate = borrow_per_second_interest_rate_base + mul_factor(borrow_per_second_interest_rate_slope_low, utilization); 
+  } else {
+    borrow_rate = borrow_per_second_interest_rate_base + mul_factor(borrow_per_second_interest_rate_slope_low, target_utilization) + mul_factor(borrowPerSecondInterestRateSlopeHigh, (utilization - target_utilization));
+  }
+  return (supply_rate, borrow_rate);
+}
+
+(int, int) get_updated_rates (slice asset_address, int time_elapsed) {
+  if (time_elapsed > 0) {
+    (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+    var (_, asset_address_hash) = parse_std_addr(asset_address);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+    (int supply_rate, int borrow_rate) = get_asset_rates(asset_address);
+    s_rate += mul_factor(s_rate, supply_rate * time_elapsed); 
+    b_rate += mul_factor(b_rate, borrow_rate * time_elapsed);
+  }
+  return (s_rate, b_rate);
+}
+
+(int) accure_interest (slice asset_address) {
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  var (_, asset_address_hash) = parse_std_addr(asset_address);
+  var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+  var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+  int time_elapsed = now() - last_accural;
+  if (time_elapsed > 0) {
+    (int s_rate, int b_rate) = get_updated_rates(asset_address, time_elapsed);
+    cell updated_asset = pack_asset_data(price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
+    assets_data~dict_set(256, asset_address, updated_asset);
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, asset_data);
+  }
+}
+
+(int) is_liquidatable (cell asset_config, cell asset_data) {
+  int borrow_amount = 0;
+  int borrow_limit = 0;
+  (slice master, slice user, cell user_principals) = storage::load();
+  (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_min(256);
+  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  while (flag) {
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_next?(256, key);
+    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    var (_, asset_address_hash) = parse_std_addr(asset_address);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+    var (asset_config_item, _) = asset_config.udict_get?(256, asset_address_hash);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+    (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config_item);
+    if (asset_value_principal < 0) {
+      borrow_amount += present_value_calc(asset_b_rate, - asset_value_principal * price);
+    } else {
+      if (asset_value_principal > 0) {
+        borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * liquidation_threshold);
+      }
+    }
+  }
+  return (borrow_limit < borrow_amount);
+}
+
+(int) get_avaliable_to_borrow(cell asset_config, cell asset_data) {
+  int borrow_limit = 0;
+  int borrow_amount = 0;
+  (slice master, slice user, cell user_principals) = storage::load();
+  (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_min(256);
+  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  while (flag) {
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_next?(256, key);
+    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    var (_, asset_address_hash) = parse_std_addr(asset_address);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+    var (asset_config_item, _) = asset_config.udict_get?(256, asset_address_hash);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+    (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config_item);
+    if (asset_value_principal > 0) {
+      borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
+    }
+  }
+  return borrow_limit;
+}
+
+(int) is_borrow_collateralized (cell asset_config, cell asset_data) {
+  int borrow_amount = 0;
+  int borrow_limit = 0;
+  (slice master, slice user, cell user_principals) = storage::load();
+  (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_min(256);
+  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  while (flag) {
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals~udict_get_next?(256, key);
+    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    var (_, asset_address_hash) = parse_std_addr(asset_address);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+    var (asset_config_item, _) = asset_config.udict_get?(256, asset_address_hash);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+    (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config_item);
+    if (asset_value_principal < 0) {
+      borrow_amount += present_value_calc(asset_b_rate, - user_assets.at(i) * price);
+    } else {
+      if (asset_value_principal > 0) {
+        borrow_limit += present_value_calc(asset_s_rate, user_assets.at(i) * price * collateral_factor);
+      }
+    }
+  }
+  return (borrow_limit < borrow_amount);
+}

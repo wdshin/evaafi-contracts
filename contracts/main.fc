@@ -3,9 +3,10 @@
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
 #include "imports/constants.fc";
-#include "src/main/get-methods.fc";
-#include "src/main/storage.fc";
-#include "src/logic.fc";
+#include "src/main-get-methods.fc";
+#include "src/main-storage.fc";
+#include "src/asset-config-packer.fc";
+#include "src/asset-data-packer.fc";
 #include "src/utils.fc";
 
 (cell) calculate_user_init_state(slice sender_address) {
@@ -50,10 +51,7 @@
   slice sender_address = cs~load_msg_addr();
   var (wc, addr_hash) = parse_std_addr(sender_address);
 
-  if (flags & 1) {
-    ;; TODO: Finish logic of on bounce
-    ;; on_bounce(in_msg_body, msg_value);
-    ;; in theory "throw(0xffff)" will be enougth
+  if (flags & 1) { ;; note: do we need it?
 		throw(0xffff); 
   }
 
@@ -86,21 +84,22 @@
   }
   
   if (op == op::update_price) {
-    cell asset_name = in_msg_body~load_msg_addr();
-    var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_name);
+    cell asset_address = in_msg_body~load_msg_addr();
+    var (_, asset_address_hash) = parse_std_addr(asset_address);
+    var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_address_hash);
     throw_unless(100, is_asset_existing?);
     slice wl_oracle = asset_config_item~load_msg_addr();
     var (wc, oracle_addr_hash) = parse_std_addr(wl_oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (asset_data_item, _) = asset_data.udict_get?(256, asset_name); ;; ?????!! assets_data ??  / fixed
-    int newPrice = in_msg_body~load_uint(64);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash); ;; ?????!! assets_data ??  / fixed
+    int new_price = in_msg_body~load_uint(64);
 
-    var (_, _, sRate, bRate, total_supply_principal, totalBorrowPrincipal, lastAccural) = unpack_asset_data(asset_data_item);
+    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
 
-    cell updatedAsset = pack_asset_data(newPrice, sRate, bRate, total_supply_principal, totalBorrowPrincipal, now());
-    ;; todo need to ask if we need now of we can use old lastAccural
+    cell updated_asset = pack_asset_data(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
+    ;; todo need to ask if we need now of we can use old last_accural
 
-    assets_data~dict_set(256, asset_name, updatedAsset);
+    assets_data~dict_set(256, asset_address, updated_asset);
     storage::save(meta, user_contract_code, assets_config, if_active, admin, assets_data);
     return();
   }
@@ -138,19 +137,5 @@
 
     ;; todo bounce user jetton if no op codes / maybe liquidate will be not in transfer_notification
   }
-
-  ;; todo recive native ton ;; without wraps / unwraps
-
-  if (op == op::wrap()) {
-    ;; todo logic for wrapping tons 
-  }
-
-  if (op == op::unwrap) {
-    ;; todo logic for unwrapping tons
-  }
-
   throw(0xffff); 
 }
-
-;; todo send to treasure and send from treasure (to cammunicating with jettons) logic or smth
-;; todo ton to wTON wrapper

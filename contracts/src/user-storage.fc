@@ -1,3 +1,10 @@
+{-
+  user_principals = {
+    slice address,
+    int 64 value
+  }
+-}
+
 () storage::save (slice master_address, slice user_address, cell user_principals) impure {
   cell data = begin_cell()
     .store_slice(master_address) ;; master_address

@@ -1,11 +1,10 @@
 const int op::transfer_notification = 0x7362d09c;
-;; todo
-const int op::init_master =  ;
-const int op::init_user = ;
-const int op::update_price = ;
-const int op::update_config = ;
-const int op::supply = ;
-const int op::withdrawal = ;
-const int op::liquidate = ;
-const int op::wrap = ;
-const int op::unwrap = ;
+
+;; todo change to best-practice opcodes generated from tlb schema
+const int op::init_master = 1;
+const int op::init_user = 2;
+const int op::update_price = 3;
+const int op::update_config = 4;
+const int op::supply = 5;
+const int op::withdrawal = 6;
+const int op::liquidate = 7;

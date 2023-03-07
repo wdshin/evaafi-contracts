@@ -1,6 +1,6 @@
 import * as main from "../contracts/main";
 import { Address, toNano, TupleSlice, WalletContract } from "ton";
-import { sendInternalMessageWithWallet } from "../test/helpers";
+import { sendInternalMessageWithWallet } from "../test/utils";
 
 // return the init Cell of the contract storage (according to load_data() contract method)
 export function initData() {

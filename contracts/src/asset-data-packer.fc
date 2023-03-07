@@ -1,0 +1,36 @@
+cell pack_asset_data(
+	int price, int s_rate, int b_rate,
+	int total_supply_principal, int total_borrow_principal,
+	int last_accural
+) {
+	return begin_cell()
+		.store_int(price, 64)
+		.store_int(s_rate, 64)
+		.store_int(b_rate, 64)
+		.store_int(total_supply_principal, 64)
+		.store_int(total_borrow_principal, 64)
+		.store_int(last_accural, 64)
+		.end_cell();
+}
+
+(int, int, int, int, int, int) unpack_asset_data(slice asset_data) {
+    int price = asset_data~load_uint(64);
+    int asset_s_rate = asset_data~load_uint(64);
+    int asset_b_rate = asset_data~load_uint(64);
+    int total_supply_principal = asset_data~load_uint(64);
+    int total_borrow_principal = asset_data~load_uint(64);
+	int last_accural = asset_data~load_uint(64);
+	
+	return (
+		price, asset_s_rate,
+		asset_b_rate, total_supply_principal,
+		total_borrow_principal, last_accural
+	);
+}
+
+int asset_data_last_accural(slice asset_data) {
+	asset_data~load_msg_addr();
+	asset_data~skip_bits(64 * 5);
+	return asset_data.preload_uint(64);
+}
+

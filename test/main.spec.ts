@@ -1,21 +1,19 @@
 import { beginDict, Cell, toNano, beginCell } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { internalMessage, randomAddress } from "./helpers";
+import { internalMessage, randomAddress } from "./utils";
 
 import { hex } from "../build/main.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 
 const op = { // todo
-  transfer_notification = 0x7362d09c,
-  init_master: ,
-  init_user: ,
-  update_price: ,
-  update_config: ,
-  supply: ,
-  withdrawal: ,
-  liquidate: ,
-  wrap: ,
-  unwrap: ,
+  transfer_notification: 0x7362d09c,
+  init_master: 1,
+  init_user: 2,
+  update_price: 3,
+  update_config: 4,
+  supply: 5,
+  withdrawal: 6,
+  liquidate: 7,
 }
 
 describe("evaa master sc tests", () => {
@@ -224,7 +222,7 @@ describe("evaa user sc tests", () => {
         value: toNano(0),
         from: randomAddress('master'),
         body: beginCell() //todo
-       .endCell(),
+          .endCell(),
       }) as any
     );
 
