@@ -117,35 +117,35 @@ function accrueInterest(address asset) internal {
 }
 
 // CALLABLE нужно проверить, что сумма доллоровой стоимости залогов пользователя умноженных на liquidationThreshold меньше чем сумма займа
-function isLiquidatable(assetConfig_, asset_data_) override public view returns (bool) {
+function isLiquidatable(asset_config_, asset_data_) override public view returns (bool) {
     borrow_amount = 0
     borrow_limit = 0 
     for asset in assets:
         if asset.principal<0: 
             borrow_amount += presentValueCalc(asset_data_.b_rate, -user.asset.principal*asset_data_.price
         else if asset.principal>0:
-            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * assetConfig_.liquidationThreshold
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * asset_config_.liquidationThreshold
     return borrow_limit < borrow_amount
 }
 
 
-function getAvailableToBorrow(assetConfig_, asset_data_) {
+function getAvailableToBorrow(asset_config_, asset_data_) {
     borrow_limit = 0 
     for asset in assets:
         if asset.principal>0: 
-            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * assetConfig_.collateralFactor
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user.asset.principal * asset_data_.price * asset_config_.collateralFactor
     return borrow_limit 
 }
 
 
-function isBorrowCollateralized(assetConfig_, asset_data_, user_) returns (bool) {
+function isBorrowCollateralized(asset_config_, asset_data_, user_) returns (bool) {
     borrow_amount = 0
     borrow_limit = 0 
     for asset in assets:
         if asset.principal<0: 
             borrow_amount += presentValueCalc(asset_data_.b_rate, -user_.asset.principal)*asset_data_.price
         else if asset.principal>0:
-            borrow_limit += presentValueCalc(asset_data_.s_rate, user_.asset.principal) * asset_data_.price * assetConfig_.collateralFactor
+            borrow_limit += presentValueCalc(asset_data_.s_rate, user_.asset.principal) * asset_data_.price * asset_config_.collateralFactor
     return borrow_limit < borrow_amount
 }
 
@@ -186,7 +186,7 @@ function withdraw(address src, uint256 amount, address asset)  {
         int104 srcPrincipalNew = principalValue((s_rate,b_rate), srcBalance);
 
         if (srcBalance < 0) {
-            if (!isBorrowCollateralized(assetConfig, asset_data)) revert NotCollateralized();
+            if (!isBorrowCollateralized(asset_config, asset_data)) revert NotCollateralized();
         }
 
         (uint104 withdrawAmount, uint104 borrowAmount) = calcWithdrawPrincipals(srcPrincipal, srcPrincipalNew);
@@ -253,7 +253,7 @@ function getAssetReserves(asset) override public view returns (int) {
 function liquidate(borrower: address, collateralToken: address, minCollateralAmount: uint64) override external {
     if isActive:
         accrueInterest(asset);
-        if (!isLiquidatable(assetConfig, asset_data)) revert NotLiquidable();
+        if (!isLiquidatable(asset_config, asset_data)) revert NotLiquidable();
 
         collateralAmount = getCollateralQuote(transferredToken, collateralToken, amountTransferred);
         if (collateralAmount < minCollateralAmount) revert TooMuchSlippage();

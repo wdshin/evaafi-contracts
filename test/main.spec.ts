@@ -1,7 +1,7 @@
 import { beginDict, Cell, toNano, beginCell } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import { internalMessage, randomAddress } from "./utils";
-
+import BN from 'bn.js';
 import { hex } from "../build/main.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 
@@ -39,12 +39,12 @@ describe("evaa master sc tests", () => {
     );
 
     const asset_data = beginDict(256);
-    const assetConfig = beginDict(256);
+    const asset_config = beginDict(256);
 
     const tonDataCell = beginCell()
       .storeUint(2000000000, 64)
-      .storeUint(1000454300 * 1000000000, 64)
-      .storeUint(1000678000 * 1000000000, 64)
+      .storeUint(new BN("DE253E29D831800", 'hex'), 64)
+      .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
       .storeUint(40000000000, 64)
       .storeUint(35000000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
@@ -52,15 +52,15 @@ describe("evaa master sc tests", () => {
 
     const usdtDataCell = beginCell()
       .storeUint(1000000000, 64)
-      .storeUint(1000134550 * 1000000000, 64)
-      .storeUint(1000432100 * 1000000000, 64)
+      .storeUint(new BN("DE1311304585C00", 'hex'), 64)
+      .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
       .storeUint(50000000000, 64)
       .storeUint(40000000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
       .endCell()
 
-    asset_data.storeCell(randomAddress('ton').toBuffer(), tonDataCell)
-    asset_data.storeCell(randomAddress('usdt').toBuffer(), usdtDataCell)
+    asset_data.storeCell(randomAddress('ton').hash, tonDataCell)
+    asset_data.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -74,7 +74,7 @@ describe("evaa master sc tests", () => {
         .storeUint(187500000000, 64)
         .storeUint(10000000000, 64)
         .storeUint(100000000000, 64)
-        .storeUint(800000000000 * 1000000, 64) // todo move to BN
+        .storeUint(new BN("B1A2BC2EC500000", 'hex'), 64) // todo move to BN
         .endCell())
       .endCell()
 
@@ -90,12 +90,12 @@ describe("evaa master sc tests", () => {
         .storeUint(243750000000, 64)
         .storeUint(13000000000, 64)
         .storeUint(130000000000, 64)
-        .storeUint(900000000000 * 1000000, 64)
+        .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
         .endCell())
       .endCell()
 
-    assetConfig.storeCell(randomAddress('ton').toBuffer(), tonConfigCell)
-    assetConfig.storeCell(randomAddress('usdt').toBuffer(), usdtConfigCell)
+    asset_config.storeCell(randomAddress('ton').hash, tonConfigCell)
+    asset_config.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
     const init_master = await contract.sendInternalMessage(
       internalMessage({
@@ -104,7 +104,7 @@ describe("evaa master sc tests", () => {
         body: beginCell()
           .storeUint(op.init_master, 32)
           .storeUint(0, 64)
-          .storeRef(assetConfig.endCell())
+          .storeRef(asset_config.endCell())
           .storeRef(asset_data.endCell())
           .endCell(),
       }) as any
@@ -126,6 +126,7 @@ describe("evaa master sc tests", () => {
       }) as any
     );
 
+    console.log(tx.type);
     console.log(tx.debugLogs);
     console.log(tx.gas_consumed);
   });
@@ -138,16 +139,19 @@ describe("evaa master sc tests", () => {
         body: beginCell()
           .storeUint(op.update_price, 32)
           .storeUint(0, 64)
+          .storeAddress(randomAddress('ton')) // new price
           .storeUint(100, 64) // new price
           .endCell(),
       }) as any
     );
+    console.log(tx.type);
+    console.log(tx.exit_code);
     console.log(tx.debugLogs);
     console.log(tx.gas_consumed);
   });
 
   it("update master config", async () => {
-    const assetConfig = beginDict(256);
+    const asset_config = beginDict(256);
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -161,7 +165,7 @@ describe("evaa master sc tests", () => {
         .storeUint(187500000000, 64)
         .storeUint(10000000000, 64)
         .storeUint(100000000000, 64)
-        .storeUint(800000000000 * 1000000, 64)
+        .storeUint(new BN("B1A2BC2EC500000", 'hex'), 64) // todo move to BN
         .endCell())
       .endCell()
 
@@ -177,13 +181,12 @@ describe("evaa master sc tests", () => {
         .storeUint(243750000000, 64)
         .storeUint(13000000000, 64)
         .storeUint(130000000000, 64)
-        .storeUint(900000000000 * 1000000, 64)
+        .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
         .endCell())
       .endCell()
 
-
-    assetConfig.storeCell(randomAddress('ton').toBuffer(), tonConfigCell)
-    assetConfig.storeCell(randomAddress('usdt').toBuffer(), usdtConfigCell)
+    asset_config.storeCell(randomAddress('ton').hash, tonConfigCell)
+    asset_config.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
     const tx = await contract.sendInternalMessage(
       internalMessage({
@@ -192,11 +195,12 @@ describe("evaa master sc tests", () => {
         body: beginCell()
           .storeUint(op.update_config, 32)
           .storeUint(0, 64)
-          .storeRef(assetConfig.endCell())
+          .storeRef(asset_config.endCell())
           .endCell(),
       }) as any
     );
 
+    console.log(tx.type);
     console.log(tx.debugLogs);
     console.log(tx.gas_consumed);
   });
