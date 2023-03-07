@@ -8,6 +8,7 @@
 #include "src/asset-config-packer.fc";
 #include "src/asset-data-packer.fc";
 #include "src/utils.fc";
+#include "src/master-utils.fc";
 
 (cell) calculate_user_init_state(slice sender_address) {
   return begin_cell()
@@ -19,7 +20,7 @@
 
 (slice) calculate_user_address (cell state_init) {
   return begin_cell().store_uint(4, 3)
-    .store_int(workchain(), 8)
+    .store_int(constants::workchain, 8)
     .store_uint(cell_hash(state_init), 256)
     .end_cell()
     .begin_parse();
@@ -32,7 +33,7 @@
   var msg = begin_cell()
               .store_uint(0x18, 6)
               .store_slice(to_wallet_address)
-              .store_coins(start_balance)
+              .store_coins(0) ;; start_balance
               .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
               .store_ref(state_init)
               .store_ref(begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
@@ -84,7 +85,7 @@
   }
   
   if (op == op::update_price) {
-    cell asset_address = in_msg_body~load_msg_addr();
+    slice asset_address = in_msg_body~load_msg_addr();
     var (_, asset_address_hash) = parse_std_addr(asset_address);
     var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_address_hash);
     throw_unless(100, is_asset_existing?);
@@ -97,10 +98,8 @@
     var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
 
     cell updated_asset = pack_asset_data(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
-    ;; todo need to ask if we need now of we can use old last_accural
-
-    assets_data~dict_set(256, asset_address, updated_asset);
-    storage::save(meta, user_contract_code, assets_config, if_active, admin, assets_data);
+    asset_data~dict_set(256, asset_address, updated_asset.begin_parse());
+    storage::save(meta, user_contract_code, assets_config, if_active, admin, asset_data);
     return();
   }
   
@@ -113,7 +112,7 @@
     return();
   }
   
-  if (op == op::withdraw) {
+  if (op == op::withdrawal) {
     ;; todo/anyone/to user
   }
   
@@ -121,11 +120,12 @@
     int query_id = in_msg_body~load_uint(64); 
     int coins = in_msg_body~load_coins(); 
     int query_id = in_msg_body~load_uint(64); 
-    int from_address = in_msg_body~load_msg_addr(); 
-    int jetton_msg_body = in_msg_body~load_msg_addr(); ;; check how we get body here 
-    int op_jetton = jetton_msg_body~load_uint(32); 
+    slice from_address = in_msg_body~load_msg_addr(); 
+    cell jetton_msg_body_unpacked = in_msg_body~load_ref(); ;; check how we get body here 
+    slice jetton_msg_body = jetton_msg_body_unpacked.begin_parse();
+    int op_jetton = jetton_msg_body~load_uint(32); ;; todo 
     int query_id_jetton = jetton_msg_body~load_uint(64); 
-    int jetton_token_id = jetton_msg_body~load_uint(32); 
+    ;; int jetton_token_id = jetton_msg_body~load_uint(32); 
     
     if (op_jetton == op::liquidate) {
       ;; todo/anyone/to user/jetton

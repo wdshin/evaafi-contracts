@@ -9,6 +9,7 @@
 #include "src/asset-data-packer.fc";
 #include "src/user-principals-packer.fc";
 #include "src/utils.fc";
+#include "src/user-utils.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   if (in_msg_body.slice_empty?()) { ;; ignore empty messages
@@ -32,7 +33,7 @@
   int op = in_msg_body~load_uint(32);
   int query_id = in_msg_body~load_uint(64);
 
-  if (op == op::withdraw) {
+  if (op == op::withdrawal) {
     ;; todo/from master
   }
    
