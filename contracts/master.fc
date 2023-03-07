@@ -3,8 +3,8 @@
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
 #include "imports/constants.fc";
-#include "src/main-get-methods.fc";
-#include "src/main-storage.fc";
+#include "src/master-get-methods.fc";
+#include "src/master-storage.fc";
 #include "src/asset-config-packer.fc";
 #include "src/asset-data-packer.fc";
 #include "src/utils.fc";

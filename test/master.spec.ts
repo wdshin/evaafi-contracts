@@ -2,7 +2,7 @@ import { beginDict, Cell, toNano, beginCell } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import { internalMessage, randomAddress } from "./utils";
 import BN from 'bn.js';
-import { hex } from "../build/main.compiled.json";
+import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 
 const op = { // todo
@@ -114,6 +114,16 @@ describe("evaa master sc tests", () => {
     console.log(init_master.gas_consumed);
   });
 
+  it("master run get method", async () => {
+    const tx = await contract.invokeGetMethod('test', []);
+
+    console.log(tx.result[0]);
+    console.log(tx.type);
+    console.log(tx.exit_code);
+    console.log(tx.debugLogs);
+    console.log(tx.gas_consumed);
+  });
+
   it("init user", async () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
@@ -212,9 +222,25 @@ describe("evaa user sc tests", () => {
   let contract: SmartContract;
 
   beforeEach(async () => {
+    const user_principals = beginDict(256);
+
+    const usdtPositionPrincipal = beginCell()
+      .storeUint(0, 64)
+      .endCell()
+
+    const tonPositionPrincipal = beginCell()
+      .storeUint(1, 64)
+      .endCell()
+
+    user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
+    user_principals.storeCell(randomAddress('usdt').hash, tonPositionPrincipal)
+
     contract = await SmartContract.fromCell(
-      Cell.fromBoc(hex)[0] as any, // code cell from build output
-      beginCell() //todo
+      Cell.fromBoc(userHex)[0] as any, // code cell from build output
+      beginCell()
+        .storeAddress(randomAddress('master'))
+        .storeAddress(randomAddress('user'))
+        .storeRef(user_principals.endCell())
         .endCell(),
       {
         debug: true,
@@ -234,18 +260,12 @@ describe("evaa user sc tests", () => {
     console.log(init_master.gas_consumed);
   });
 
-  it("init user", async () => {
-    const tx = await contract.sendInternalMessage(
-      internalMessage({
-        value: toNano(0),
-        from: randomAddress('admin'),
-        body: beginCell()
-          .storeUint(op.init_user, 32)
-          .storeUint(0, 64)
-          .endCell(),
-      }) as any
-    );
+  it("user run get method", async () => {
+    const tx = await contract.invokeGetMethod('test', []);
 
+    console.log(tx.result[0]);
+    console.log(tx.type);
+    console.log(tx.exit_code);
     console.log(tx.debugLogs);
     console.log(tx.gas_consumed);
   });
