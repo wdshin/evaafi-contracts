@@ -33,7 +33,7 @@
   int op = in_msg_body~load_uint(32);
   int query_id = in_msg_body~load_uint(64);
 
-  if (op == op::withdrawal) {
+  if (op == op::withdraw) {
     ;; todo/from master
   }
    
