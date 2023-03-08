@@ -66,14 +66,13 @@
   return (borrow_limit < borrow_amount);
 }
 
-;; todo convert SOLIDITY to FUNC
-;;function getAccountAssetBalance(asset, ratesTuple) {
-;;    if (user.userPrincipal.asset >= 0) {
-;;        return signed256(presentValueCalc(ratesTuple.s_rate, uint104(user.userPrincipal.asset)));
-;;    } else {
-;;        return -signed256(presentValueCalc(ratesTuple.b_rate, uint104(-user.userPrincipal.asset)));
-;;    }
-;;}
-(int) get_account_asset_balance (slice asset_address, cell asset_data) {
-  return (1);
+(int) get_account_asset_balance (slice asset_address, tuple rates_tuple) {
+  (slice master, slice user, cell user_principals) = storage::load();
+  var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address);
+  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  if (asset_value_principal >= 0) {
+    return present_value_calc(rates_tuple.at(0), asset_value_principal);
+  } else {
+    return - present_value_calc(rates_tuple.at(1), - asset_value_principal);
+  }
 }

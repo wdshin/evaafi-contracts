@@ -41,13 +41,16 @@
 }
 
 ;; todo:
-() getAssetPrice () method_id {}
-;; todo:
-() getAccountAssetSupply () method_id {}
-;; todo:
-() getAccountAssetBorrow () method_id {}
-;; todo: combine all getmethods to one 
-() getUIVariables () method_id {}
+;;(int) getAssetPrice (slice asset) method_id {
+;;
+;;}
+;;
+;;;; todo:
+;;() getAccountAssetSupply () method_id {}
+;;;; todo:
+;;() getAccountAssetBorrow () method_id {}
+;;;; todo: combine all getmethods to one 
+;;() getUIVariables () method_id {}
 
 (int) test () method_id {
   return (1);
