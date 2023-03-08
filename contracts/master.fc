@@ -43,8 +43,11 @@
 }
 
 
-() process_incoming_asset(int asset_master_hash, slice owner_address, int amount) impure {
-  ;; TODO
+() process_incoming_asset(int asset_master_hash, slice owner_address, int amount, int s_rate, int b_rate) impure {
+  send_message_to_lending_wallet(
+    owner_address,
+    pack_supply_message(asset_master_hash, amount, s_rate, b_rate)
+  );
 }
 
 () process_incoming_ton(slice owner_address, int amount) impure {
