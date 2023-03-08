@@ -1,0 +1,10 @@
+;; Functions, which are common for TON in general
+
+(slice) calculate_address (cell state_init) {
+	return begin_cell()
+		.store_uint(4, 3)
+		.store_int(constants::workchain, 8)
+		.store_uint(cell_hash(state_init), 256)
+		.end_cell()
+		.begin_parse();
+}

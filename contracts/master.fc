@@ -17,18 +17,14 @@
     .store_ref(begin_cell().end_cell())
     .end_cell(); 
 }
+;; slice calculate_user_address(slice sender_address) {
+;;   return calculate_address(calculate_user_init_state(sender_address));
+;; }
 
-(slice) calculate_user_address (cell state_init) {
-  return begin_cell().store_uint(4, 3)
-    .store_int(constants::workchain, 8)
-    .store_uint(cell_hash(state_init), 256)
-    .end_cell()
-    .begin_parse();
-}
 
 () init_user (slice sender_address) impure {
   cell state_init = calculate_user_init_state(sender_address);
-  slice to_wallet_address = calculate_user_address(state_init);
+  slice to_wallet_address = calculate_address(state_init);
  
   var msg = begin_cell()
               .store_uint(0x18, 6)
