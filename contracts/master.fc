@@ -41,12 +41,16 @@
   send_raw_message(msg.end_cell(), 1); ;; pay transfer fees separately, revert on errors
 }
 
-() process_incoming_ton() impure {
+() process_incoming_asset(int asset_master_hash, slice owner_address, int amount) impure {
   ;; TODO
 }
 
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+() process_incoming_ton(slice owner_address, int amount) impure {
+  process_incoming_asset(constants::ton_dummy_hash, owner_address, amount);
+  ;; ??? Do we need to withhold some amount of TONs for network fees, etc.?
+}
 
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   slice cs = in_msg_full.begin_parse();
   int flags = cs~load_uint(4);
   slice sender_address = cs~load_msg_addr();
@@ -56,16 +60,19 @@
 		throw(0xffff); 
   }
 
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
-    process_incoming_ton();
+    process_incoming_ton(sender_address, my_balance);
+    ;; ??? save?
     return ();
   }
 
   int op = in_msg_body~load_uint(32);
   if (op == 0) { ;; TON incoming (with comment)
-    process_incoming_ton();
+    process_incoming_ton(sender_address, my_balance);
+    ;; ??? save?
+    return ();
   }
 
   int query_id = in_msg_body~load_uint(64);
@@ -75,7 +82,7 @@
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_assets_config = in_msg_body~load_ref();
     cell new_asset_data = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, new_asset_data);
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_data);
     return();
   }
   
@@ -98,7 +105,7 @@
     var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
     cell updated_asset = pack_asset_data(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
     asset_data~dict_set(256, asset_address, updated_asset.begin_parse());
-    storage::save(meta, user_contract_code, assets_config, if_active, admin, asset_data);
+    storage::save(meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_data);
     return();
   }
   
@@ -107,7 +114,7 @@
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_assets_config = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, asset_data);
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, asset_data);
     return();
   }
   
@@ -117,24 +124,27 @@
   
   if (op == op::transfer_notification) {
     int query_id = in_msg_body~load_uint(64); 
-    int coins = in_msg_body~load_coins(); 
-    int query_id = in_msg_body~load_uint(64); 
-    slice from_address = in_msg_body~load_msg_addr(); 
-    cell jetton_msg_body_unpacked = in_msg_body~load_ref(); ;; check how we get body here 
-    slice jetton_msg_body = jetton_msg_body_unpacked.begin_parse();
-    int op_jetton = jetton_msg_body~load_uint(32); ;; todo 
-    int query_id_jetton = jetton_msg_body~load_uint(64); 
-    ;; int jetton_token_id = jetton_msg_body~load_uint(32); 
+    int jetton_amount = in_msg_body~load_coins(); 
+    slice from_address = in_msg_body~load_msg_addr();
     
-    if (op_jetton == op::liquidate) {
-      ;; todo/anyone/to user/jetton
-    }
-    
-    if (op_jetton == op::supply) {
-      ;; todo/anyone/to user/jetton
-    }
+    ;; sender_address is the address of our jetton wallet
+    ;; (which received money and notified us)
+    ;; we need to find which jetton_type this wallet corresponds to
+    (slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
 
-    ;; todo bounce user jetton if no op codes / maybe liquidate will be not in transfer_notification
+    throw_unless(error::received_unsupported_jetton, f);
+    ;; Either this jetton type is not supported (whitelisted)
+    ;; (??? Should we refund them? Is it even technically possible?)
+    ;; or someone just tried to hack-send us a transfer_notification from a random address
+
+    process_incoming_asset(jetton_master_address, from_address, jetton_amount);
+    ;; ??? save?
+    return ();
   }
+  ;; ??? Where does liquidate go?
+  ;; if (op_jetton == op::liquidate) {
+  ;;   ;; todo/anyone/to user/jetton
+  ;; }
+
   throw(0xffff); 
 }
