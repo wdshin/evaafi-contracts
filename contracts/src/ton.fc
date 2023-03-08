@@ -8,7 +8,7 @@ int slice_data_equal? (slice a, slice b) asm "SDEQ";
 }
 
 (slice) calculate_address (cell state_init) {
-	int wc = get_current_workchain()
+	int wc = get_current_workchain();
 	return begin_cell()
 		.store_uint(4, 3)
 		.store_int(wc, 8)
