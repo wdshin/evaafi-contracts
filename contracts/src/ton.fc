@@ -1,5 +1,7 @@
 ;; Functions, which are common for TON in general
 
+int slice_data_equal? (slice a, slice b) asm "SDEQ";
+
 (int) get_current_workchain () {
 	var (wc, _) = parse_std_addr(my_address());
 	return (wc);
@@ -14,3 +16,8 @@
 		.end_cell()
 		.begin_parse();
 }
+
+
+;; () send_message(slice to_address, ) impure {
+
+;; }
