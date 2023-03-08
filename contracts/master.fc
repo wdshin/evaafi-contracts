@@ -22,20 +22,26 @@
 ;; }
 
 
-() init_user (slice sender_address) impure {
-  cell state_init = calculate_user_init_state(sender_address);
-  slice to_wallet_address = calculate_address(state_init);
+;; ??? Do we need send-mode as a separate parameter?
+() send_message_to_lending_wallet(slice owner_address, cell content) impure {
+  cell state_init = calculate_user_init_state(owner_address);
+  slice lending_wallet_address = calculate_address(state_init);
  
   var msg = begin_cell()
-              .store_uint(0x18, 6)
-              .store_slice(to_wallet_address)
-              .store_coins(0) ;; start_balance
-              .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
-              .store_ref(state_init)
-              .store_ref(begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
+            .store_uint(0x18, 6)
+            .store_slice(lending_wallet_address)
+            .store_coins(0) ;; start_balance
+            .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+            .store_ref(state_init)
+            .store_ref(content);
 
   send_raw_message(msg.end_cell(), 1); ;; pay transfer fees separately, revert on errors
 }
+
+() init_user (slice owner_address) impure {
+  send_message_to_lending_wallet(owner_address, begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
+}
+
 
 () process_incoming_asset(int asset_master_hash, slice owner_address, int amount) impure {
   ;; TODO
