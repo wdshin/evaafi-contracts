@@ -8,7 +8,6 @@
   int asset_value_principal = asset_value_principal_packed~load_uint(64);
   cell account_balances = new_dict();
   while (flag) {
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
     int asset_value_principal = asset_value_principal_packed~load_uint(64);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
     var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
@@ -17,6 +16,7 @@
     rates_tuple~tpush(asset_b_rate);
     ~dump(rates_tuple); ;; todo tests
     dict~udict_set(256, asset_address, get_account_asset_balance(asset_address, rates_tuple)); ;; todo tests
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return (dict);
 }

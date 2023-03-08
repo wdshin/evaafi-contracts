@@ -3,9 +3,7 @@
   int borrow_limit = 0;
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) = user_principals.udict_get_min?(256);
-  int asset_value_principal = asset_value_principal_packed~load_uint(64);
   while (flag) {
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
     int asset_value_principal = asset_value_principal_packed~load_uint(64);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
     var (asset_config_item, _) = asset_config.udict_get?(256, asset_address);
@@ -18,6 +16,7 @@
         borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * liquidation_threshold);
       }
     }
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return (borrow_limit < borrow_amount);
 }
@@ -27,9 +26,7 @@
   int borrow_amount = 0;
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
-  int asset_value_principal = asset_value_principal_packed~load_uint(64);
   while (flag) {
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
     int asset_value_principal = asset_value_principal_packed~load_uint(64);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
     var (asset_config_item, _) = asset_config.udict_get?(256, asset_address);
@@ -38,6 +35,7 @@
     if (asset_value_principal > 0) {
       borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
     }
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return borrow_limit;
 }
@@ -47,9 +45,7 @@
   int borrow_limit = 0;
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
-  int asset_value_principal = asset_value_principal_packed~load_uint(64);
   while (flag) {
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
     int asset_value_principal = asset_value_principal_packed~load_uint(64);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
     var (asset_config_item, _) = asset_config.udict_get?(256, asset_address);
@@ -62,6 +58,7 @@
         borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
       }
     }
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return (borrow_limit < borrow_amount);
 }

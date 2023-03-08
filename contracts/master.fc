@@ -3,12 +3,13 @@
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
 #include "imports/constants.fc";
-#include "src/master-get-methods.fc";
+#include "src/ton.fc";
 #include "src/master-storage.fc";
 #include "src/asset-config-packer.fc";
 #include "src/asset-data-packer.fc";
 #include "src/utils.fc";
 #include "src/master-utils.fc";
+#include "src/master-get-methods.fc";
 
 (cell) calculate_user_init_state(slice sender_address) {
   return begin_cell()
