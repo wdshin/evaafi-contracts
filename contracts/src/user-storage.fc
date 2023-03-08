@@ -1,8 +1,6 @@
 {-
-  user_principals = {
-    slice address,
-    int 64 value
-  }
+  user_principals = Dict
+    slice(256) jetton_address -> int(64) value
 -}
 
 () storage::save (slice master_address, slice user_address, cell user_principals) impure {
