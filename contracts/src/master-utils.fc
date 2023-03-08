@@ -1,5 +1,4 @@
-(int, int) get_asset_rates (slice asset_address) {
-  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+(int, int) get_asset_rates (cell asset_config_collection, cell asset_dynamics_collection, slice asset_address) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (_, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -28,12 +27,12 @@
   return (supply_rate, borrow_rate);
 }
 
-(int, int) get_updated_rates (cell asset_dynamics_collection, slice asset_address, int time_elapsed) {
+(int, int) get_updated_rates (cell asset_config_collection, cell asset_dynamics_collection, slice asset_address, int time_elapsed) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
   if (time_elapsed > 0) {
-    (int supply_rate, int borrow_rate) = get_asset_rates(asset_address);
+    (int supply_rate, int borrow_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address);
     int updated_s_rate = s_rate + mul_factor(s_rate, supply_rate * time_elapsed); 
     int updated_b_rate = b_rate + mul_factor(b_rate, borrow_rate * time_elapsed);
     return (updated_s_rate, updated_b_rate);
@@ -41,6 +40,7 @@
   return (s_rate, b_rate);
 }
 
+;; TODO: refactor
 (_) accure_interest (slice asset_address) {
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
@@ -55,8 +55,7 @@
   }
 }
 
-(int) get_collateral_quote (slice borrow_token, slice collateral_token, int amount) {
-  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+(int) get_collateral_quote (cell asset_config_collection, cell asset_dynamics_collection, slice borrow_token, slice collateral_token, int amount) {
   var (_, collateral_asset_address_hash) = parse_std_addr(collateral_token);
   var (collateral_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, collateral_asset_address_hash);
   var (collateral_price, _, _, _, _, _) = unpack_asset_dynamics(collateral_asset_dynamics);
@@ -71,8 +70,7 @@
   return (borrow_price * amount * collateral_decimals / asset_price_discounted / borrow_decimals);
 }
 
-(int) get_asset_reserves (slice asset_address) {
-  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+(int) get_asset_reserves (cell asset_dynamics_collection, slice asset_address) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -84,8 +82,7 @@
   return (protocol_balance_by_token - total_supply + total_borrow);
 }
 
-(int, int) get_asset_totals (slice asset_address) {
-  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+(int, int) get_asset_totals (cell asset_dynamics_collection, slice asset_address) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
