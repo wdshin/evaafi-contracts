@@ -1,5 +1,5 @@
 ;;todo protocol_balance_by_token
-() storage::save (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell assets_data) impure {
+() storage::save (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) impure {
   cell data = begin_cell()
     .store_ref(meta) ;; meta_data 
     .store_ref(user_contract_code) ;; user_contract_code
@@ -10,7 +10,7 @@
         .store_slice(admin) ;; admin_address
         .store_dict(wallet_to_master)
       .end_cell())
-    .store_ref(assets_data) ;;assets_data
+    .store_ref(asset_dynamics_collection) ;;asset_dynamics_collection
   .end_cell();
   set_data(data);
 }
