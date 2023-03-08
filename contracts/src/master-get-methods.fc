@@ -18,7 +18,7 @@ slice calc_address (int addr_hash) inline {
 }
 
 (cell) get_assets_rates () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_min?(256);
   cell rates = new_dict();
   while (flag) {
@@ -35,7 +35,7 @@ slice calc_address (int addr_hash) inline {
 }
 
 (cell) get_assets_reserves () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_min?(256);
   cell reserves = new_dict();
   while (flag) {
@@ -53,20 +53,20 @@ slice calc_address (int addr_hash) inline {
 }
 
 (cell) getAssetsData () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   return (asset_dynamics_collection);
 }
 
 (cell) getConfig () method_id {
   ;;todo addd wallet_to_master to all storage functions calls
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
     
   cell config = begin_cell()
     .store_ref(meta) ;; meta_data 
     .store_ref(user_contract_code) ;; user_contract_code
     .store_ref(
       begin_cell()
-        .store_ref(assets_config) ;; assets_config
+        .store_ref(asset_config_collection) ;; asset_config_collection
         .store_uint(if_active, 8) ;; if_active
         .store_slice(admin) ;; admin_address
         .store_dict(wallet_to_master) ;; ?

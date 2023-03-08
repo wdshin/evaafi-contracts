@@ -1,6 +1,7 @@
 (slice, int, int, int, int, int, int, int, int, int, int) unpack_asset_config(slice asset_config) {
 	slice oracle = asset_config~load_msg_addr();
 	int decimals = asset_config~load_uint(8);
+	
 	cell asset_config_params_packed = asset_config~load_ref();
 	slice asset_config_params = asset_config_params_packed.begin_parse();
 	int collateral_factor = asset_config_params~load_uint(16);

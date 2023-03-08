@@ -1,11 +1,11 @@
 ;;todo protocol_balance_by_token
-() storage::save (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell assets_data) impure {
+() storage::save (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell assets_data) impure {
   cell data = begin_cell()
     .store_ref(meta) ;; meta_data 
     .store_ref(user_contract_code) ;; user_contract_code
     .store_ref(
       begin_cell()
-        .store_ref(assets_config) ;; assets_config
+        .store_ref(asset_config_collection) ;; asset_config_collection
         .store_uint(if_active, 8) ;; if_active
         .store_slice(admin) ;; admin_address
         .store_dict(wallet_to_master)
@@ -22,12 +22,12 @@
 
   cell marketConfig = ds~load_ref();
   slice unpacked_marked_config = marketConfig.begin_parse();
-  cell assets_config = unpacked_marked_config~load_ref();
+  cell asset_config_collection = unpacked_marked_config~load_ref();
   int if_active = unpacked_marked_config~load_uint(8);
   slice admin = unpacked_marked_config~load_msg_addr();
   cell wallet_to_master = unpacked_marked_config~load_dict();
 
   cell asset_dynamics_collection = ds~load_ref();
-  return (meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_dynamics_collection);
+  return (meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
 }
 

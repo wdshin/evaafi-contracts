@@ -1,10 +1,10 @@
 (int, int) get_asset_rates (slice asset_address) {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (_, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
-  var (asset_config_item, _) = assets_config.udict_get?(256, asset_address_hash);
-  (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config_item);
+  var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address_hash);
+  (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config);
   int total_supply = present_value_calc(asset_s_rate, total_supply_principal);
   int total_borrow = present_value_calc(asset_b_rate, total_borrow_principal);
   int utilization = 0;
@@ -42,7 +42,7 @@
 }
 
 (_) accure_interest (slice asset_address) {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -51,28 +51,28 @@
     (int s_rate, int b_rate) = get_updated_rates(asset_dynamics_collection, asset_address, time_elapsed);
     cell updated_asset = pack_asset_dynamics(price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
     asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
-    storage::save(meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_dynamics_collection);
+    storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
   }
 }
 
 (int) get_collateral_quote (slice borrow_token, slice collateral_token, int amount) {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, collateral_asset_address_hash) = parse_std_addr(collateral_token);
   var (collateral_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, collateral_asset_address_hash);
   var (collateral_price, _, _, _, _, _) = unpack_asset_dynamics(collateral_asset_dynamics);
   var (_, borrow_asset_address_hash) = parse_std_addr(borrow_token);
-  var (borrow_asset_config_item, _) = assets_config.udict_get?(256, borrow_asset_address_hash);
-  (_, int borrow_decimals, _, _, int liquidation_penalty, _, _, _, _, _, _) = unpack_asset_config(borrow_asset_config_item);
+  var (borrow_asset_config, _) = asset_config_collection.udict_get?(256, borrow_asset_address_hash);
+  (_, int borrow_decimals, _, _, int liquidation_penalty, _, _, _, _, _, _) = unpack_asset_config(borrow_asset_config);
   int asset_price_discounted = mul_factor(collateral_price, constants::factor_scale - liquidation_penalty);
   var (borrow_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, borrow_asset_address_hash);
   var (borrow_price, _, _, _, _, _) = unpack_asset_dynamics(borrow_asset_dynamics);
-  var (collateral_asset_config_item, _) = assets_config.udict_get?(256, collateral_asset_address_hash);
-  (_, int collateral_decimals, _, _, _, _, _, _, _, _, _) = unpack_asset_config(collateral_asset_config_item);
+  var (collateral_asset_config, _) = asset_config_collection.udict_get?(256, collateral_asset_address_hash);
+  (_, int collateral_decimals, _, _, _, _, _, _, _, _, _) = unpack_asset_config(collateral_asset_config);
   return (borrow_price * amount * collateral_decimals / asset_price_discounted / borrow_decimals);
 }
 
 (int) get_asset_reserves (slice asset_address) {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -85,7 +85,7 @@
 }
 
 (int, int) get_asset_totals (slice asset_address) {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);

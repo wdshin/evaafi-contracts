@@ -186,7 +186,7 @@ function withdraw(address src, uint256 amount, address asset)  {
         int104 srcPrincipalNew = principalValue((s_rate,b_rate), srcBalance);
 
         if (srcBalance < 0) {
-            if (!isBorrowCollateralized(asset_config, asset_dynamics_collection)) revert NotCollateralized();
+            if (!isBorrowCollateralized(asset_config_collection, asset_dynamics_collection)) revert NotCollateralized();
         }
 
         (uint104 withdrawAmount, uint104 borrowAmount) = calcWithdrawPrincipals(srcPrincipal, srcPrincipalNew);
@@ -254,7 +254,7 @@ function getAssetReserves(asset) override public view returns (int) {
 function liquidate(borrower: address, collateralToken: address, minCollateralAmount: uint64) override external {
     if isActive:
         accrueInterest(asset);
-        if (!isLiquidatable(asset_config, asset_dynamics_collection)) revert NotLiquidable();
+        if (!isLiquidatable(asset_config_collection, asset_dynamics_collection)) revert NotLiquidable();
 
         collateralAmount = getCollateralQuote(transferredToken, collateralToken, amountTransferred);
         if (collateralAmount < minCollateralAmount) revert TooMuchSlippage();
