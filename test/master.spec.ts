@@ -38,7 +38,7 @@ describe("evaa master sc tests", () => {
       }
     );
 
-    const asset_data = beginDict(256);
+    const asset_dynamics_collection = beginDict(256);
     const asset_config = beginDict(256);
 
     const tonDataCell = beginCell()
@@ -59,8 +59,8 @@ describe("evaa master sc tests", () => {
       .storeUint((new Date()).getTime() * 1000, 64)
       .endCell()
 
-    asset_data.storeCell(randomAddress('ton').hash, tonDataCell)
-    asset_data.storeCell(randomAddress('usdt').hash, usdtDataCell)
+    asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
+    asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -105,7 +105,7 @@ describe("evaa master sc tests", () => {
           .storeUint(op.init_master, 32)
           .storeUint(0, 64)
           .storeRef(asset_config.endCell())
-          .storeRef(asset_data.endCell())
+          .storeRef(asset_dynamics_collection.endCell())
           .endCell(),
       }) as any
     );

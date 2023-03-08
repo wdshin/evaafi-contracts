@@ -68,9 +68,9 @@ function calcWithdrawPrincipals(int104 oldPrincipal, int104 newPrincipal) intern
 
 function getAssetRates(asset) {
     //все переменные участвующие в рассчете ставки берутся из ассет конфига для соответствующего ассета
-    uint totalSupply_ = presentValueCalc(asset_data.asset.s_rate, asset_data.asset.total_supply_principal);
+    uint totalSupply_ = presentValueCalc(asset_dynamics_collection.asset.s_rate, asset_dynamics_collection.asset.total_supply_principal);
 
-    uint total_borrow_ = presentValueCalc(asset_data.asset.b_rate, asset_data.asset.total_borrow_principal);
+    uint total_borrow_ = presentValueCalc(asset_dynamics_collection.asset.b_rate, asset_dynamics_collection.asset.total_borrow_principal);
     if (totalSupply_ == 0) {
         utilization =  0;
     } else {
@@ -108,7 +108,7 @@ function getUpdatedRates(address asset, uint timeElapsed) returns (uint64, uint6
 
 function accrueInterest(address asset) internal {
     uint40 now_ = getNowInternal();
-    uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
+    uint timeElapsed = uint256(now_ - asset_dynamics_collection.asset.lastAccrual);
     if (timeElapsed > 0) {
         (s_rate, b_rate) = getUpdatedRates(asset, timeElapsed);
         lastAccrualTime = now_;
@@ -167,8 +167,8 @@ function supply()  {
 
         (uint104 repayAmount, uint104 supplyAmount) = calcSupplyPrincipals(dstPrincipal, dstPrincipalNew);
 
-        asset_data.asset.total_supply_principal += supplyAmount;
-        asset_data.asset.total_borrow_principal -= repayAmount;
+        asset_dynamics_collection.asset.total_supply_principal += supplyAmount;
+        asset_dynamics_collection.asset.total_borrow_principal -= repayAmount;
 
         user.asset.principal = dstPrincipalNew;
 
@@ -186,13 +186,13 @@ function withdraw(address src, uint256 amount, address asset)  {
         int104 srcPrincipalNew = principalValue((s_rate,b_rate), srcBalance);
 
         if (srcBalance < 0) {
-            if (!isBorrowCollateralized(asset_config, asset_data)) revert NotCollateralized();
+            if (!isBorrowCollateralized(asset_config, asset_dynamics_collection)) revert NotCollateralized();
         }
 
         (uint104 withdrawAmount, uint104 borrowAmount) = calcWithdrawPrincipals(srcPrincipal, srcPrincipalNew);
 
-        asset_data.asset.total_supply_principal -= withdrawAmount;
-        asset_data.asset.total_borrow_principal += borrowAmount;
+        asset_dynamics_collection.asset.total_supply_principal -= withdrawAmount;
+        asset_dynamics_collection.asset.total_borrow_principal += borrowAmount;
 
         user.asset.principal = dstPrincipalNew;
 
@@ -220,10 +220,10 @@ function getAccountAssetBalance(asset, ratesTuple) {
 //done in func
 function getAssetTotals(address asset) {
     uint40 now_ = getNowInternal();
-    uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
+    uint timeElapsed = uint256(now_ - asset_dynamics_collection.asset.lastAccrual);
     (s_rate, b_rate) = getUpdatedRates(asset, timeElapsed)
-    totalSupply = presentValueCalc(asset_data.Asset.s_rate, asset_data.Asset.total_supply_principal)
-    total_borrow = presentValueCalc(asset_data.Asset.b_rate, asset_data.Asset.total_borrow_principal)
+    totalSupply = presentValueCalc(asset_dynamics_collection.Asset.s_rate, asset_dynamics_collection.Asset.total_supply_principal)
+    total_borrow = presentValueCalc(asset_dynamics_collection.Asset.b_rate, asset_dynamics_collection.Asset.total_borrow_principal)
     return (totalSupply, total_borrow)
 }
 
@@ -232,7 +232,7 @@ function getAssetTotals(address asset) {
 function getCollateralQuote(address borrowToken, address collateralToken, uint amount) override public view returns (uint) {
     AssetInfo memory assetInfo = getAssetInfoByAddress(asset);
     uint256 assetPrice = getPrice(collateralToken);
-    uint256 assetPriceDiscounted = mulFactor(assetPrice, SCALE - asset_data.borrowToken.liquidationPenalty);
+    uint256 assetPriceDiscounted = mulFactor(assetPrice, SCALE - asset_dynamics_collection.borrowToken.liquidationPenalty);
     uint256 basePrice = getPrice(borrowToken);
     // # of collateral assets
     // = (TotalValueOfBaseAmount / DiscountedPriceOfCollateralAsset) * assetScale
@@ -243,10 +243,10 @@ function getCollateralQuote(address borrowToken, address collateralToken, uint a
 
 //done func
 function getAssetReserves(asset) override public view returns (int) {
-    (uint64 s_rate, uint64 b_rate) = accruedInterestIndices(getNowInternal() - asset_data.asset.lastAccrualTime);
+    (uint64 s_rate, uint64 b_rate) = accruedInterestIndices(getNowInternal() - asset_dynamics_collection.asset.lastAccrualTime);
     uint balance = ERC20(baseToken).balanceOf(address(this));
-    uint totalSupply_ = presentValueSupply(s_rate, asset_data.asset.total_supply_principal);
-    uint total_borrow_ = - presentValueBorrow(b_rate, asset_data.asset.total_borrow_principal);
+    uint totalSupply_ = presentValueSupply(s_rate, asset_dynamics_collection.asset.total_supply_principal);
+    uint total_borrow_ = - presentValueBorrow(b_rate, asset_dynamics_collection.asset.total_borrow_principal);
     return signed256(balance) - signed256(totalSupply_) + signed256(total_borrow_);
 }
 
@@ -254,7 +254,7 @@ function getAssetReserves(asset) override public view returns (int) {
 function liquidate(borrower: address, collateralToken: address, minCollateralAmount: uint64) override external {
     if isActive:
         accrueInterest(asset);
-        if (!isLiquidatable(asset_config, asset_data)) revert NotLiquidable();
+        if (!isLiquidatable(asset_config, asset_dynamics_collection)) revert NotLiquidable();
 
         collateralAmount = getCollateralQuote(transferredToken, collateralToken, amountTransferred);
         if (collateralAmount < minCollateralAmount) revert TooMuchSlippage();
@@ -289,7 +289,7 @@ function liquidate(borrower: address, collateralToken: address, minCollateralAmo
         user.transferredToken.principal = newDebtTokenPrincipal
 
 
-
+        // asset_data not yet renamed to asset_dynamics_collection because it's usage was not immediately obvious
         asset_data.transferredToken.total_supply_principal += supplyAmount;
         asset_data.transferredToken.total_borrow_principal -= repayAmount;
         asset_data.collateralToken.total_supply_principal -= collateralTokenLiquidationPrincipal;           

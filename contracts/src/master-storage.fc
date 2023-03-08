@@ -27,7 +27,7 @@
   slice admin = unpacked_marked_config~load_msg_addr();
   cell wallet_to_master = unpacked_marked_config~load_dict();
 
-  cell asset_data = ds~load_ref();
-  return (meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_data);
+  cell asset_dynamics_collection = ds~load_ref();
+  return (meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_dynamics_collection);
 }
 

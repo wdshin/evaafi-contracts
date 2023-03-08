@@ -1,4 +1,4 @@
-cell pack_asset_data(
+cell pack_asset_dynamics(
 	int price, int s_rate, int b_rate,
 	int total_supply_principal, int total_borrow_principal,
 	int last_accural
@@ -13,13 +13,13 @@ cell pack_asset_data(
 		.end_cell();
 }
 
-(int, int, int, int, int, int) unpack_asset_data(slice asset_data) {
-    int price = asset_data~load_uint(64);
-    int asset_s_rate = asset_data~load_uint(64);
-    int asset_b_rate = asset_data~load_uint(64);
-    int total_supply_principal = asset_data~load_uint(64);
-    int total_borrow_principal = asset_data~load_uint(64);
-	int last_accural = asset_data~load_uint(64);
+(int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
+    int price = asset_dynamics~load_uint(64);
+    int asset_s_rate = asset_dynamics~load_uint(64);
+    int asset_b_rate = asset_dynamics~load_uint(64);
+    int total_supply_principal = asset_dynamics~load_uint(64);
+    int total_borrow_principal = asset_dynamics~load_uint(64);
+	int last_accural = asset_dynamics~load_uint(64);
 	
 	return (
 		price, asset_s_rate,
@@ -28,9 +28,9 @@ cell pack_asset_data(
 	);
 }
 
-int asset_data_last_accural(slice asset_data) {
-	asset_data~load_msg_addr();
-	asset_data~skip_bits(64 * 5);
-	return asset_data.preload_uint(64);
+int asset_dynamics_last_accural(slice asset_dynamics) {
+	asset_dynamics~load_msg_addr();
+	asset_dynamics~skip_bits(64 * 5);
+	return asset_dynamics.preload_uint(64);
 }
 

@@ -66,7 +66,7 @@
 		throw(0xffff); 
   }
 
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     process_incoming_ton(sender_address, my_balance);
@@ -87,8 +87,8 @@
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_assets_config = in_msg_body~load_ref();
-    cell new_asset_data = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_data);
+    cell new_asset_dynamics_collection = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_dynamics_collection);
     return();
   }
   
@@ -105,12 +105,12 @@
     slice oracle = asset_config_item~load_msg_addr();
     var (_, oracle_addr_hash) = parse_std_addr(oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash); ;; ?????!! assets_data ??  / fixed
+    var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash); ;; ?????!! assets_data ??  / fixed
     int new_price = in_msg_body~load_uint(64);
-    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
-    cell updated_asset = pack_asset_data(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
-    asset_data~dict_set(256, asset_address, updated_asset.begin_parse());
-    storage::save(meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_data);
+    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    cell updated_asset = pack_asset_dynamics(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
+    asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
+    storage::save(meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_dynamics_collection);
     return();
   }
   
@@ -119,7 +119,7 @@
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_assets_config = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, asset_data);
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, asset_dynamics_collection);
     return();
   }
   
