@@ -1,3 +1,54 @@
+(int) getCollateralQuote (slice borrow_token, slice collateral_token, int amount) method_id {
+  return get_collateral_quote(borrow_token, collateral_token, amount);
+}
+
+(int, int) getAssetRates (slice asset_address) method_id {
+  var (s_rate, b_rate) = get_asset_rates(asset_address);
+  return (s_rate, b_rate);
+}
+
+(int) getAssetReserves (slice asset_address) method_id {
+  return get_asset_reserves(asset_address);
+}
+
+(int, int) getAssetTotals (slice asset_address) method_id {
+  var (s_rate, b_rate) = get_asset_totals(asset_address);
+  return (s_rate, b_rate);
+}
+
+(cell) getAssetsData () method_id {
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  return (asset_data);
+}
+
+(cell) getConfig () method_id {
+  ;;todo addd wallet_to_master to all storage functions calls
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+    
+  cell config = begin_cell()
+    .store_ref(meta) ;; meta_data 
+    .store_ref(user_contract_code) ;; user_contract_code
+    .store_ref(
+      begin_cell()
+        .store_ref(assets_config) ;; assets_config
+        .store_uint(if_active, 8) ;; if_active
+        .store_slice(admin) ;; admin_address
+        .store_dict(wallet_to_master) ;; ?
+      .end_cell())
+    .end_cell();
+
+  return (config);
+}
+
+;; todo:
+() getAssetPrice () method_id {}
+;; todo:
+() getAccountAssetSupply () method_id {}
+;; todo:
+() getAccountAssetBorrow () method_id {}
+;; todo: combine all getmethods to one 
+() getUIVariables () method_id {}
+
 (int) test () method_id {
   return (1);
 }

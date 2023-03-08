@@ -217,7 +217,7 @@ function getAccountAssetBalance(asset, ratesTuple) {
     }
 }
 
-
+//done in func
 function getAssetTotals(address asset) {
     uint40 now_ = getNowInternal();
     uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
@@ -227,6 +227,7 @@ function getAssetTotals(address asset) {
     return (totalSupply, total_borrow)
 }
 
+//done func
 //децимал соответствует децималу коллатерала
 function getCollateralQuote(address borrowToken, address collateralToken, uint amount) override public view returns (uint) {
     AssetInfo memory assetInfo = getAssetInfoByAddress(asset);
@@ -240,7 +241,7 @@ function getCollateralQuote(address borrowToken, address collateralToken, uint a
 }
 
 
-
+//done func
 function getAssetReserves(asset) override public view returns (int) {
     (uint64 s_rate, uint64 b_rate) = accruedInterestIndices(getNowInternal() - asset_data.asset.lastAccrualTime);
     uint balance = ERC20(baseToken).balanceOf(address(this));

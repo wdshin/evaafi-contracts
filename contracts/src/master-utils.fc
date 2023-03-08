@@ -55,3 +55,58 @@
     storage::save(meta, user_contract_code, assets_config, if_active, admin, asset_data);
   }
 }
+
+(int) get_collateral_quote (slice borrow_token, slice collateral_token, int amount) {
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  var (_, collateral_asset_address_hash) = parse_std_addr(collateral_token);
+  var (collateral_asset_data_item, _) = asset_data.udict_get?(256, collateral_asset_address_hash);
+  var (collateral_price, _, _, _, _, _) = unpack_asset_data(collateral_asset_data_item);
+  var (_, borrow_asset_address_hash) = parse_std_addr(borrow_token);
+  var (borrow_asset_config_item, _) = asset_config.udict_get?(256, borrow_asset_address_hash);
+  (_, int borrow_decimals, _, _, int liquidation_penalty, _, _, _, _, _, _) = unpack_asset_config(borrow_asset_config_item);
+  int asset_price_discounted = mul_factor(collateral_price, constants::factor_scale - liquidation_penalty);
+  var (borrow_asset_data_item, _) = asset_borrow.udict_get?(256, borrow_asset_address_hash);
+  var (borrow_price, _, _, _, _, _) = unpack_asset_data(borrow_asset_data_item);
+  var (collateral_asset_config_item, _) = asset_config.udict_get?(256, collateral_asset_address_hash);
+  (_, int collateral_decimals, _, _, _, _, _, _, _, _, _) = unpack_asset_config(collateral_asset_config_item);
+  return (borrow_price * amount * collateral_decimals / asset_price_discounted / borrow_decimals);
+}
+
+(int) get_asset_reserves (slice asset_address) {
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  var (_, asset_address_hash) = parse_std_addr(asset_address);
+  var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+  var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+  int time_elapsed = now() - last_accural;
+  (int s_rate, int b_rate) = get_updated_rates(asset_address, time_elapsed);
+  int total_supply = principal_value_supply_calc(s_rate, total_supply_principal);
+  int total_borrow = principal_value_borrow_calc(b_rate, total_borrow_principal);
+  int protocol_balance_by_token = 0; ;;todo take it from store
+  return (protocol_balance_by_token - total_supply + total_borrow);
+}
+
+;; todo
+;; SOLIDITY
+;;function getAssetTotals(address asset) {
+;;    uint40 now_ = getNowInternal();
+;;    uint timeElapsed = uint256(now_ - asset_data.asset.lastAccrual);
+;;    (s_rate, b_rate) = getUpdatedRates(asset, timeElapsed)
+;;    totalSupply = presentValueCalc(asset_data.Asset.s_rate, asset_data.Asset.total_supply_principal)
+;;    total_borrow = presentValueCalc(asset_data.Asset.b_rate, asset_data.Asset.total_borrow_principal)
+;;    return (totalSupply, total_borrow)
+;;}
+;; CONVERT TO FUNC
+;; todo
+(int, int) get_asset_totals (slice asset_address) {
+  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell asset_data) = storage::load();
+  var (_, asset_address_hash) = parse_std_addr(asset_address);
+  var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash);
+  var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+  int time_elapsed = now() - last_accural;
+  (int s_rate, int b_rate) = get_updated_rates(asset_address, time_elapsed);
+  present_value_calc
+  int total_supply = principal_value_supply_calc(s_rate, total_supply_principal);
+  int total_borrow = principal_value_borrow_calc(b_rate, total_borrow_principal);
+  int protocol_balance_by_token = 0; ;;todo take it from store
+  return ()
+}

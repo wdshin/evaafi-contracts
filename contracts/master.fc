@@ -90,11 +90,10 @@
   if (op == op::update_price) {
     slice asset_address = in_msg_body~load_msg_addr();
     var (_, asset_address_hash) = parse_std_addr(asset_address);
-    var (asset_config_item, _) = assets_config.udict_get?(256, asset_address_hash);
-    slice oracle = asset_config_item~load_msg_addr();
     var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_address_hash);
     throw_unless(100, is_asset_existing?);
-    var (wc, oracle_addr_hash) = parse_std_addr(oracle);
+    slice oracle = asset_config_item~load_msg_addr();
+    var (_, oracle_addr_hash) = parse_std_addr(oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash); ;; ?????!! assets_data ??  / fixed
     int new_price = in_msg_body~load_uint(64);

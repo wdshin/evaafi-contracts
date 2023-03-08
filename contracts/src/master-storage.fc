@@ -1,3 +1,4 @@
+;;todo protocol_balance_by_token
 () storage::save (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell assets_data) impure {
   cell data = begin_cell()
     .store_ref(meta) ;; meta_data 

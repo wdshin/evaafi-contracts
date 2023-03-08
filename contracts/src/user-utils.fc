@@ -65,3 +65,15 @@
   }
   return (borrow_limit < borrow_amount);
 }
+
+;; todo convert SOLIDITY to FUNC
+;;function getAccountAssetBalance(asset, ratesTuple) {
+;;    if (user.userPrincipal.asset >= 0) {
+;;        return signed256(presentValueCalc(ratesTuple.s_rate, uint104(user.userPrincipal.asset)));
+;;    } else {
+;;        return -signed256(presentValueCalc(ratesTuple.b_rate, uint104(-user.userPrincipal.asset)));
+;;    }
+;;}
+(int) get_account_asset_balance (slice asset_address, cell asset_data) {
+  return (1);
+}

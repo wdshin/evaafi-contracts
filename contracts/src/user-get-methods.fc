@@ -1,3 +1,37 @@
+(int) getAccountAssetBalance (slice asset_address, cell asset_data) method_id {
+  return get_account_asset_balance(); ;;todo
+}
+
+;;todo
+() getAccountBalances () method_id {
+  (slice master, slice user, cell user_principals) = storage::load();
+  (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
+  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  while (flag) {
+    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
+    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
+    
+    ;;todo implement 
+    ;;get_account_asset_balance() for each asset here
+    
+    ;;var (asset_config_item, _) = asset_config.udict_get?(256, asset_address);
+    ;;var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
+    ;;(slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config_item);
+    ;;if (asset_value_principal < 0) {
+    ;;  borrow_amount += present_value_calc(asset_b_rate, - asset_value_principal * price);
+    ;;} else {
+    ;;  if (asset_value_principal > 0) {
+    ;;    borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
+    ;;  }
+    ;;}
+  }
+}
+
+(int) getAvailableToBorrow (cell asset_config, cell asset_data) method_id {
+ return get_avaliable_to_borrow(asset_config, asset_data);
+}
+
 (int) test () method_id {
   return (2);
 }
