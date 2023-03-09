@@ -130,7 +130,7 @@
     var (_, oracle_addr_hash) = parse_std_addr(oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
-    int new_price = in_msg_body~load_uint(64);
+    int new_price = in_msg_body~load_price(64);
     var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
     cell updated_asset = pack_asset_dynamics(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
     asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());

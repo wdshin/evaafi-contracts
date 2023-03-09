@@ -27,7 +27,10 @@ slice calc_address (int addr_hash) inline {
   cell rates = new_dict();
   while (flag) {
     var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, calc_address(asset_address)); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
-    slice asset_rates = begin_cell().store_uint(s_rate, 64).store_uint(b_rate, 64).end_cell().begin_parse();
+    slice asset_rates = begin_cell()
+      .store_sb_rate(s_rate)
+      .store_sb_rate(b_rate)
+      .end_cell().begin_parse();
     rates~udict_set(256, asset_address, asset_rates); ;; todo tests
     (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
   }
@@ -45,7 +48,7 @@ slice calc_address (int addr_hash) inline {
   cell reserves = new_dict();
   while (flag) {
     var reserve = get_asset_reserves(asset_dynamics_collection, calc_address(asset_address));
-    slice asset_reserve = begin_cell().store_uint(reserve, 64).end_cell().begin_parse();
+    slice asset_reserve = begin_cell().store_uint(reserve, 64).end_cell().begin_parse(); ;; TODO: encapsulate this "reserve" storage
     reserves~udict_set(256, asset_address, asset_reserve); ;; todo tests
     (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
   }
@@ -66,7 +69,8 @@ slice calc_address (int addr_hash) inline {
 (cell) getConfig () method_id {
   ;;todo addd wallet_to_master to all storage functions calls
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
-    
+  
+  ;; TODO@sepezho: why is this construction duplicated/copy-pasted from master-storage.fc?
   cell config = begin_cell()
     .store_ref(meta) ;; meta_data 
     .store_ref(user_contract_code) ;; user_contract_code

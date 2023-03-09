@@ -1,0 +1,36 @@
+;; ??? How to store prices?
+(slice, int) load_price(slice cs) inline {
+	return cs.load_uint(64);
+}
+builder store_price(builder b, int price) inline {
+	return b.store_uint(price, 64);
+}
+
+
+;; ??? How to store s_rate and b_rate?
+(slice, int) load_sb_rate(slice cs) inline {
+	return cs.load_uint(64);
+}
+builder store_sb_rate(builder b, int sb_rate) inline {
+	return b.store_uint(sb_rate, 64);
+}
+
+
+;; ??? How to store principal amounts?
+;; (Note it at least can be negative)
+(slice, int) load_principal(slice cs) inline {
+	return cs.load_int(64);
+}
+builder store_principal(builder b, int principal) inline {
+	return b.store_int(principal, 64);
+}
+
+
+;; ??? Is timestamp always positive?
+(slice, int) load_timestamp(slice cs) inline {
+	return cs.load_uint(64);
+}
+builder store_timestamp(builder b, int timestamp) inline {
+	return b.store_uint(timestamp, 64);
+}
+

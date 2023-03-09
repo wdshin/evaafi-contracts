@@ -4,22 +4,22 @@ cell pack_asset_dynamics(
 	int last_accural
 ) {
 	return begin_cell()
-		.store_int(price, 64)
-		.store_int(s_rate, 64)
-		.store_int(b_rate, 64)
-		.store_int(total_supply_principal, 64)
-		.store_int(total_borrow_principal, 64)
-		.store_int(last_accural, 64)
+		.store_price(price)
+		.store_sb_rate(s_rate)
+		.store_sb_rate(b_rate)
+		.store_principal(total_supply_principal)
+		.store_principal(total_borrow_principal)
+		.store_timestamp(last_accural)
 		.end_cell();
 }
 
 (int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
-    int price = asset_dynamics~load_uint(64);
-    int asset_s_rate = asset_dynamics~load_uint(64);
-    int asset_b_rate = asset_dynamics~load_uint(64);
-    int total_supply_principal = asset_dynamics~load_uint(64);
-    int total_borrow_principal = asset_dynamics~load_uint(64);
-	int last_accural = asset_dynamics~load_uint(64);
+    int price = asset_dynamics~load_price();
+    int asset_s_rate = asset_dynamics~load_sb_rate();
+    int asset_b_rate = asset_dynamics~load_sb_rate();
+    int total_supply_principal = asset_dynamics~load_principal();
+    int total_borrow_principal = asset_dynamics~load_principal();
+	int last_accural = asset_dynamics~load_timestamp();
 	
 	return (
 		price, asset_s_rate,
@@ -28,9 +28,9 @@ cell pack_asset_dynamics(
 	);
 }
 
-int asset_dynamics_last_accural(slice asset_dynamics) {
-	asset_dynamics~load_msg_addr();
-	asset_dynamics~skip_bits(64 * 5);
-	return asset_dynamics.preload_uint(64);
-}
+;; int asset_dynamics_last_accural(slice asset_dynamics) {
+;; 	asset_dynamics~load_msg_addr();
+;; 	asset_dynamics~skip_bits(64 * 5); ;; ! Super careful with this stuff, now that it might be different
+;; 	return asset_dynamics.preload_uint(64);
+;; }
 

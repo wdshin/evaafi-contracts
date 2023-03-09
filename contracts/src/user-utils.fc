@@ -4,7 +4,7 @@
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) = user_principals.udict_get_min?(256);
   while (flag) {
-    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
     var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -27,7 +27,7 @@
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
   while (flag) {
-    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
     var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -46,7 +46,7 @@
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
   while (flag) {
-    int asset_value_principal = asset_value_principal_packed~load_uint(64);
+    int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
     var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
@@ -66,7 +66,7 @@
 (int) get_account_asset_balance (slice asset_address, tuple rates_tuple) {
   (slice master, slice user, cell user_principals) = storage::load();
   var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address);
-  int asset_value_principal = asset_value_principal_packed~load_uint(64);
+  int asset_value_principal = asset_value_principal_packed~load_principal();
   if (asset_value_principal >= 0) {
     return present_value_calc(rates_tuple.at(0), asset_value_principal);
   } else {
