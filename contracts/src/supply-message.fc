@@ -1,0 +1,19 @@
+cell pack_supply_message(int query_id, int asset_master_hash, int amount, int s_rate, int b_rate) {
+	return begin_cell()
+		.store_op_code(op::supply)
+		.store_query_id(query_id)
+		.store_address_hash(asset_master_hash)
+		.store_grams(amount)
+		.store_sb_rate(s_rate)
+		.store_sb_rate(b_rate)
+		.end_cell();
+}
+
+(int, int, int, int) parse_supply_message(slice cs) {
+	return (
+		cs~load_address_hash(),
+		cs~load_grams(),
+		cs~load_sb_rate(),
+		cs~load_sb_rate()
+	);
+}

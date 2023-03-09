@@ -44,15 +44,33 @@
 }
 
 
-() process_incoming_asset(int asset_master_hash, slice owner_address, int amount, int s_rate, int b_rate) impure {
+() process_incoming_asset(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  int asset_master_hash, slice owner_address, int amount
+) impure {
+  (int s_rate, int b_rate) = get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    asset_master_hash
+  );
   send_message_to_lending_wallet(
     owner_address,
-    pack_supply_message(asset_master_hash, amount, s_rate, b_rate)
+    pack_supply_message(
+      1234 ;; query_id ??? What to set it to?
+      asset_master_hash, amount,
+      s_rate, b_rate
+    )
   );
+  ;; TODO: update the current amount of corresponding asset
 }
 
-() process_incoming_ton(slice owner_address, int amount) impure {
-  process_incoming_asset(constants::ton_dummy_hash, owner_address, amount);
+() process_incoming_ton(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  slice owner_address, int amount
+) impure {
+  process_incoming_asset(
+    asset_config_collection, asset_dynamics_collection,
+    constants::ton_dummy_hash, owner_address, amount
+  );
   ;; ??? Do we need to withhold some amount of TONs for network fees, etc.?
 }
 
@@ -69,14 +87,20 @@
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
-    process_incoming_ton(sender_address, my_balance);
+    process_incoming_ton(
+      asset_config_collection, asset_dynamics_collection,
+      sender_address, my_balance
+    );
     ;; ??? save?
     return ();
   }
 
   int op = in_msg_body~load_uint(32);
   if (op == 0) { ;; TON incoming (with comment)
-    process_incoming_ton(sender_address, my_balance);
+    process_incoming_ton(
+      asset_config_collection, asset_dynamics_collection,
+      sender_address, my_balance
+    );
     ;; ??? save?
     return ();
   }
@@ -142,7 +166,10 @@
     ;; (??? Should we refund them? Is it even technically possible?)
     ;; or someone just tried to hack-send us a transfer_notification from a random address
 
-    process_incoming_asset(jetton_master_address, from_address, jetton_amount);
+    process_incoming_asset(
+      asset_config_collection, asset_dynamics_collection,
+      jetton_master_address, from_address, jetton_amount
+    );
     ;; ??? save?
     return ();
   }
