@@ -11,6 +11,29 @@
 #include "src/utils.fc";
 #include "src/user-utils.fc";
 
+
+int get_principal(cell principals, int asset_id) {
+  (slice cs, int f) = principals.udict_get?(256, asset_id);
+  if (f) {
+    return cs.preload_principal();
+  } else {
+    return 0;
+    ;; Default to zero,
+    ;; so it doesn't have to store all possible assets from the start
+    ;; and the supported assets can be extended by changing master's config
+  }
+}
+
+(cell, ()) ~set_principal(cell principals, int asset_id, int amount) {
+  return (
+    principals.udict_set_builder(256, asset_id,
+      begin_cell().store_principal(amount)),
+    ()
+  );
+}
+
+
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   if (in_msg_body.slice_empty?()) { ;; ignore empty messages
     return ();
@@ -28,20 +51,38 @@
 		throw(0xffff); 
   }
 
-  (slice master, slice user, cell user_principals) = storage::load();
+  (slice master_address, slice owner_address, cell user_principals) = storage::load();
+
+  throw_unless(error::message_not_from_master,
+    slice_data_equal?(sender_address, master_address)
+  ); ;; This line makes the contract unhackable (hopefully)
 	
-  int op = in_msg_body~load_uint(32);
-  int query_id = in_msg_body~load_uint(64);
+  int op = in_msg_body~load_op_code();
+  int query_id = in_msg_body~load_query_id();
+
+  if (op == op::supply) {
+    (int asset_master_hash, int amount, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
+    
+    int old_principal = user_principals.get_principal(asset_master_hash);
+    int present = present_value(s_rate, b_rate, old_principal);
+
+    present += amount;
+
+    int new_principal = principal_value(s_rate, b_rate, present);
+    user_principals~set_principal(asset_master_hash, new_principal);
+
+    ;; send_message(master_address, 0, ) ;; ... TODO tomorrow
+
+    storage::save(master_address, owner_address, user_principals);
+
+    return ();
+  }
 
   if (op == op::withdraw) {
     ;; todo/from master
   }
    
   if (op == op::liquidate) {
-    ;; todo/from master 
-  }
-  
-  if (op == op::supply) {
     ;; todo/from master 
   }
   

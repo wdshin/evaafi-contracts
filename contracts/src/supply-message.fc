@@ -1,3 +1,4 @@
+;; Supply request message
 cell pack_supply_message(int query_id, int asset_master_hash, int amount, int s_rate, int b_rate) {
 	return begin_cell()
 		.store_op_code(op::supply)
@@ -17,3 +18,7 @@ cell pack_supply_message(int query_id, int asset_master_hash, int amount, int s_
 		cs~load_sb_rate()
 	);
 }
+
+
+;; Supply success (response) message
+;; cell pack_supply_success_message(int query_id, ) ;; ... tomorrow
