@@ -2,6 +2,20 @@
 
 int slice_data_equal? (slice a, slice b) asm "SDEQ";
 
+(slice, int) load_op_code(slice cs) inline {
+	return cs.load_uint(32);
+}
+builder store_op_code(builder b, int op_code) inline {
+	return b.store_uint(op_code, 32);
+}
+
+(slice, int) load_query_id(slice cs) inline {
+	return cs.load_uint(64);
+}
+builder store_query_id(builder b, int query_id) inline {
+	return b.store_uint(query_id, 64);
+}
+
 (int) get_current_workchain () {
 	var (wc, _) = parse_std_addr(my_address());
 	return (wc);

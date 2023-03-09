@@ -95,7 +95,7 @@
     return ();
   }
 
-  int op = in_msg_body~load_uint(32);
+  int op = in_msg_body~load_op_code();
   if (op == 0) { ;; TON incoming (with comment)
     process_incoming_ton(
       asset_config_collection, asset_dynamics_collection,
@@ -105,7 +105,7 @@
     return ();
   }
 
-  int query_id = in_msg_body~load_uint(64);
+  int query_id = in_msg_body~load_query_id();
 
   if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
@@ -152,7 +152,7 @@
   }
   
   if (op == op::transfer_notification) {
-    int query_id = in_msg_body~load_uint(64); 
+    int query_id = in_msg_body~load_query_id(); 
     int jetton_amount = in_msg_body~load_coins(); 
     slice from_address = in_msg_body~load_msg_addr();
     
