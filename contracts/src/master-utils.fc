@@ -55,7 +55,10 @@
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, _) = unpack_asset_dynamics(asset_dynamics);
   if (time_elapsed > 0) {
-    (int s_rate, int b_rate) = get_current_rates(asset_dynamics_collection, asset_address);
+    (int s_rate, int b_rate) = get_current_rates(
+      asset_config_collection, asset_dynamics_collection,
+      asset_address
+    );
     cell updated_asset = pack_asset_dynamics(price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
     asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
     storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
@@ -87,7 +90,10 @@
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, _) = unpack_asset_dynamics(asset_dynamics);
-  (int s_rate, int b_rate) = get_current_rates(asset_dynamics_collection, asset_address,);
+  (int s_rate, int b_rate) = get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    asset_address
+  );
   int total_supply = principal_value_supply_calc(s_rate, total_supply_principal);
   int total_borrow = principal_value_borrow_calc(b_rate, total_borrow_principal);
   int protocol_balance_by_token = 0; ;;todo take it from store
@@ -101,7 +107,10 @@
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (price, _, _, total_supply_principal, total_borrow_principal, _) = unpack_asset_dynamics(asset_dynamics);
-  (int s_rate, int b_rate) = get_current_rates(asset_dynamics_collection, asset_address);
+  (int s_rate, int b_rate) = get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    asset_address
+  );
   int total_supply = present_value_calc(s_rate, total_supply_principal);
   int total_borrow = present_value_calc(b_rate, total_borrow_principal);
   return (total_supply, total_borrow);
