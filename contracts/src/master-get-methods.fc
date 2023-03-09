@@ -3,9 +3,10 @@
   return get_collateral_quote(asset_config_collection, asset_dynamics_collection, borrow_token, collateral_token, amount);
 }
 
+;; TODO@sepezho: is it supposed to return (s_rate and b_rate) or (supply_interest and borrow_interest)?
 (int, int) getAssetRates (slice asset_address) method_id {
   (_, _, cell asset_config_collection, _, _, _, cell asset_dynamics_collection) = storage::load();
-  var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address);
+  var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
   return (s_rate, b_rate);
 }
 
@@ -19,12 +20,13 @@ slice calc_address (int addr_hash) inline {
     .begin_parse();
 }
 
+;; TODO@sepezho: is it supposed to return a dict of (s_rate and b_rate) or of (supply_interest and borrow_interest)?
 (cell) get_assets_rates () method_id {
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_min?(256);
   cell rates = new_dict();
   while (flag) {
-    var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, calc_address(asset_address));
+    var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, calc_address(asset_address)); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
     slice asset_rates = begin_cell().store_uint(s_rate, 64).store_uint(b_rate, 64).end_cell().begin_parse();
     rates~udict_set(256, asset_address, asset_rates); ;; todo tests
     (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
