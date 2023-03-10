@@ -38,3 +38,12 @@ cell pack_supply_success_message(
 		.store_principal(supply_amount_principal)
 		.end_cell();
 }
+
+(int, int, int) parse_supply_success_message(slice cs) {
+	return (
+		cs~load_address_hash(),
+		cs~load_principal(),
+		cs~load_principal()
+	);
+}
+

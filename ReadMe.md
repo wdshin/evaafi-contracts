@@ -26,7 +26,10 @@
 ### user_principals
 Словарь: ассет -> баланс (положительный для вкладов и отрицательный для долгов)
 
+## Various
 
+`asset_id` ≈ `asset_master_hash`
+It's an address hash of the corresponding jetton's master smart contract in most cases, but it's a special constant in the case of TON itself.
 
 
 

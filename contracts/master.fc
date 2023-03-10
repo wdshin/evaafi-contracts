@@ -107,18 +107,44 @@
 
   int query_id = in_msg_body~load_query_id();
 
+  ;; More common op codes are checked first to save a little gas
+  if (op == op::supply_success) {
+    (int asset_id, int repay_amount_principal, int supply_amount_principal) = parse_supply_success_message(in_msg_body);
+
+    (int price, int s_rate, int b_rate,
+    int total_supply_principal, int total_borrow_principal,
+    int last_accural) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+
+    asset_dynamics_collection~asset_dynamics_collection:set_packed(
+      asset_id,
+      price, s_rate, b_rate,
+      total_supply_principal + supply_amount_principal,
+      total_borrow_principal - repay_amount_principal,
+      last_accural
+    );
+
+    storage::save(
+      meta, user_contract_code,
+      asset_config_collection, 
+      f_active, admin, wallet_to_master,
+      asset_dynamics_collection
+    );
+
+    return ();
+  }
+
   if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_asset_config_collection = in_msg_body~load_ref();
     cell new_asset_dynamics_collection = in_msg_body~load_ref();
     storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, new_asset_dynamics_collection);
-    return();
+    return ();
   }
   
   if (op == op::init_user) {
     init_user(sender_address); 
-    return();
+    return ();
   }
   
   if (op == op::update_price) {
@@ -132,10 +158,14 @@
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
     int new_price = in_msg_body~load_price(64);
     var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
-    cell updated_asset = pack_asset_dynamics(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
-    asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
+    cell updated_asset = pack_asset_dynamics(
+      new_price, s_rate, b_rate,
+      total_supply_principal, total_borrow_principal,
+      now() ;; TODO@sepezho << nns2009: I don't think you should update last_accural here, because s_rate and b_rate are not recalculated
+    );
+    asset_dynamics_collection~udict_set(256, asset_address_hash, updated_asset.begin_parse());
     storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
-    return();
+    return ();
   }
   
   if (op == op::update_config) {
@@ -144,7 +174,7 @@
     throw_unless(103, addr_hash == admin_addr_hash);
     cell new_asset_config_collection = in_msg_body~load_ref();
     storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
-    return();
+    return ();
   }
   
   if (op == op::withdraw) {
