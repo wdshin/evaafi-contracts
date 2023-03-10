@@ -1,8 +1,11 @@
 (slice, int, int, int, int, int, int, int, int, int, int) unpack_asset_config(slice asset_config) {
 	slice oracle = asset_config~load_msg_addr();
 	int decimals = asset_config~load_uint(8);
+	
 	cell asset_config_params_packed = asset_config~load_ref();
 	slice asset_config_params = asset_config_params_packed.begin_parse();
+
+	;; TODO: encapsulate all of these loads as well
 	int collateral_factor = asset_config_params~load_uint(16);
 	int liquidation_threshold = asset_config_params~load_uint(16);
 	int liquidation_penalty = asset_config_params~load_uint(16);
@@ -35,6 +38,7 @@ cell pack_asset_config(
 		.store_slice(oracle)
 		.store_uint(decimals, 8) 
 		.store_ref(begin_cell()
+			;; TODO: encapsulate all of these stores as well
 			.store_uint(collateral_factor, 16) 
 			.store_uint(liquidation_threshold, 16) 
 			.store_uint(liquidation_penalty, 16)

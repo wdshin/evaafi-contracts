@@ -11,15 +11,15 @@
 #include "src/master-utils.fc";
 #include "src/master-get-methods.fc";
 
-(cell) calculate_user_init_state(slice sender_address) {
+(cell) calculate_user_init_state(slice owner_address) {
   return begin_cell()
     .store_slice(my_address())
-    .store_slice(sender_address)
+    .store_slice(owner_address)
     .store_ref(begin_cell().end_cell())
     .end_cell(); 
 }
-;; slice calculate_user_address(slice sender_address) {
-;;   return calculate_address(calculate_user_init_state(sender_address));
+;; slice calculate_user_address(slice owner_address) {
+;;   return calculate_address(calculate_user_init_state(owner_address));
 ;; }
 
 
@@ -29,9 +29,9 @@
   slice lending_wallet_address = calculate_address(state_init);
  
   var msg = begin_cell()
-            .store_uint(0x18, 6)
+            .store_uint(0x18, 6) ;; ??? Bounceable?
             .store_slice(lending_wallet_address)
-            .store_coins(0) ;; start_balance
+            .store_grams(0)
             .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
             .store_ref(state_init)
             .store_ref(content);
@@ -44,12 +44,33 @@
 }
 
 
-() process_incoming_asset(int asset_master_hash, slice owner_address, int amount) impure {
-  ;; TODO
+() process_incoming_asset(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  int asset_master_hash, slice owner_address, int amount
+) impure {
+  (int s_rate, int b_rate) = get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    asset_master_hash
+  );
+  send_message_to_lending_wallet(
+    owner_address,
+    pack_supply_message(
+      1234 ;; query_id ??? What to set it to?
+      asset_master_hash, amount,
+      s_rate, b_rate
+    )
+  );
+  ;; TODO: update the current amount of corresponding asset
 }
 
-() process_incoming_ton(slice owner_address, int amount) impure {
-  process_incoming_asset(constants::ton_dummy_hash, owner_address, amount);
+() process_incoming_ton(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  slice owner_address, int amount
+) impure {
+  process_incoming_asset(
+    asset_config_collection, asset_dynamics_collection,
+    constants::ton_dummy_hash, owner_address, amount
+  );
   ;; ??? Do we need to withhold some amount of TONs for network fees, etc.?
 }
 
@@ -62,73 +83,98 @@
   if (flags & 1) { ;; note: do we need it?
 		throw(0xffff); 
   }
-~dump(1);
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
-~dump(1);
+
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
-    process_incoming_ton(sender_address, my_balance);
+    process_incoming_ton(
+      asset_config_collection, asset_dynamics_collection,
+      sender_address, my_balance
+    );
     ;; ??? save?
     return ();
   }
 
-  int op = in_msg_body~load_uint(32);
+  int op = in_msg_body~load_op_code();
   if (op == 0) { ;; TON incoming (with comment)
-    process_incoming_ton(sender_address, my_balance);
+    process_incoming_ton(
+      asset_config_collection, asset_dynamics_collection,
+      sender_address, my_balance
+    );
     ;; ??? save?
     return ();
   }
 
-  int query_id = in_msg_body~load_uint(64);
-  if (op == op::init_master) {
+  int query_id = in_msg_body~load_query_id();
 
-var (wc, admin_addr_hash) = parse_std_addr(admin);
-    ;;throw_unless(103, addr_hash == admin_addr_hash);
-    cell new_assets_config = in_msg_body~load_ref();
-    cell new_asset_data = in_msg_body~load_ref();
-    ;;cell wallet_to_master = in_msg_body~load_ref();
-~dump(13333);
-    ;;storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_data);
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, begin_cell().end_cell(), new_asset_data);
-~dump(55555);
-    return();
+  ;; More common op codes are checked first to save a little gas
+  if (op == op::supply_success) {
+    (int asset_id, int repay_amount_principal, int supply_amount_principal) = parse_supply_success_message(in_msg_body);
+
+    (int price, int s_rate, int b_rate,
+    int total_supply_principal, int total_borrow_principal,
+    int last_accural) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+
+    asset_dynamics_collection~asset_dynamics_collection:set_packed(
+      asset_id,
+      price, s_rate, b_rate,
+      total_supply_principal + supply_amount_principal,
+      total_borrow_principal - repay_amount_principal,
+      last_accural
+    );
+
+    storage::save(
+      meta, user_contract_code,
+      asset_config_collection, 
+      f_active, admin, wallet_to_master,
+      asset_dynamics_collection
+    );
+
+    return ();
+  }
+
+  if (op == op::init_master) {
+    var (wc, admin_addr_hash) = parse_std_addr(admin);
+    throw_unless(103, addr_hash == admin_addr_hash);
+    cell new_asset_config_collection = in_msg_body~load_ref();
+    cell new_asset_dynamics_collection = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, new_asset_dynamics_collection);
+    return ();
   }
   
   if (op == op::init_user) {
     init_user(sender_address); 
-    return();
+    return ();
   }
   
   if (op == op::update_price) {
     slice asset_address = in_msg_body~load_msg_addr();
     var (_, asset_address_hash) = parse_std_addr(asset_address);
-    var (asset_config_item, is_asset_existing?) = assets_config.udict_get?(256, asset_address_hash);
+    var (asset_config, is_asset_existing?) = asset_config_collection.udict_get?(256, asset_address_hash);
     throw_unless(100, is_asset_existing?);
-    slice oracle = asset_config_item~load_msg_addr();
+    slice oracle = asset_config~load_msg_addr();
     var (_, oracle_addr_hash) = parse_std_addr(oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
-    var (asset_data_item, _) = asset_data.udict_get?(256, asset_address_hash); ;; ?????!! assets_data ??  / fixed
-    int new_price = in_msg_body~load_uint(64);
-    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_data(asset_data_item);
-    cell updated_asset = pack_asset_data(new_price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now());
-    asset_data~dict_set(256, asset_address, updated_asset.begin_parse());
-    storage::save(meta, user_contract_code, assets_config, if_active, admin, wallet_to_master, asset_data);
-    return();
+    var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
+    int new_price = in_msg_body~load_price(64);
+    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    cell updated_asset = pack_asset_dynamics(
+      new_price, s_rate, b_rate,
+      total_supply_principal, total_borrow_principal,
+      now() ;; TODO@sepezho << nns2009: I don't think you should update last_accural here, because s_rate and b_rate are not recalculated
+    );
+    asset_dynamics_collection~udict_set(256, asset_address_hash, updated_asset.begin_parse());
+    storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
+    return ();
   }
   
   if (op == op::update_config) {
     ;;todo update not only asset config but config of entire market (isActive & meta too)
-~dump(1);
     var (wc, admin_addr_hash) = parse_std_addr(admin);
-~dump(addr_hash);
-~dump(admin_addr_hash);
     throw_unless(103, addr_hash == admin_addr_hash);
-~dump(1);
-    cell new_assets_config = in_msg_body~load_ref();
-~dump(1);
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, asset_data);
-~dump(1);
-    return();
+    cell new_asset_config_collection = in_msg_body~load_ref();
+    storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
+    return ();
   }
   
   if (op == op::withdraw) {
@@ -136,7 +182,7 @@ var (wc, admin_addr_hash) = parse_std_addr(admin);
   }
   
   if (op == op::transfer_notification) {
-    int query_id = in_msg_body~load_uint(64); 
+    int query_id = in_msg_body~load_query_id(); 
     int jetton_amount = in_msg_body~load_coins(); 
     slice from_address = in_msg_body~load_msg_addr();
     
@@ -145,18 +191,20 @@ var (wc, admin_addr_hash) = parse_std_addr(admin);
     ;; we need to find which jetton_type this wallet corresponds to
     
     ;;todo compile fix 
-    ;;(slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
+    (slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
 
     ;;todo compile fix
-    ;;throw_unless(error::received_unsupported_jetton, f);
+    throw_unless(error::received_unsupported_jetton, f);
     
     ;; Either this jetton type is not supported (whitelisted)
     ;; (??? Should we refund them? Is it even technically possible?)
     ;; or someone just tried to hack-send us a transfer_notification from a random address
 
     ;; todo compile fix
-    ;; process_incoming_asset(jetton_master_address, from_address, jetton_amount);
-    
+    process_incoming_asset(
+      asset_config_collection, asset_dynamics_collection,
+      jetton_master_address, from_address, jetton_amount
+    );
     ;; ??? save?
     return ();
   }

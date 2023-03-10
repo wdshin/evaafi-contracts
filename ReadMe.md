@@ -4,22 +4,32 @@
 
 ## Master
 
-### asset_config (просто config?)
-Конфиг асетов в пуле который задается при его инициализации и не изменяется (админ ток может сменить если оч надо)
+### asset_config_collection
+Словарь: ассет -> `asset_config`
 
-в конфиге такие данные как collateralFactor liquidationThreshold и тд
+### asset_config
+Конфиг конкретного ассета, который задается при его инициализации и не изменяется (админ ток может сменить если оч надо)
++ collateralFactor
++ liquidationThreshold
++ ...
 
-### ??? asset_info ??? asset_price
-### ??? asset_info_collection
+### asset_dynamics_collection
+Словарь: ассет -> `asset_dynamics`
+
+### asset_dynamics
+Информация о текущих изменяющихся данных (sRate, bRate и т.п.),
+относящихся к конкретному ассету
+
 
 ## User (лучше Wallet? по аналогии с жетонами)
 
-### asset_collection
-Коллекция из `asset_data`
+### user_principals
+Словарь: ассет -> баланс (положительный для вкладов и отрицательный для долгов)
 
-### asset_data
-Информация о конкретном ассете, относящаяся к конкретному пользователю
+## Various
 
+`asset_id` ≈ `asset_master_hash`
+It's an address hash of the corresponding jetton's master smart contract in most cases, but it's a special constant in the case of TON itself.
 
 
 

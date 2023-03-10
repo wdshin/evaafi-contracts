@@ -1,0 +1,58 @@
+cell pack_asset_dynamics(
+	int price, int s_rate, int b_rate,
+	int total_supply_principal, int total_borrow_principal,
+	int last_accural
+) {
+	return begin_cell()
+		.store_price(price)
+		.store_sb_rate(s_rate)
+		.store_sb_rate(b_rate)
+		.store_principal(total_supply_principal)
+		.store_principal(total_borrow_principal)
+		.store_timestamp(last_accural)
+		.end_cell();
+}
+
+(int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
+	int price = asset_dynamics~load_price();
+	int asset_s_rate = asset_dynamics~load_sb_rate();
+	int asset_b_rate = asset_dynamics~load_sb_rate();
+	int total_supply_principal = asset_dynamics~load_principal();
+	int total_borrow_principal = asset_dynamics~load_principal();
+	int last_accural = asset_dynamics~load_timestamp();
+	
+	return (
+		price, asset_s_rate,
+		asset_b_rate, total_supply_principal,
+		total_borrow_principal, last_accural
+	);
+}
+
+;; int asset_dynamics_last_accural(slice asset_dynamics) {
+;; 	asset_dynamics~load_msg_addr();
+;; 	asset_dynamics~skip_bits(64 * 5); ;; ! Super careful with this stuff, now that it might be different
+;; 	return asset_dynamics.preload_uint(64);
+;; }
+
+(int, int, int, int, int, int) asset_dynamics_collection:get_unpacked(
+	cell asset_dynamics_collection, int asset_id
+) {
+	(slice asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_id);
+	return unpack_asset_dynamics(asset_dynamics);
+}
+
+(cell, ()) asset_dynamics_collection:set_packed(
+	cell asset_dynamics_collection, int asset_id,
+	int price, int s_rate, int b_rate,
+	int total_supply_principal, int total_borrow_principal,
+	int last_accural
+) {
+	return asset_dynamics_collection.udict_set(
+		256, asset_id,
+		pack_asset_dynamics(
+			price, s_rate, b_rate,
+			total_supply_principal, total_borrow_principal,
+			last_accural
+		)
+	);
+}

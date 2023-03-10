@@ -1,62 +1,87 @@
 (int) getCollateralQuote (slice borrow_token, slice collateral_token, int amount) method_id {
-  return get_collateral_quote(borrow_token, collateral_token, amount);
+  (_, _, cell asset_config_collection, _, _, _, cell asset_dynamics_collection) = storage::load();
+  return get_collateral_quote(asset_config_collection, asset_dynamics_collection, borrow_token, collateral_token, amount);
 }
 
+;; TODO@sepezho: is it supposed to return (s_rate and b_rate) or (supply_interest and borrow_interest)?
 (int, int) getAssetRates (slice asset_address) method_id {
-  var (s_rate, b_rate) = get_asset_rates(asset_address);
+  (_, _, cell asset_config_collection, _, _, _, cell asset_dynamics_collection) = storage::load();
+  var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
   return (s_rate, b_rate);
 }
 
+slice calc_address (int addr_hash) inline {
+	int wc = get_current_workchain();
+
+  return begin_cell().store_uint(4, 3)
+    .store_int(wc, 8)
+    .store_uint(addr_hash, 256)
+    .end_cell()
+    .begin_parse();
+}
+
+;; TODO@sepezho: is it supposed to return a dict of (s_rate and b_rate) or of (supply_interest and borrow_interest)?
 (cell) get_assets_rates () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
-  (int asset_address, slice asset_data_item, int flag) = asset_data.udict_get_min?(256);
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_min?(256);
   cell rates = new_dict();
   while (flag) {
-    var (s_rate, b_rate) = get_asset_rates(calc_address_from_hash(asset_address));
-    slice asset_rates = begin_cell().store_uint(s_rate, 64).store_uint(b_rate, 64).end_cell().begin_parse();
+    ;; var (s_rate, b_rate) = get_asset_rates(calc_address_from_hash(asset_address));
+    ;; slice asset_rates = begin_cell().store_uint(s_rate, 64).store_uint(b_rate, 64).end_cell().begin_parse();
+    var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, calc_address(asset_address)); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
+    slice asset_rates = begin_cell()
+      .store_sb_rate(s_rate)
+      .store_sb_rate(b_rate)
+      .end_cell().begin_parse();
     rates~udict_set(256, asset_address, asset_rates); ;; todo tests
-    (asset_address, asset_data_item, flag) = asset_data.udict_get_next?(256, asset_address);
+    (asset_address, asset_dynamics, flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
   }
   return (rates);
 }
 
 (int) getAssetReserves (slice asset_address) method_id {
-  return get_asset_reserves(asset_address);
+  (_, _, _, _, _, _, cell asset_dynamics_collection) = storage::load();
+  return get_asset_reserves(asset_dynamics_collection, asset_address);
 }
 
 (cell) get_assets_reserves () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
-  (int asset_address, slice asset_data_item, int flag) = asset_data.udict_get_min?(256);
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  (int asset_address, slice asset_dynamics, int flag) = asset_dynamics_collection.udict_get_min?(256);
   cell reserves = new_dict();
   while (flag) {
-    var reserve = get_asset_reserves(calc_address_from_hash(asset_address));
-    slice asset_reserve = begin_cell().store_int(reserve, 64).end_cell().begin_parse();
+    ;; var reserve = get_asset_reserves(calc_address_from_hash(asset_address));
+    ;; slice asset_reserve = begin_cell().store_int(reserve, 64).end_cell().begin_parse();
+
+    var reserve = get_asset_reserves(asset_dynamics_collection, calc_address(asset_address));
+    slice asset_reserve = begin_cell().store_uint(reserve, 64).end_cell().begin_parse(); ;; TODO: encapsulate this "reserve" storage
     reserves~udict_set(256, asset_address, asset_reserve); ;; todo tests
-    (asset_address, asset_data_item, flag) = asset_data.udict_get_next?(256, asset_address);
+    ( asset_address,  asset_dynamics,  flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
   }
   return (reserves);
 }
 
 (int, int) getAssetTotals (slice asset_address) method_id {
-  var (s_rate, b_rate) = get_asset_totals(asset_address);
+  (_, _, _, _, _, _, cell asset_dynamics_collection) = storage::load();
+  var (s_rate, b_rate) = get_asset_totals(asset_dynamics_collection, asset_address);
   return (s_rate, b_rate);
 }
 
 (cell) getAssetsData () method_id {
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
-  return (asset_data);
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  return (asset_dynamics_collection);
 }
 
 (cell) getConfig () method_id {
   ;;todo addd wallet_to_master to all storage functions calls
-  (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
-    
+  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+  
+  ;; TODO@sepezho: why is this construction duplicated/copy-pasted from master-storage.fc?
   cell config = begin_cell()
     .store_ref(meta) ;; meta_data 
     .store_ref(user_contract_code) ;; user_contract_code
     .store_ref(
       begin_cell()
-        .store_ref(assets_config) ;; assets_config
+        .store_ref(asset_config_collection) ;; asset_config_collection
         .store_uint(if_active, 8) ;; if_active
         .store_slice(admin) ;; admin_address
         .store_dict(wallet_to_master) ;; ?
@@ -68,10 +93,10 @@
 
 (cell, cell, cell, cell) getUIVariables () method_id {
   cell config = getConfig();
-  cell asset_data = getAssetsData();
+  cell asset_dynamics_collection = getAssetsData();
   cell assets_rates = get_assets_rates();
   cell assets_reserves = get_assets_reserves();
-  return (asset_data, config, assets_rates, assets_reserves);
+  return (asset_dynamics_collection, config, assets_rates, assets_reserves);
 }
 
 (int) test () method_id {

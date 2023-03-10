@@ -38,8 +38,8 @@ describe("evaa master sc tests", () => {
       }
     );
 
-    const asset_data = beginDict(256);
-    const asset_config = beginDict(256);
+    const asset_dynamics_collection = beginDict(256);
+    const asset_config_collection = beginDict(256);
 
     const tonDataCell = beginCell()
       .storeUint(2000000000, 64)
@@ -59,8 +59,8 @@ describe("evaa master sc tests", () => {
       .storeUint((new Date()).getTime() * 1000, 64)
       .endCell()
 
-    asset_data.storeCell(randomAddress('ton').hash, tonDataCell)
-    asset_data.storeCell(randomAddress('usdt').hash, usdtDataCell)
+    asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
+    asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -94,8 +94,8 @@ describe("evaa master sc tests", () => {
         .endCell())
       .endCell()
 
-    asset_config.storeCell(randomAddress('ton').hash, tonConfigCell)
-    asset_config.storeCell(randomAddress('usdt').hash, usdtConfigCell)
+    asset_config_collection.storeCell(randomAddress('ton').hash, tonConfigCell)
+    asset_config_collection.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
     const to_master = beginDict(256);
     to_master.storeCell(randomAddress('ton').hash, tonConfigCell)
@@ -106,9 +106,11 @@ describe("evaa master sc tests", () => {
         body: beginCell()
           .storeUint(op.init_master, 32)
           .storeUint(0, 64)
-          .storeRef(asset_config.endCell())
-          .storeRef(asset_data.endCell())
+          // .storeRef(asset_config.endCell())
+          // .storeRef(asset_data.endCell())
           // .storeRef(to_master.endCell())
+          .storeRef(asset_config_collection.endCell())
+          .storeRef(asset_dynamics_collection.endCell())
           .endCell(),
       }) as any
     );
@@ -179,7 +181,7 @@ describe("evaa master sc tests", () => {
   });
 
   it("update master config", async () => {
-    const asset_config = beginDict(256);
+    const asset_config_collection = beginDict(256);
 
     const tonConfigCell = beginCell()
       .storeAddress(randomAddress('oracle'))
@@ -213,8 +215,8 @@ describe("evaa master sc tests", () => {
         .endCell())
       .endCell()
 
-    asset_config.storeCell(randomAddress('ton').hash, tonConfigCell)
-    asset_config.storeCell(randomAddress('usdt').hash, usdtConfigCell)
+    asset_config_collection.storeCell(randomAddress('ton').hash, tonConfigCell)
+    asset_config_collection.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
     const tx = await contract.sendInternalMessage(
       internalMessage({
@@ -223,7 +225,7 @@ describe("evaa master sc tests", () => {
         body: beginCell()
           .storeUint(op.update_config, 32)
           .storeUint(0, 64)
-          .storeRef(asset_config.endCell())
+          .storeRef(asset_config_collection.endCell())
           .endCell(),
       }) as any
     );

@@ -1,5 +1,21 @@
 ;; Functions, which are common for TON in general
 
+int slice_data_equal? (slice a, slice b) asm "SDEQ";
+
+(slice, int) load_op_code(slice cs) inline {
+	return cs.load_uint(32);
+}
+builder store_op_code(builder b, int op_code) inline {
+	return b.store_uint(op_code, 32);
+}
+
+(slice, int) load_query_id(slice cs) inline {
+	return cs.load_uint(64);
+}
+builder store_query_id(builder b, int query_id) inline {
+	return b.store_uint(query_id, 64);
+}
+
 (int) get_current_workchain () {
 	var (wc, _) = parse_std_addr(my_address());
 	return (wc);
@@ -15,11 +31,24 @@
 		.begin_parse();
 }
 
-slice calc_address_from_hash (int addr_hash) inline {
+slice calc_address_from_hash (int addr_hash) inline { ;; todo do we need this function?
 	int wc = get_current_workchain();
   return begin_cell().store_uint(4, 3)
     .store_int(wc, 8)
     .store_uint(addr_hash, 256)
     .end_cell()
     .begin_parse();
+
+() send_message(
+	slice to_address, int nano_ton_amount,
+	cell content, int mode
+) impure {
+	var msg = begin_cell()
+		.store_uint(0x10, 6) ;; ??? Sends non-bounceable. Does it need to be a parameter?
+		.store_slice(to_address)
+		.store_grams(nano_ton_amount)
+		.store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+		.store_ref(content);
+
+	send_raw_message(msg.end_cell(), mode);
 }
