@@ -3,6 +3,9 @@
 }
 
 (int) present_value_calc (int index, int principal_value) {
+~dump(index);
+~dump(principal_value);
+~dump(constants::base_index_scale);
   return principal_value * index / constants::base_index_scale;
 }
 

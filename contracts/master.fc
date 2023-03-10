@@ -62,8 +62,9 @@
   if (flags & 1) { ;; note: do we need it?
 		throw(0xffff); 
   }
-
+~dump(1);
   (cell meta, cell user_contract_code, cell assets_config, int if_active, slice admin, cell wallet_to_master, cell asset_data) = storage::load();
+~dump(1);
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     process_incoming_ton(sender_address, my_balance);
@@ -79,13 +80,17 @@
   }
 
   int query_id = in_msg_body~load_uint(64);
-
   if (op == op::init_master) {
-    var (wc, admin_addr_hash) = parse_std_addr(admin);
-    throw_unless(103, addr_hash == admin_addr_hash);
+
+var (wc, admin_addr_hash) = parse_std_addr(admin);
+    ;;throw_unless(103, addr_hash == admin_addr_hash);
     cell new_assets_config = in_msg_body~load_ref();
     cell new_asset_data = in_msg_body~load_ref();
-    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_data);
+    ;;cell wallet_to_master = in_msg_body~load_ref();
+~dump(13333);
+    ;;storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, new_asset_data);
+    storage::save(meta, user_contract_code, new_assets_config, if_active, admin, begin_cell().end_cell(), new_asset_data);
+~dump(55555);
     return();
   }
   
@@ -113,10 +118,16 @@
   
   if (op == op::update_config) {
     ;;todo update not only asset config but config of entire market (isActive & meta too)
+~dump(1);
     var (wc, admin_addr_hash) = parse_std_addr(admin);
+~dump(addr_hash);
+~dump(admin_addr_hash);
     throw_unless(103, addr_hash == admin_addr_hash);
+~dump(1);
     cell new_assets_config = in_msg_body~load_ref();
+~dump(1);
     storage::save(meta, user_contract_code, new_assets_config, if_active, admin, wallet_to_master, asset_data);
+~dump(1);
     return();
   }
   
@@ -132,14 +143,20 @@
     ;; sender_address is the address of our jetton wallet
     ;; (which received money and notified us)
     ;; we need to find which jetton_type this wallet corresponds to
- ;;todo compile   (slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
+    
+    ;;todo compile fix 
+    ;;(slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
 
-   ;;todo compile throw_unless(error::received_unsupported_jetton, f);
+    ;;todo compile fix
+    ;;throw_unless(error::received_unsupported_jetton, f);
+    
     ;; Either this jetton type is not supported (whitelisted)
     ;; (??? Should we refund them? Is it even technically possible?)
     ;; or someone just tried to hack-send us a transfer_notification from a random address
 
-   ;;todo compile process_incoming_asset(jetton_master_address, from_address, jetton_amount);
+    ;; todo compile fix
+    ;; process_incoming_asset(jetton_master_address, from_address, jetton_amount);
+    
     ;; ??? save?
     return ();
   }

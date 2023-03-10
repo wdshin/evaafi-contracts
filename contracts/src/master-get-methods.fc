@@ -15,7 +15,7 @@
     var (s_rate, b_rate) = get_asset_rates(calc_address_from_hash(asset_address));
     slice asset_rates = begin_cell().store_uint(s_rate, 64).store_uint(b_rate, 64).end_cell().begin_parse();
     rates~udict_set(256, asset_address, asset_rates); ;; todo tests
-    (int asset_address, slice asset_data_item, int flag) = asset_data.udict_get_next?(256, asset_address);
+    (asset_address, asset_data_item, flag) = asset_data.udict_get_next?(256, asset_address);
   }
   return (rates);
 }
@@ -30,9 +30,9 @@
   cell reserves = new_dict();
   while (flag) {
     var reserve = get_asset_reserves(calc_address_from_hash(asset_address));
-    slice asset_reserve = begin_cell().store_uint(reserve, 64).end_cell().begin_parse();
+    slice asset_reserve = begin_cell().store_int(reserve, 64).end_cell().begin_parse();
     reserves~udict_set(256, asset_address, asset_reserve); ;; todo tests
-    (int asset_address, slice asset_data_item, int flag) = asset_data.udict_get_next?(256, asset_address);
+    (asset_address, asset_data_item, flag) = asset_data.udict_get_next?(256, asset_address);
   }
   return (reserves);
 }
@@ -66,12 +66,12 @@
   return (config);
 }
 
-(cell, cell, cell, cell, cell) getUIVariables () method_id {
+(cell, cell, cell, cell) getUIVariables () method_id {
   cell config = getConfig();
   cell asset_data = getAssetsData();
   cell assets_rates = get_assets_rates();
   cell assets_reserves = get_assets_reserves();
-  return (asset_data, config, assets_rates, assets_rates, assets_reserves);
+  return (asset_data, config, assets_rates, assets_reserves);
 }
 
 (int) test () method_id {

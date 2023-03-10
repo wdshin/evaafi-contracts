@@ -3,10 +3,13 @@
 }
 
 (cell) getAccountBalances (cell asset_data) method_id {
+  ~dump(11); ;; todo tests
   (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) = user_principals.udict_get_min?(256);
+  ~dump(12); ;; todo tests
   int asset_value_principal = asset_value_principal_packed~load_uint(64);
   cell account_balances = new_dict();
+  ~dump(1); ;; todo tests
   while (flag) {
     int asset_value_principal = asset_value_principal_packed~load_uint(64);
     var (asset_data_item, _) = asset_data.udict_get?(256, asset_address);
@@ -17,9 +20,9 @@
     ~dump(rates_tuple); ;; todo tests
     int balance = get_account_asset_balance(calc_address_from_hash(asset_address), rates_tuple);
     account_balances~udict_set(256, asset_address, begin_cell().store_uint(balance, 64).end_cell().begin_parse()); ;; todo tests
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
+    (asset_address, asset_value_principal_packed, flag) = user_principals.udict_get_next?(256, asset_address);
   }
-  return (account_balances);
+  return (begin_cell().store_dict(account_balances).end_cell());
 }
 
 (int) getAvailableToBorrow (cell asset_config, cell asset_data) method_id {

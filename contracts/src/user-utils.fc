@@ -17,7 +17,7 @@
         borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * liquidation_threshold);
       }
     }
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
+    (asset_address, asset_value_principal_packed, flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return (borrow_limit < borrow_amount);
 }
@@ -36,7 +36,7 @@
     if (asset_value_principal > 0) {
       borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
     }
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
+    (asset_address, asset_value_principal_packed, flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return borrow_limit;
 }
@@ -59,16 +59,20 @@
         borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
       }
     }
-    (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
+    (asset_address, asset_value_principal_packed, flag) =  user_principals.udict_get_next?(256, asset_address);
   }
   return (borrow_limit < borrow_amount);
 }
 
 (int) get_account_asset_balance (slice asset_address, tuple rates_tuple) {
+  ~dump(1);
   (slice master, slice user, cell user_principals) = storage::load();
+  ~dump(user_principals);
   var (_, asset_address_hash) = parse_std_addr(asset_address);
-  var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address_hash);
+  ~dump(asset_address_hash);
+  (slice asset_value_principal_packed, int isgood?) = user_principals.udict_get?(256, asset_address_hash);
   int asset_value_principal = asset_value_principal_packed~load_uint(64);
+
   if (asset_value_principal >= 0) {
     return present_value_calc(rates_tuple.at(0), asset_value_principal);
   } else {
