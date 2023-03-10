@@ -15,10 +15,11 @@
     rates_tuple~tpush(asset_s_rate);
     rates_tuple~tpush(asset_b_rate);
     ~dump(rates_tuple); ;; todo tests
-    dict~udict_set(256, asset_address, get_account_asset_balance(asset_address, rates_tuple)); ;; todo tests
+    int balance = get_account_asset_balance(calc_address_from_hash(asset_address), rates_tuple);
+    account_balances~udict_set(256, asset_address, begin_cell().store_uint(balance, 64).end_cell().begin_parse()); ;; todo tests
     (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_next?(256, asset_address);
   }
-  return (dict);
+  return (account_balances);
 }
 
 (int) getAvailableToBorrow (cell asset_config, cell asset_data) method_id {

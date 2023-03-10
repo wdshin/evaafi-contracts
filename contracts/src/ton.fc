@@ -14,3 +14,13 @@
 		.end_cell()
 		.begin_parse();
 }
+
+slice calc_address_from_hash (int addr_hash) inline {
+	int wc = get_current_workchain();
+
+  return begin_cell().store_uint(4, 3)
+    .store_int(wc, 8)
+    .store_uint(addr_hash, 256)
+    .end_cell()
+    .begin_parse();
+}

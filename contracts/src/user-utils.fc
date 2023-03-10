@@ -1,3 +1,4 @@
+
 (int) is_liquidatable (cell asset_config, cell asset_data) {
   int borrow_amount = 0;
   int borrow_limit = 0;
@@ -65,7 +66,8 @@
 
 (int) get_account_asset_balance (slice asset_address, tuple rates_tuple) {
   (slice master, slice user, cell user_principals) = storage::load();
-  var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address);
+  var (_, asset_address_hash) = parse_std_addr(asset_address);
+  var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address_hash);
   int asset_value_principal = asset_value_principal_packed~load_uint(64);
   if (asset_value_principal >= 0) {
     return present_value_calc(rates_tuple.at(0), asset_value_principal);

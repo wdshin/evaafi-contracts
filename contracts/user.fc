@@ -3,13 +3,14 @@
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
 #include "imports/constants.fc";
-#include "src/user-get-methods.fc";
+#include "src/ton.fc";
 #include "src/user-storage.fc";
 #include "src/asset-config-packer.fc";
 #include "src/asset-data-packer.fc";
 #include "src/user-principals-packer.fc";
 #include "src/utils.fc";
 #include "src/user-utils.fc";
+#include "src/user-get-methods.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   if (in_msg_body.slice_empty?()) { ;; ignore empty messages
