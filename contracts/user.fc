@@ -61,17 +61,37 @@ int get_principal(cell principals, int asset_id) {
   int query_id = in_msg_body~load_query_id();
 
   if (op == op::supply) {
-    (int asset_master_hash, int amount, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
+    (int asset_master_hash, int supply_amount_current, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
     
     int old_principal = user_principals.get_principal(asset_master_hash);
     int present = present_value(s_rate, b_rate, old_principal);
 
-    present += amount;
+    present += supply_amount_current;
 
     int new_principal = principal_value(s_rate, b_rate, present);
     user_principals~set_principal(asset_master_hash, new_principal);
 
-    ;; send_message(master_address, 0, ) ;; ... TODO tomorrow
+    int repay_amount_principal = 0;
+    int supply_amount_principal = 0;
+    if (old_principal < 0) {
+      if (new_principal <= 0) {
+        repay_amount_principal = new_principal - old_principal;
+      } else {
+        repay_amount_principal = - old_principal;
+        supply_amount_principal = new_principal;
+      }
+    } else {
+      supply_amount_principal = new_principal - old_principal;
+    }
+
+    send_message(
+      master_address, 0,
+      pack_supply_success_message(
+        query_id, asset_master_hash,
+        repay_amount_principal, supply_amount_principal
+      ),
+      64 ;; ??? this mode?
+    );
 
     storage::save(master_address, owner_address, user_principals);
 
