@@ -1,0 +1,2 @@
+const int error::message_not_from_master = 67;
+

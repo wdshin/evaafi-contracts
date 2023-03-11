@@ -53,7 +53,9 @@
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
-  var (price, _, _, total_supply_principal, total_borrow_principal, _) = unpack_asset_dynamics(asset_dynamics);
+
+  var (price, _, _, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+  int time_elapsed = now() - last_accural;
   if (time_elapsed > 0) {
     (int s_rate, int b_rate) = get_current_rates(
       asset_config_collection, asset_dynamics_collection,
@@ -84,6 +86,7 @@
 }
 
 (int) get_asset_reserves (
+  cell asset_config_collection,
   cell asset_dynamics_collection,
   slice asset_address
 ) {
@@ -101,6 +104,7 @@
 }
 
 (int, int) get_asset_totals (
+  cell asset_config_collection,
   cell asset_dynamics_collection,
   slice asset_address
 ) {
