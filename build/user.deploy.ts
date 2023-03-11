@@ -16,6 +16,15 @@ const op = { // todo
 
 // return the init Cell of the contract storage (according to load_data() contract method)
 export function initData() {
+  return beginCell()
+    .storeAddress(randomAddress('master'))
+    .storeAddress(randomAddress('user'))
+    .storeDict(beginDict(256).endDict())
+    .endCell()
+}
+
+// return the op that should be sent to the contract on deployment, can be "null" to send an empty message
+export function initMessage() {
   const user_principals = beginDict(256);
 
   const usdtPositionPrincipal = beginCell()
@@ -28,16 +37,8 @@ export function initData() {
 
   user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
   user_principals.storeCell(randomAddress('usdt').hash, tonPositionPrincipal)
-  return beginCell()
-    .storeAddress(randomAddress('master'))
-    .storeAddress(randomAddress('user'))
-    .storeRef(user_principals.endCell())
-    .endCell()
-}
 
-// return the op that should be sent to the contract on deployment, can be "null" to send an empty message
-export function initMessage() {
-  return beginCell()
+  return beginCell().storeUint(op.init_user, 32).storeUint(0, 64).storeDict(user_principals.endCell())
     .endCell();
 }
 

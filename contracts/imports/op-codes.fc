@@ -15,4 +15,3 @@ const int op::withdraw_success = 61;
 const int op::withdraw_fail = 62;
 
 const int op::liquidate = 7;
-const int error::message_not_from_master = 66;

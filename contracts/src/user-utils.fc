@@ -63,7 +63,7 @@
   return (borrow_limit < borrow_amount);
 }
 
-(int) get_account_asset_balance (slice asset_address, tuple rates_tuple) {
+(int) get_account_asset_balance (slice asset_address, int s_rate, int b_rate) {
   ~dump(1);
   (slice master, slice user, cell user_principals) = storage::load();
   var (_, asset_address_hash) = parse_std_addr(asset_address);  
@@ -71,8 +71,8 @@
   var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address_hash); ;;asset_address_hash do we need it?
   int asset_value_principal = asset_value_principal_packed~load_principal();
   if (asset_value_principal >= 0) {
-    return present_value_calc(rates_tuple.at(0), asset_value_principal);
+    return present_value_calc(s_rate, asset_value_principal);
   } else {
-    return - present_value_calc(rates_tuple.at(1), - asset_value_principal);
+    return - present_value_calc(b_rate, - asset_value_principal);
   }
 }

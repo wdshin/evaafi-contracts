@@ -1,5 +1,5 @@
-(int) getAccountAssetBalance (slice asset_address, tuple rates_tuple) method_id {
-  return get_account_asset_balance(asset_address, rates_tuple);
+(int) getAccountAssetBalance (slice asset_address, int s_rate, int b_rate) method_id {
+  return get_account_asset_balance(asset_address, s_rate, b_rate);
 }
 
 (cell) getAccountBalances (cell asset_dynamics_collection) method_id {
@@ -14,7 +14,7 @@
     tuple rates_tuple = empty_tuple();
     rates_tuple~tpush(asset_s_rate); ;;todo tests / maybe we need to change to load_sb_rate or smth
     rates_tuple~tpush(asset_b_rate);
-    int balance = get_account_asset_balance(calc_address_from_hash(asset_address), rates_tuple);
+    int balance = get_account_asset_balance(calc_address_from_hash(asset_address), asset_s_rate, asset_b_rate);
     account_balances~udict_set(256, asset_address, begin_cell().store_uint(balance, 64).end_cell().begin_parse()); ;; todo tests
     (asset_address, asset_value_principal_packed, flag) = user_principals.udict_get_next?(256, asset_address);
   }

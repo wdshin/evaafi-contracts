@@ -137,7 +137,7 @@
 
   if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
-    throw_unless(103, addr_hash == admin_addr_hash);
+    ;; throw_unless(103, addr_hash == admin_addr_hash); ;; todo admin checker
     cell new_asset_config_collection = in_msg_body~load_ref();
     cell new_asset_dynamics_collection = in_msg_body~load_ref();
     storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, new_asset_dynamics_collection);

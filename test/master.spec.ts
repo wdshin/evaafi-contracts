@@ -294,7 +294,7 @@ describe("evaa user sc tests", () => {
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
-    }, { type: 'tuple', value: [{ type: 'int', value: '1' }, { type: 'int', value: '2' }] }]);
+    }, { type: 'int', value: '1' }, { type: 'int', value: '2' }]);
 
     // console.log('-----getAccountAssetBalance ---------')
     // console.log(tx.debugLogs);

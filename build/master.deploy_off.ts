@@ -18,14 +18,14 @@ const op = { // todo
 export function initData() {
   return beginCell()
     .storeRef(beginCell().storeBuffer(new Buffer('Main evaa pool.')).endCell())
-    .storeAddress(randomAddress("admin"))
     .storeRef(Cell.fromBoc(userHex)[0])
     .storeRef(beginCell()
-      .storeRef(beginCell().endCell())
+      .storeDict(beginDict(256).endDict())
       .storeUint(-1, 8)
       .storeAddress(randomAddress('admin'))
+      .storeDict(beginDict(256).endDict())
       .endCell())
-    .storeRef(beginCell().endCell())
+    .storeDict(beginDict(256).endDict())
     .endCell()
 }
 
