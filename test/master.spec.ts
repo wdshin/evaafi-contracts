@@ -30,6 +30,7 @@ describe("evaa master sc tests", () => {
           .storeDict(beginDict(256).endDict())
           .storeUint(-1, 8)
           .storeAddress(randomAddress('admin'))
+          .storeDict(beginDict(256).endDict())
           .endCell())
         .storeDict(beginDict(256).endDict())
         .endCell(),
@@ -121,17 +122,18 @@ describe("evaa master sc tests", () => {
 
   it("master run main get method", async () => {
     const tx = await contract.invokeGetMethod('getUIVariables', []);
+    // console.log('--------------')
+    // console.log(tx.debugLogs);
+    // console.log(tx.result);
+    // console.log(tx.type);
+    // console.log(tx.exit_code);
+    // console.log(tx.gas_consumed);
+    // console.log('--------------')
     expect(tx.type).equals('success');
-    //console.log('--------------')
-    //console.log(tx.debugLogs);
-    //console.log(tx.result);
-    //console.log(tx.type);
-    //console.log(tx.exit_code);
-    //console.log(tx.gas_consumed);
-    //console.log('--------------')
   });
 
-  it("master run get method", async () => {
+  it("master run get asset data method", async () => {
+
     const tx = await contract.invokeGetMethod('getAssetsData', []);
     //console.log(tx.result[0]);
     //console.log(tx.type);
@@ -230,6 +232,7 @@ describe("evaa master sc tests", () => {
       }) as any
     );
 
+    expect(tx.type).equals('success');
     // console.log(tx.type);
     // console.log(tx.debugLogs);
     // console.log(tx.exit_code);

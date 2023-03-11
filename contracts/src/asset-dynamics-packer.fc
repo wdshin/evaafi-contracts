@@ -20,7 +20,9 @@ cell pack_asset_dynamics(
 	int total_supply_principal = asset_dynamics~load_principal();
 	int total_borrow_principal = asset_dynamics~load_principal();
 	int last_accural = asset_dynamics~load_timestamp();
-	
+
+	;; + balance of token 
+
 	return (
 		price, asset_s_rate,
 		asset_b_rate, total_supply_principal,
@@ -47,12 +49,13 @@ cell pack_asset_dynamics(
 	int total_supply_principal, int total_borrow_principal,
 	int last_accural
 ) {
-	return asset_dynamics_collection.udict_set(
-		256, asset_id,
-		pack_asset_dynamics(
+	cell asset_dynamics = pack_asset_dynamics(
 			price, s_rate, b_rate,
 			total_supply_principal, total_borrow_principal,
 			last_accural
-		)
-	);
+		);
+
+	return (asset_dynamics_collection.udict_set(
+		256, asset_id, asset_dynamics.begin_parse() 
+	), ());
 }

@@ -2,16 +2,18 @@
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
+#include "imports/errors.fc";
 #include "imports/constants.fc";
 #include "src/ton.fc";
+#include "src/storage.fc";
 #include "src/user-storage.fc";
 #include "src/asset-config-packer.fc";
-#include "src/asset-data-packer.fc";
+#include "src/asset-dynamics-packer.fc";
 #include "src/user-principals-packer.fc";
 #include "src/utils.fc";
 #include "src/user-utils.fc";
+#include "src/supply-message.fc";
 #include "src/user-get-methods.fc";
-
 
 int get_principal(cell principals, int asset_id) {
   (slice cs, int f) = principals.udict_get?(256, asset_id);
@@ -101,10 +103,10 @@ int get_principal(cell principals, int asset_id) {
 
   if (op == op::init_user) {
     var (_, sender_address_hash) = parse_std_addr(sender_address);
-    var (_, master_hash) = parse_std_addr(master);
+    var (_, master_hash) = parse_std_addr(master_address);
     throw_unless(66, sender_address_hash == master_hash);
     cell new_user_principals = in_msg_body~load_ref();
-    storage::save(master, user, new_user_principals);
+    storage::save(master_address, owner_address, new_user_principals);
     return();
   }
   

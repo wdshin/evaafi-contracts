@@ -38,6 +38,7 @@ slice calc_address_from_hash (int addr_hash) inline { ;; todo do we need this fu
     .store_uint(addr_hash, 256)
     .end_cell()
     .begin_parse();
+}
 
 () send_message(
 	slice to_address, int nano_ton_amount,

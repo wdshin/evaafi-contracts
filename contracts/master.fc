@@ -4,12 +4,14 @@
 #include "imports/op-codes.fc";
 #include "imports/constants.fc";
 #include "src/ton.fc";
+#include "src/storage.fc";
 #include "src/master-storage.fc";
 #include "src/asset-config-packer.fc";
-#include "src/asset-data-packer.fc";
+#include "src/asset-dynamics-packer.fc";
 #include "src/utils.fc";
 #include "src/master-utils.fc";
 #include "src/master-get-methods.fc";
+#include "src/supply-message.fc";
 
 (cell) calculate_user_init_state(slice owner_address) {
   return begin_cell()
@@ -50,12 +52,12 @@
 ) impure {
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
-    asset_master_hash
+    calc_address_from_hash(asset_master_hash)
   );
   send_message_to_lending_wallet(
     owner_address,
     pack_supply_message(
-      1234 ;; query_id ??? What to set it to?
+      1234, ;; query_id ??? What to set it to?
       asset_master_hash, amount,
       s_rate, b_rate
     )
@@ -126,7 +128,7 @@
     storage::save(
       meta, user_contract_code,
       asset_config_collection, 
-      f_active, admin, wallet_to_master,
+      if_active, admin, wallet_to_master,
       asset_dynamics_collection
     );
 
@@ -156,7 +158,7 @@
     var (_, oracle_addr_hash) = parse_std_addr(oracle);
     throw_unless(103, addr_hash == oracle_addr_hash);
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
-    int new_price = in_msg_body~load_price(64);
+    int new_price = in_msg_body~load_price();
     var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
     cell updated_asset = pack_asset_dynamics(
       new_price, s_rate, b_rate,
@@ -190,21 +192,24 @@
     ;; (which received money and notified us)
     ;; we need to find which jetton_type this wallet corresponds to
     
+    ;; ---------------------
     ;;todo compile fix 
-    (slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
-
+    ;;(slice jetton_master_address, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
     ;;todo compile fix
-    throw_unless(error::received_unsupported_jetton, f);
+    ;;throw_unless(error::received_unsupported_jetton, f);
+    ;; ---------------------
     
     ;; Either this jetton type is not supported (whitelisted)
     ;; (??? Should we refund them? Is it even technically possible?)
     ;; or someone just tried to hack-send us a transfer_notification from a random address
 
+    ;; ---------------------
     ;; todo compile fix
-    process_incoming_asset(
-      asset_config_collection, asset_dynamics_collection,
-      jetton_master_address, from_address, jetton_amount
-    );
+    ;;process_incoming_asset(
+    ;;  asset_config_collection, asset_dynamics_collection,
+    ;;  jetton_master_address, from_address, jetton_amount
+    ;;);
+    ;; ---------------------
     ;; ??? save?
     return ();
   }
