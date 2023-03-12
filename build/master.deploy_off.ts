@@ -21,7 +21,7 @@ export function initData() {
     .storeRef(Cell.fromBoc(userHex)[0])
     .storeRef(beginCell()
       .storeDict(beginDict(256).endDict())
-      .storeUint(-1, 8)
+      .storeInt(-1, 8)
       .storeAddress(randomAddress('admin'))
       .storeDict(beginDict(256).endDict())
       .endCell())

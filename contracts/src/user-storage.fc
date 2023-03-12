@@ -1,4 +1,5 @@
 {-
+ 
   user_principals = Dict
     slice(256) jetton_address -> int(64) value
 -}

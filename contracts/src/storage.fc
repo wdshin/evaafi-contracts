@@ -2,6 +2,7 @@
 builder store_price(builder b, int price) inline {
 	return b.store_uint(price, 64);
 }
+
 (slice, int) load_price(slice cs) inline {
 	return cs.load_uint(64);
 }
@@ -14,7 +15,6 @@ builder store_address_hash(builder b, int address_hash) inline {
 	return cs.load_uint(256);
 }
 
-
 ;; ??? How to store s_rate and b_rate?
 builder store_sb_rate(builder b, int sb_rate) inline {
 	return b.store_uint(sb_rate, 64);
@@ -23,19 +23,19 @@ builder store_sb_rate(builder b, int sb_rate) inline {
 	return cs.load_uint(64);
 }
 
-
 ;; ??? How to store principal amounts?
 ;; (Note it at least can be negative)
 builder store_principal(builder b, int principal) inline {
 	return b.store_int(principal, 64);
 }
+
 (slice, int) load_principal(slice cs) inline {
 	return cs.load_int(64);
 }
-int preload_principal(slice cs) inline {
-	return cs.preload_uint(64);
-}
 
+int preload_principal(slice cs) inline {
+	return cs.preload_int(64);
+}
 
 ;; ??? Is timestamp always positive?
 builder store_timestamp(builder b, int timestamp) inline {
