@@ -1,7 +1,7 @@
 cell pack_asset_dynamics(
 	int price, int s_rate, int b_rate,
 	int total_supply_principal, int total_borrow_principal,
-	int last_accural
+	int last_accural, int token_balance
 ) {
 	return begin_cell()
 		.store_price(price)
@@ -10,23 +10,22 @@ cell pack_asset_dynamics(
 		.store_principal(total_supply_principal)
 		.store_principal(total_borrow_principal)
 		.store_timestamp(last_accural)
+		.store_balance(token_balance)
 		.end_cell();
 }
 
-(int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
+(int, int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
 	int price = asset_dynamics~load_price();
 	int asset_s_rate = asset_dynamics~load_sb_rate();
 	int asset_b_rate = asset_dynamics~load_sb_rate();
 	int total_supply_principal = asset_dynamics~load_principal();
 	int total_borrow_principal = asset_dynamics~load_principal();
 	int last_accural = asset_dynamics~load_timestamp();
-
-	;; + balance of token 
-
+	int token_balance = asset_dynamics~load_balance();
 	return (
 		price, asset_s_rate,
 		asset_b_rate, total_supply_principal,
-		total_borrow_principal, last_accural
+		total_borrow_principal, last_accural, token_balance
 	);
 }
 
@@ -36,23 +35,23 @@ cell pack_asset_dynamics(
 ;; 	return asset_dynamics.preload_uint(64);
 ;; }
 
-(int, int, int, int, int, int) asset_dynamics_collection:get_unpacked(
+(int, int, int, int, int, int, int) asset_dynamics_collection:get_unpacked(
 	cell asset_dynamics_collection, int asset_id
 ) {
 	(slice asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_id);
 	return unpack_asset_dynamics(asset_dynamics);
 }
 
-(cell, ()) asset_dynamics_collection:set_packed(
+(cell, ()) asset_dynamics_collection:set_packed( ;; todo check token_balance
 	cell asset_dynamics_collection, int asset_id,
 	int price, int s_rate, int b_rate,
 	int total_supply_principal, int total_borrow_principal,
-	int last_accural
+	int last_accural, int token_balance
 ) {
 	cell asset_dynamics = pack_asset_dynamics(
 			price, s_rate, b_rate,
 			total_supply_principal, total_borrow_principal,
-			last_accural
+			last_accural, token_balance
 		);
 
 	return (asset_dynamics_collection.udict_set(

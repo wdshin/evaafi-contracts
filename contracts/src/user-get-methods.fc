@@ -10,7 +10,7 @@
   while (flag) {
     int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
-    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     int balance = get_account_asset_balance(calc_address_from_hash(asset_address), asset_s_rate, asset_b_rate);
     account_balances~udict_set(256, asset_address, begin_cell().store_uint(balance, 64).end_cell().begin_parse()); ;; todo tests
     (asset_address, asset_value_principal_packed, flag) = user_principals.udict_get_next?(256, asset_address);

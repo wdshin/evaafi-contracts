@@ -15,6 +15,15 @@ builder store_address_hash(builder b, int address_hash) inline {
 	return cs.load_uint(256);
 }
 
+builder store_balance(builder b, int balance) inline {
+	return b.store_uint(balance, 64);
+}
+
+(slice, int) load_balance(slice cs) inline {
+	return cs.load_uint(64);
+}
+
+
 ;; ??? How to store s_rate and b_rate?
 builder store_sb_rate(builder b, int sb_rate) inline {
 	return b.store_uint(sb_rate, 64);
