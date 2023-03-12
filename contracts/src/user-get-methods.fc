@@ -10,7 +10,7 @@
   while (flag) {
     int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
-    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     tuple rates_tuple = empty_tuple();
     rates_tuple~tpush(asset_s_rate); ;;todo tests / maybe we need to change to load_sb_rate or smth
     rates_tuple~tpush(asset_b_rate);

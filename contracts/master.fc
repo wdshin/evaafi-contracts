@@ -115,14 +115,14 @@
 
     (int price, int s_rate, int b_rate,
     int total_supply_principal, int total_borrow_principal,
-    int last_accural) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+    int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
 
     asset_dynamics_collection~asset_dynamics_collection:set_packed(
       asset_id,
       price, s_rate, b_rate,
       total_supply_principal + supply_amount_principal,
       total_borrow_principal - repay_amount_principal,
-      last_accural
+      last_accural, token_balance
     );
 
     storage::save(
@@ -159,11 +159,11 @@
     throw_unless(103, addr_hash == oracle_addr_hash);
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
     int new_price = in_msg_body~load_price();
-    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     cell updated_asset = pack_asset_dynamics(
       new_price, s_rate, b_rate,
       total_supply_principal, total_borrow_principal,
-      now() ;; TODO@sepezho << nns2009: I don't think you should update last_accural here, because s_rate and b_rate are not recalculated
+      now(), token_balance ;; TODO@sepezho << nns2009: I don't think you should update last_accural here, because s_rate and b_rate are not recalculated
     );
     asset_dynamics_collection~udict_set(256, asset_address_hash, updated_asset.begin_parse());
     storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
