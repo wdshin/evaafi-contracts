@@ -28,7 +28,7 @@ describe("evaa master sc tests", () => {
         .storeRef(Cell.fromBoc(userHex)[0])
         .storeRef(beginCell()
           .storeDict(beginDict(256).endDict())
-          .storeUint(-1, 8)
+          .storeIint(-1, 8)
           .storeAddress(randomAddress('admin'))
           .storeDict(beginDict(256).endDict())
           .endCell())
@@ -49,15 +49,17 @@ describe("evaa master sc tests", () => {
       .storeUint(40000000000, 64)
       .storeUint(35000000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
       .endCell()
 
     const usdtDataCell = beginCell()
       .storeUint(1000000000, 64)
       .storeUint(new BN("DE1311304585C00", 'hex'), 64)
       .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
-      .storeUint(50000000000, 64)
-      .storeUint(40000000000, 64)
+      .storeUint(500000000, 64) //todo
+      .storeUint(400000000, 64)//todo
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(100000000, 64)
       .endCell()
 
     asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
@@ -250,11 +252,11 @@ describe("evaa user sc tests", () => {
     const user_principals = beginDict(256);
 
     const usdtPositionPrincipal = beginCell()
-      .storeUint(0, 64)
+      .storeIint(-200, 64)
       .endCell()
 
     const tonPositionPrincipal = beginCell()
-      .storeUint(1, 64)
+      .storeIint(180, 64)
       .endCell()
 
     user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)

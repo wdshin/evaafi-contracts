@@ -19,11 +19,11 @@ export function initData() {
   const user_principals = beginDict(256);
 
   const usdtPositionPrincipal = beginCell()
-    .storeUint(0, 64)
+    .storeInt(-200, 64)
     .endCell()
 
   const tonPositionPrincipal = beginCell()
-    .storeUint(1, 64)
+    .storeIint(180, 64)
     .endCell()
 
   user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)

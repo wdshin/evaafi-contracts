@@ -7,7 +7,7 @@
     int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
-    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config);
     if (asset_value_principal < 0) {
       borrow_amount += present_value_calc(asset_b_rate, - asset_value_principal * price);
@@ -30,7 +30,7 @@
     int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
-    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config);
     if (asset_value_principal > 0) {
       borrow_limit += present_value_calc(asset_s_rate, asset_value_principal * price * collateral_factor);
@@ -49,7 +49,7 @@
     int asset_value_principal = asset_value_principal_packed~load_principal();
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address);
     var (asset_config, _) = asset_config_collection.udict_get?(256, asset_address);
-    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural) = unpack_asset_dynamics(asset_dynamics);
+    var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     (slice oracle, int decimals, int collateral_factor, int liquidation_threshold, int liquidation_penalty, int base_borrow_rate, int borrow_rate_slope_low, int borrow_rate_slope_high, int supply_rate_slope_low, int supply_rate_slope_high, int target_utilization) = unpack_asset_config(asset_config);
     if (asset_value_principal < 0) {
       borrow_amount += present_value_calc(asset_b_rate, - asset_value_principal * price);
