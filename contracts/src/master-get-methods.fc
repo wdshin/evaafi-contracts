@@ -73,7 +73,7 @@
     .store_ref(
       begin_cell()
         .store_ref(asset_config_collection) ;; asset_config_collection
-        .store_uint(if_active, 8) ;; if_active
+        .store_int(if_active, 8) ;; if_active
         .store_slice(admin) ;; admin_address
         .store_dict(wallet_to_master) ;; ?
       .end_cell())

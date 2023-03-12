@@ -6,7 +6,7 @@
     .store_ref(
       begin_cell()
         .store_dict(asset_config_collection)
-        .store_uint(if_active, 8)
+        .store_int(if_active, 8)
         .store_slice(admin)
         .store_dict(wallet_to_master)
       .end_cell())
@@ -22,7 +22,7 @@
   cell marketConfig = ds~load_ref();
   slice unpacked_marked_config = marketConfig.begin_parse();
   cell asset_config_collection = unpacked_marked_config~load_dict();
-  int if_active = unpacked_marked_config~load_uint(8);
+  int if_active = unpacked_marked_config~load_int(8);
   slice admin = unpacked_marked_config~load_msg_addr();
   cell wallet_to_master = unpacked_marked_config~load_dict();
   cell asset_dynamics_collection = ds~load_dict();
