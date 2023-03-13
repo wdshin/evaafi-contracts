@@ -50,11 +50,11 @@
   while (flag) {
     ;; var reserve = get_asset_reserves(calc_address_from_hash(asset_address));
     ;; slice asset_reserve = begin_cell().store_int(reserve, 64).end_cell().begin_parse();
-
-    var reserve = get_asset_reserves(asset_config_collection, asset_dynamics_collection, calc_address_from_hash(asset_address));
-    slice asset_reserve = begin_cell().store_int(reserve, 64).end_cell().begin_parse(); ;; TODO: encapsulate this "reserve" storage
+    int reserve = get_asset_reserves(asset_config_collection, asset_dynamics_collection, calc_address_from_hash(asset_address));
+    ;; abs solution and bit for isnegarive is really bed approach / need to find something another
+    slice asset_reserve = begin_cell().store_int((reserve < 0), 1).store_uint(abs(reserve), 64).end_cell().begin_parse(); ;; TODO: encapsulate this "reserve" storage
     reserves~udict_set(256, asset_address, asset_reserve); ;; todo tests
-    ( asset_address,  asset_dynamics,  flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
+    (asset_address,  asset_dynamics, flag) = asset_dynamics_collection.udict_get_next?(256, asset_address);
   }
   return (reserves);
 }
