@@ -43,7 +43,6 @@ export function initMessage() {
     .storeUint(35000000000, 64)
     .storeUint((new Date()).getTime() * 1000, 64)
     .storeUint(10000000000, 64)
-
     .endCell()
 
   const usdtDataCell = beginCell()

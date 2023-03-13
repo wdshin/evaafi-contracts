@@ -1,4 +1,6 @@
 const int constants::factor_scale = 1000000000000000000; ;; todo change to 10^^18
+const int constants::asset_coefficient_scale = 10000;
+const int constants::price_scale = 1000000000;
 const int constants::base_index_scale = 1000000000000000000;
 const int constants::ton_dummy_hash = 1;
 

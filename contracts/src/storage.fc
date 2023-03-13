@@ -48,9 +48,9 @@ int preload_principal(slice cs) inline {
 
 ;; ??? Is timestamp always positive?
 builder store_timestamp(builder b, int timestamp) inline {
-	return b.store_uint(timestamp, 64);
+	return b.store_uint(timestamp, 32);
 }
 (slice, int) load_timestamp(slice cs) inline {
-	return cs.load_uint(64);
+	return cs.load_uint(32);
 }
 

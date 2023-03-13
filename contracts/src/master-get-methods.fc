@@ -3,13 +3,21 @@
   return get_collateral_quote(asset_config_collection, asset_dynamics_collection, borrow_token, collateral_token, amount);
 }
 
+(int, int) getUpdatedRates (
+  cell asset_config_collection, cell asset_dynamics_collection,
+  slice asset_address, int time_elapsed 
+) method_id {
+  return get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    asset_address, time_elapsed);
+}
+
 ;; TODO@sepezho: is it supposed to return (s_rate and b_rate) or (supply_interest and borrow_interest)?
 (int, int) getAssetRates (slice asset_address) method_id {
   (_, _, cell asset_config_collection, _, _, _, cell asset_dynamics_collection) = storage::load();
   var (s_rate, b_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address); ;; TODO@sepezho: this is not s_rate and b_rate - don't use these names
   return (s_rate, b_rate);
 }
-
 
 ;; TODO@sepezho: is it supposed to return a dict of (s_rate and b_rate) or of (supply_interest and borrow_interest)?
 (cell) get_assets_rates () method_id {

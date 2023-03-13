@@ -241,6 +241,89 @@ describe("evaa master sc tests", () => {
     // console.log(tx.gas_consumed);
     // expect(tx.type).equals('success');
   });
+
+  it("master get updated rates", async () => {
+    const asset_data = beginDict(256);
+
+    const tonDataCell = beginCell()
+      .storeUint(2000000000, 64)
+      .storeUint(new BN("DE253E29D831800", 'hex'), 64)
+      .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
+      .storeUint(40000000000, 64)
+      .storeUint(35000000000, 64)
+      .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
+      .endCell()
+
+    const usdtDataCell = beginCell()
+      .storeUint(1000000000, 64)
+      .storeUint(new BN("DE1311304585C00", 'hex'), 64)
+      .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
+      .storeUint(500000000, 64)
+      .storeUint(400000000, 64)
+      .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
+      .endCell()
+
+    asset_data.storeCell(randomAddress('ton').hash, tonDataCell)
+    asset_data.storeCell(randomAddress('usdt').hash, usdtDataCell)
+
+    const asset_config = beginDict(256);
+
+    const tonConfigCell = beginCell()
+      .storeAddress(randomAddress('oracle'))
+      .storeUint(8, 8)
+      .storeRef(beginCell()
+        .storeUint(8300, 16)
+        .storeUint(9000, 16)
+        .storeUint(500, 16)
+        .storeUint(15854895991, 64)
+        .storeUint(25000000000, 64)
+        .storeUint(187500000000, 64)
+        .storeUint(10000000000, 64)
+        .storeUint(100000000000, 64)
+        .storeUint(new BN("B1A2BC2EC500000", 'hex'), 64) // todo move to BN
+        .endCell())
+      .endCell()
+
+    const usdtConfigCell = beginCell()
+      .storeAddress(randomAddress('oracle'))
+      .storeUint(6, 8)
+      .storeRef(beginCell()
+        .storeUint(8000, 16)
+        .storeUint(8500, 16)
+        .storeUint(700, 16)
+        .storeUint(20611364789, 64)
+        .storeUint(32500000000, 64)
+        .storeUint(243750000000, 64)
+        .storeUint(13000000000, 64)
+        .storeUint(130000000000, 64)
+        .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
+        .endCell())
+      .endCell()
+
+    asset_config.storeCell(randomAddress('ton').hash, tonConfigCell)
+    asset_config.storeCell(randomAddress('usdt').hash, usdtConfigCell)
+    //@ts-ignore
+    const tx = await contract.invokeGetMethod('getUpdatedRates', [{ type: 'cell', value: asset_config.endCell().toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_data.endCell().toBoc({ idx: false }).toString('base64') }, {
+      type: "cell_slice",
+      value: beginCell()
+        .storeAddress(randomAddress('usdt'))
+        .endCell()
+        .toBoc({ idx: false })
+        .toString("base64")
+    }, { type: 'int', value: '10' }]);
+
+    // console.log('-----getAvailableToBorrow---------')
+    // console.log(tx.debugLogs);
+    // console.log(tx.result[0]?.toString());
+    // console.log(tx.result[1]?.toString());
+    // console.log(tx.type);
+    // console.log(tx.exit_code);
+    expect(tx.type).equals('success');
+    // console.log(tx.gas_consumed);
+    // console.log('--------------')
+  });
 });
 
 
@@ -252,11 +335,11 @@ describe("evaa user sc tests", () => {
     const user_principals = beginDict(256);
 
     const usdtPositionPrincipal = beginCell()
-      .storeIint(-200, 64)
+      .storeInt(-200, 64)
       .endCell()
 
     const tonPositionPrincipal = beginCell()
-      .storeIint(180, 64)
+      .storeInt(180, 64)
       .endCell()
 
     user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
@@ -318,15 +401,17 @@ describe("evaa user sc tests", () => {
       .storeUint(40000000000, 64)
       .storeUint(35000000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
       .endCell()
 
     const usdtDataCell = beginCell()
       .storeUint(1000000000, 64)
       .storeUint(new BN("DE1311304585C00", 'hex'), 64)
       .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
-      .storeUint(50000000000, 64)
-      .storeUint(40000000000, 64)
+      .storeUint(500000000, 64)
+      .storeUint(400000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
       .endCell()
 
     asset_data.storeCell(randomAddress('ton').hash, tonDataCell)
@@ -334,11 +419,11 @@ describe("evaa user sc tests", () => {
 
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAccountBalances', [{ type: 'cell', value: asset_data.endCell().toBoc({ idx: false }).toString('base64') }]);
-    // console.log('-----getAccountBalances---------')
-    // console.log(tx.debugLogs);
-    // console.log(tx.result);
-    // console.log(tx.type);
-    // console.log(tx.exit_code);
+    console.log('-----getAccountBalances---------')
+    console.log(tx.debugLogs);
+    console.log(tx.result);
+    console.log(tx.type);
+    console.log(tx.exit_code);
     expect(tx.type).equals('success');
     // console.log(tx.gas_consumed);
     // console.log('--------------')
@@ -354,15 +439,17 @@ describe("evaa user sc tests", () => {
       .storeUint(40000000000, 64)
       .storeUint(35000000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
       .endCell()
 
     const usdtDataCell = beginCell()
       .storeUint(1000000000, 64)
       .storeUint(new BN("DE1311304585C00", 'hex'), 64)
       .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
-      .storeUint(50000000000, 64)
-      .storeUint(40000000000, 64)
+      .storeUint(500000000, 64)
+      .storeUint(400000000, 64)
       .storeUint((new Date()).getTime() * 1000, 64)
+      .storeUint(10000000000, 64)
       .endCell()
 
     asset_data.storeCell(randomAddress('ton').hash, tonDataCell)

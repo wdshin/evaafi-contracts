@@ -68,6 +68,13 @@
   var (_, asset_address_hash) = parse_std_addr(asset_address);  
   var (asset_value_principal_packed, _) = user_principals.udict_get?(256, asset_address_hash); ;;asset_address_hash do we need it?
   int asset_value_principal = asset_value_principal_packed~load_principal();
+  
+  ~dump(19999999999);
+  ~dump(s_rate);
+  ~dump(b_rate);
+  ~dump(asset_value_principal);
+  ~dump(19999999999);
+  
   if (asset_value_principal >= 0) {
     return present_value_calc(s_rate, asset_value_principal);
   } else {

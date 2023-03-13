@@ -12,37 +12,37 @@
   int utilization = 0;
   int supply_rate = 0;
   int borrow_rate = 0;
+  
   if (total_supply == 0) {
     utilization = 0;
   } else {
     utilization = total_borrow * constants::factor_scale / total_supply;
   }
   if (utilization <= target_utilization) {
-    supply_rate = mul_factor(supply_rate_slope_low, utilization);
+    supply_rate = mul_factor(constants::factor_scale, supply_rate_slope_low, utilization);
   } else {
-    supply_rate = mul_factor(supply_rate_slope_low, target_utilization) + mul_factor(supply_rate_slope_high, (utilization - target_utilization));
+    supply_rate = mul_factor(constants::factor_scale, supply_rate_slope_low, target_utilization) + mul_factor(constants::factor_scale, supply_rate_slope_high, (utilization - target_utilization));
   }
   if (utilization <= target_utilization){
-    borrow_rate = base_borrow_rate + mul_factor(borrow_rate_slope_low, utilization); 
+    borrow_rate = base_borrow_rate + mul_factor(constants::factor_scale, borrow_rate_slope_low, utilization); 
   } else {
-    borrow_rate = base_borrow_rate + mul_factor(borrow_rate_slope_low, target_utilization) + mul_factor(borrow_rate_slope_high, (utilization - target_utilization));
+    borrow_rate = base_borrow_rate + mul_factor(constants::factor_scale, borrow_rate_slope_low, target_utilization) + mul_factor(constants::factor_scale, borrow_rate_slope_high, (utilization - target_utilization));
   }
   return (supply_rate, borrow_rate); ;; TODO@sepezho: rename to supply_interest and borrow_interest?
 }
 
-(int, int) get_current_rates ( ;; ??? compute_current_rates?
+(int, int) get_current_rates ( ;; todo update func name in exel // ??? compute_current_rates?
   cell asset_config_collection, cell asset_dynamics_collection,
-  slice asset_address
+  slice asset_address, int time_elapsed 
 ) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
   var (_, s_rate, b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
 
-  int time_elapsed = now() - last_accural;
   if (time_elapsed > 0) {
     (int supply_rate, int borrow_rate) = get_asset_rates(asset_config_collection, asset_dynamics_collection, asset_address);
-    int updated_s_rate = s_rate + mul_factor(s_rate, supply_rate * time_elapsed); 
-    int updated_b_rate = b_rate + mul_factor(b_rate, borrow_rate * time_elapsed);
+    int updated_s_rate = s_rate + mul_factor(constants::factor_scale, s_rate, supply_rate * time_elapsed); 
+    int updated_b_rate = b_rate + mul_factor(constants::factor_scale, b_rate, borrow_rate * time_elapsed);
     return (updated_s_rate, updated_b_rate);
   }
   return (s_rate, b_rate);
@@ -59,7 +59,7 @@
   if (time_elapsed > 0) {
     (int s_rate, int b_rate) = get_current_rates(
       asset_config_collection, asset_dynamics_collection,
-      asset_address
+      asset_address, time_elapsed 
     );
     cell updated_asset = pack_asset_dynamics(price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now(), token_balance);
     asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
@@ -74,14 +74,14 @@
   var (_, collateral_asset_address_hash) = parse_std_addr(collateral_token);
   var (collateral_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, collateral_asset_address_hash);
   var (collateral_price, _, _, _, _, _, _) = unpack_asset_dynamics(collateral_asset_dynamics);
+  var (collateral_asset_config, _) = asset_config_collection.udict_get?(256, collateral_asset_address_hash);
+  (_, int collateral_decimals, _, _, int liquidation_penalty, _, _, _, _, _, _) = unpack_asset_config(collateral_asset_config);
   var (_, borrow_asset_address_hash) = parse_std_addr(borrow_token);
   var (borrow_asset_config, _) = asset_config_collection.udict_get?(256, borrow_asset_address_hash);
-  (_, int borrow_decimals, _, _, int liquidation_penalty, _, _, _, _, _, _) = unpack_asset_config(borrow_asset_config);
-  int asset_price_discounted = mul_factor(collateral_price, constants::factor_scale - liquidation_penalty);
+  (_, int borrow_decimals, _, _, _, _, _, _, _, _, _) = unpack_asset_config(borrow_asset_config);
+  int asset_price_discounted = mul_factor(constants::asset_coefficient_scale, collateral_price, constants::asset_coefficient_scale - liquidation_penalty);
   var (borrow_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, borrow_asset_address_hash);
   var (borrow_price, _, _, _, _, _, _) = unpack_asset_dynamics(borrow_asset_dynamics);
-  var (collateral_asset_config, _) = asset_config_collection.udict_get?(256, collateral_asset_address_hash);
-  (_, int collateral_decimals, _, _, _, _, _, _, _, _, _) = unpack_asset_config(collateral_asset_config);
   return (borrow_price * amount * collateral_decimals / asset_price_discounted / borrow_decimals);
 }
 
@@ -92,15 +92,14 @@
 ) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
-  var (price, _, _, total_supply_principal, total_borrow_principal, _, _) = unpack_asset_dynamics(asset_dynamics);
+  var (_, _, _, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
-    asset_address
+    asset_address, now() - last_accural
   );
-  int total_supply = principal_value_supply_calc(s_rate, total_supply_principal);
-  int total_borrow = principal_value_borrow_calc(b_rate, total_borrow_principal);
-  int protocol_balance_by_token = 0; ;;todo take it from store
-  return (protocol_balance_by_token - total_supply + total_borrow);
+  int total_supply = present_value_calc(s_rate, total_supply_principal);
+  int total_borrow = present_value_calc(b_rate, total_borrow_principal);
+  return (token_balance - total_supply + total_borrow);
 }
 
 (int, int) get_asset_totals (
@@ -110,10 +109,10 @@
 ) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
-  var (price, _, _, total_supply_principal, total_borrow_principal, _, _) = unpack_asset_dynamics(asset_dynamics);
+  var (price, _, _, total_supply_principal, total_borrow_principal, last_accural, _) = unpack_asset_dynamics(asset_dynamics);
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
-    asset_address
+    asset_address, now() - last_accural
   );
   int total_supply = present_value_calc(s_rate, total_supply_principal);
   int total_borrow = present_value_calc(b_rate, total_borrow_principal);

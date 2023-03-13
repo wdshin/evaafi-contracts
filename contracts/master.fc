@@ -48,11 +48,13 @@
 
 () process_incoming_asset(
   cell asset_config_collection, cell asset_dynamics_collection,
-  int asset_master_hash, slice owner_address, int amount
+  int asset_master_hash, slice owner_address, int amount 
 ) impure {
+  var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_master_hash); ;; todo asset_master_hash ???? 
+  var (_, _, _, _, _, last_accural, _) = unpack_asset_dynamics(asset_dynamics);
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
-    calc_address_from_hash(asset_master_hash)
+    calc_address_from_hash(asset_master_hash), now() - last_accural 
   );
   send_message_to_lending_wallet(
     owner_address,

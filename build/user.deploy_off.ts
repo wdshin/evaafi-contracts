@@ -32,7 +32,7 @@ export function initMessage() {
     .endCell()
 
   const tonPositionPrincipal = beginCell()
-    .storeIint(180, 64)
+    .storeInt(180, 64)
     .endCell()
 
   user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
