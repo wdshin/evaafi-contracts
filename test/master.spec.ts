@@ -179,7 +179,7 @@ describe("evaa user sc tests", () => {
     const tx = await user_contract.invokeGetMethod('getAccountAssetBalance', [{
       type: "cell_slice",
       value: beginCell()
-        .storeAddress(randomAddress('ton'))
+        .storeAddress(randomAddress('usdt'))
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
