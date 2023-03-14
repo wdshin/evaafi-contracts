@@ -1,6 +1,6 @@
 import { beginDict, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { op, logs, principals_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { op, logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import BN from 'bn.js';
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
@@ -174,7 +174,7 @@ describe("evaa user sc tests", () => {
     // logs(tx);
   });
 
-  it("user run get account asset balance get method", async () => {
+  it("user run get account asset balance", async () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAccountAssetBalance', [{
       type: "cell_slice",
@@ -183,7 +183,7 @@ describe("evaa user sc tests", () => {
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
-    }, { type: 'int', value: '10403094103' }, { type: 'int', value: '46619100048' }]);
+    }, { type: 'int', value: '1000134550000000000' }, { type: 'int', value: '1000432100000000000' }]);
     // logs(tx);
     console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
@@ -193,14 +193,14 @@ describe("evaa user sc tests", () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAccountBalances', [{ type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
     // logs(tx);
-    console.log(principals_parse((tx.result[0] as Cell).beginParse()))
+    console.log(balances_parse((tx.result[0] as Cell).beginParse()))
     expect(tx.type).equals('success');
   });
 
   it("user run get avl to borr method", async () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAvailableToBorrow', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
-    // logs(tx);
+    logs(tx);
     console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
   });

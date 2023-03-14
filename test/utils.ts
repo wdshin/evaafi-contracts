@@ -214,7 +214,7 @@ export const reserves_parse = (dict: any) => {
   return data_dict;
 }
 
-export const principals_parse = (dict: any) => {
+export const balances_parse = (dict: any) => {
   const data_dict = parseDict(dict, 256, i => ({
     principal: BigInt(i.readInt(65).toString()),
   }));
