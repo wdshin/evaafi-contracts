@@ -85,14 +85,15 @@ export const logs = (tx: any) => {
 
 const asset_dynamics_collection = beginDict(256);
 const asset_config_collection = beginDict(256);
-
+console.log(
+)
 const tonDataCell = beginCell()
   .storeUint(2000000000, 64)
   .storeUint(new BN("DE253E29D831800", 'hex'), 64)
   .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
   .storeUint(40000000000, 64)
   .storeUint(35000000000, 64)
-  .storeUint((new Date()).getTime() * 1000, 64)
+  .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
   .storeUint(10000000000, 64)
   .endCell()
 
@@ -102,7 +103,7 @@ const usdtDataCell = beginCell()
   .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
   .storeUint(500000000, 64) //todo
   .storeUint(400000000, 64)//todo
-  .storeUint((new Date()).getTime() * 1000, 64)
+  .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
   .storeUint(100000000, 64)
   .endCell()
 
@@ -168,7 +169,7 @@ export const asset_dynamics_parse = (dict: any) => {
     b_rate: BigInt(i.readUint(64).toString()),
     totalSupply: BigInt(i.readUint(64).toString()),
     totalBorrow: BigInt(i.readUint(64).toString()),
-    lastAccural: BigInt(i.readUint(64).toString()),
+    lastAccural: BigInt(i.readUint(32).toString()),
     balance: BigInt(i.readUint(64).toString()),
   }));
   return data_dict;
@@ -215,7 +216,7 @@ export const reserves_parse = (dict: any) => {
 
 export const principals_parse = (dict: any) => {
   const data_dict = parseDict(dict, 256, i => ({
-    principal: (i.readInt(65)),
+    principal: BigInt(i.readInt(65).toString()),
   }));
   return data_dict;
 }

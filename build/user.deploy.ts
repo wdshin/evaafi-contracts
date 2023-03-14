@@ -1,5 +1,6 @@
 import { beginDict, Cell, Address, beginCell, toNano, TupleSlice, WalletContract } from "ton";
-import { randomAddress, sendInternalMessageWithWallet } from "../test/utils";
+import { op, logs, principals_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { sendInternalMessageWithWallet } from "../test/utils";
 import { hex as userHex } from "./user.compiled.json";
 import BN from "bn.js";
 
@@ -25,20 +26,10 @@ export function initData() {
 
 // return the op that should be sent to the contract on deployment, can be "null" to send an empty message
 export function initMessage() {
-  const user_principals = beginDict(256);
-
-  const usdtPositionPrincipal = beginCell()
-    .storeInt(-200, 64)
-    .endCell()
-
-  const tonPositionPrincipal = beginCell()
-    .storeInt(180, 64)
-    .endCell()
-
-  user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
-  user_principals.storeCell(randomAddress('usdt').hash, tonPositionPrincipal)
-
-  return beginCell().storeUint(op.init_user, 32).storeUint(0, 64).storeDict(user_principals.endCell())
+  return beginCell()
+    .storeUint(op.init_user, 32)
+    .storeUint(0, 64)
+    .storeDict(user_principals_packed_dict)
     .endCell();
 }
 
