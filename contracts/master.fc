@@ -46,16 +46,19 @@
 }
 
 
-() process_incoming_asset(
+cell process_incoming_asset(
   cell asset_config_collection, cell asset_dynamics_collection,
   int asset_master_hash, slice owner_address, int amount 
 ) impure {
-  var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_master_hash); ;; todo asset_master_hash ???? 
-  var (_, _, _, _, _, last_accural, _) = unpack_asset_dynamics(asset_dynamics);
+  (int price, int s_rate, int b_rate,
+	int total_supply_principal, int total_borrow_principal,
+	int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_master_hash);
+
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
     calc_address_from_hash(asset_master_hash), now() - last_accural 
   );
+
   send_message_to_lending_wallet(
     owner_address,
     pack_supply_message(
@@ -64,14 +67,21 @@
       s_rate, b_rate
     )
   );
-  ;; TODO: update the current amount of corresponding asset
+
+  asset_dynamics_collection~asset_dynamics_collection:set_packed(
+    price, s_rate, b_rate,
+    total_supply_principal, total_borrow_principal,
+    last_accural, token_balance + amount
+  );
+
+  return asset_dynamics_collection;
 }
 
-() process_incoming_ton(
+cell process_incoming_ton(
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int amount
 ) impure {
-  process_incoming_asset(
+  return process_incoming_asset(
     asset_config_collection, asset_dynamics_collection,
     constants::ton_dummy_hash, owner_address, amount
   );
@@ -91,21 +101,33 @@
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
-    process_incoming_ton(
+    asset_dynamics_collection = process_incoming_ton(
       asset_config_collection, asset_dynamics_collection,
-      sender_address, my_balance
+      sender_address, msg_value
     );
-    ;; ??? save?
+    storage::save(
+      meta, user_contract_code,
+      asset_config_collection, 
+      if_active, admin, wallet_to_master,
+      asset_dynamics_collection
+    );
+
     return ();
   }
 
   int op = in_msg_body~load_op_code();
   if (op == 0) { ;; TON incoming (with comment)
-    process_incoming_ton(
+    asset_dynamics_collection = process_incoming_ton(
       asset_config_collection, asset_dynamics_collection,
-      sender_address, my_balance
+      sender_address, msg_value
     );
-    ;; ??? save?
+    storage::save(
+      meta, user_contract_code,
+      asset_config_collection, 
+      if_active, admin, wallet_to_master,
+      asset_dynamics_collection
+    );
+    
     return ();
   }
 
@@ -114,6 +136,8 @@
   ;; More common op codes are checked first to save a little gas
   if (op == op::supply_success) {
     (int asset_id, int repay_amount_principal, int supply_amount_principal) = parse_supply_success_message(in_msg_body);
+
+    ;; TODO !!! verify the sender is indeed Lending wallet !!!
 
     (int price, int s_rate, int b_rate,
     int total_supply_principal, int total_borrow_principal,
@@ -207,12 +231,18 @@
 
     ;; ---------------------
     ;; todo compile fix
-    ;;process_incoming_asset(
+    ;;asset_dynamics_collection = process_incoming_asset(
     ;;  asset_config_collection, asset_dynamics_collection,
     ;;  jetton_master_address, from_address, jetton_amount
     ;;);
     ;; ---------------------
-    ;; ??? save?
+    ;; storage::save(
+    ;;   meta, user_contract_code,
+    ;;   asset_config_collection, 
+    ;;   if_active, admin, wallet_to_master,
+    ;;   asset_dynamics_collection
+    ;; );
+
     return ();
   }
   ;; ??? Where does liquidate go?
