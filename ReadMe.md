@@ -1,3 +1,19 @@
+# EVAA | Evaa Protocol Smart Contracts | Hack-a-TONx w/ DoraHacks
+Welcome to EVAA - Evaa Protocol smart cotntracts  GitHub repository! This repository contains the smartcontracts for the first lending protocol on TON blockchain.
+
+![Evaa Protocol](assets/evaa_smarts_git.png)
+
+Smart contracts is written using `FunC`
+
+## Contacts 
+If you want to contribute or found a bug, write here on telegram please -  https://t.me/sepezho 
+
+
+----------- 
+
+
+# OLD
+
 Документ пока что очень сырой
 
 # Терминология
