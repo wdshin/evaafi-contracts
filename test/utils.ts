@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { beginCell, beginDict, Address, Cell, CellMessage, InternalMessage, CommonMessageInfo, WalletContract, SendMode, Wallet } from "ton";
+import { beginCell, parseDict, beginDict, Address, Cell, CellMessage, InternalMessage, CommonMessageInfo, WalletContract, SendMode, Wallet } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import Prando from "prando";
 
@@ -40,7 +40,7 @@ export function internalMessage(params: { from?: Address; to?: Address; value?: 
 // temp fix until ton-contract-executor (unit tests) remembers c7 value between calls
 export function setBalance(contract: SmartContract, balance: BN) {
   contract.setC7Config({
-    balance: balance.toNumber(),
+    balance: balance.toNumber()
   });
 }
 
@@ -161,3 +161,69 @@ export const user_principals_packed_dict = user_principals.endCell()
 export const asset_config_collection_packed_dict = asset_config_collection.endCell()
 export const asset_dynamics_collection_packed_dict = asset_dynamics_collection.endCell()
 
+export const asset_dynamics_parse = (dict: any) => {
+  const data_dict = parseDict(dict, 256, i => ({
+    price: BigInt(i.readUint(64).toString()),
+    s_rate: BigInt(i.readUint(64).toString()),
+    b_rate: BigInt(i.readUint(64).toString()),
+    totalSupply: BigInt(i.readUint(64).toString()),
+    totalBorrow: BigInt(i.readUint(64).toString()),
+    lastAccural: BigInt(i.readUint(64).toString()),
+    balance: BigInt(i.readUint(64).toString()),
+  }));
+  return data_dict;
+}
+
+export const asset_config_parse = (dict: any) => {
+  const data_dict = parseDict(dict, 256, src => {
+    const oracle = src.readAddress();             //store_slice(oracle)
+    const decimals = BigInt(src.readUint(8).toString());             //.store_uint(decimals, 8)
+    const ref = src.readRef();       //.store_ref(begin_cell()
+    const collateralFactor = BigInt(ref.readUint(16).toString());    //.store_uint(collateral_factor, 16) 
+    const liquidationThreshold = BigInt(ref.readUint(16).toString());//.store_uint(liquidation_threshold, 16) 
+    const liquidationPenalty = BigInt(ref.readUint(16).toString());  // .store_uint(liquidation_penalty, 16)
+    const baseBorrowRate = BigInt(ref.readUint(64).toString());      //.store_uint(base_borrow_rate, 64) 
+    const borrowRateSlopeLow = BigInt(ref.readUint(64).toString());  //.store_uint(borrow_rate_slope_low, 64) 
+    const borrowRateSlopeHigh = BigInt(ref.readUint(64).toString()); //.store_uint(supply_rate_slope_low, 64) 
+    const supplyRateSlopeLow = BigInt(ref.readUint(64).toString());  //.store_uint(supply_rate_slope_low, 64) 
+    const supplyRateSlopeHigh = BigInt(ref.readUint(64).toString()); //.store_uint(supply_rate_slope_high, 64) 
+    const targeUtilization = BigInt(ref.readUint(64).toString());    //.store_uint(target_utilization, 64) 
+
+    return {
+      oracle, decimals, collateralFactor, liquidationThreshold,
+      liquidationPenalty, baseBorrowRate, borrowRateSlopeLow,
+      borrowRateSlopeHigh, supplyRateSlopeLow, supplyRateSlopeHigh, targeUtilization
+    }
+  })
+  return data_dict;
+}
+
+export const rates_parse = (dict: any) => {
+  const data_dict = parseDict(dict, 256, i => ({
+    s_rate_per_second: BigInt(i.readUint(64).toString()),
+    b_rate_per_second: BigInt(i.readUint(64).toString()),
+  }));
+  return data_dict;
+}
+
+export const reserves_parse = (dict: any) => {
+  const data_dict = parseDict(dict, 256, i => ({
+    reserve: BigInt(i.readInt(65).toString()),
+  }));
+  return data_dict;
+}
+
+export const principals_parse = (dict: any) => {
+  const data_dict = parseDict(dict, 256, i => ({
+    principal: (i.readInt(65)),
+  }));
+  return data_dict;
+}
+
+export function hex2a(hexx: any) {
+  var hex = hexx.toString();//force conversion
+  var str = '';
+  for (var i = 0; i < hex.length; i += 2)
+    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  return str;
+}

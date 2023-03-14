@@ -12,10 +12,10 @@
     var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
     var (price, asset_s_rate, asset_b_rate, total_supply_principal, total_borrow_principal, last_accural, token_balance) = unpack_asset_dynamics(asset_dynamics);
     int balance = get_account_asset_balance(calc_address_from_hash(asset_address_hash), asset_s_rate, asset_b_rate);
-    account_balances~udict_set(256, asset_address_hash, begin_cell().store_int(balance, 64).end_cell().begin_parse()); ;; todo tests
+    account_balances~udict_set(256, asset_address_hash, begin_cell().store_int(balance, 65).end_cell().begin_parse()); ;; todo tests
     (asset_address_hash, asset_value_principal_packed, flag) = user_principals.udict_get_next?(256,asset_address_hash);
   }
-  return (begin_cell().store_dict(account_balances).end_cell());
+  return (account_balances);
 }
 
 (int) getAvailableToBorrow (cell asset_config_collection, cell asset_dynamics_collection) method_id {

@@ -1,11 +1,18 @@
 import { beginDict, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { op, logs, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { op, logs, principals_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import BN from 'bn.js';
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 import { expect } from "chai";
 
+const oracleOnChainMetadataSpec: {
+  [key in any]: 'utf8' | 'ascii' | undefined;
+} = {
+  name: 'utf8',
+  description: 'utf8',
+  image: 'ascii',
+};
 let contract: SmartContract;
 describe("evaa master sc tests", () => {
   beforeEach(async () => {
@@ -88,12 +95,11 @@ describe("evaa master sc tests", () => {
           .endCell(),
       }) as any
     );
-
     // logs(tx);
     expect(tx.type).equals('success');
   });
 
-  it("master run get updated rates", async () => {
+  it("master run get updated rates for usdt", async () => {
     //@ts-ignore
     const tx = await contract.invokeGetMethod('getUpdatedRates', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, {
       type: "cell_slice",
@@ -103,21 +109,39 @@ describe("evaa master sc tests", () => {
         .toBoc({ idx: false })
         .toString("base64")
     }, { type: 'int', value: '10' }]);
-
     // logs(tx);
+    // todo
+    // const res = tx.result.map(e => BigInt(e));
+    // expect(res[0]).equals('success'); // todo
+    // expect(res[1]).equals('success');
     expect(tx.type).equals('success');
   });
 
   it("master run get asset data method", async () => {
     const tx = await contract.invokeGetMethod('getAssetsData', []);
     // logs(tx);
+    const dict = asset_dynamics_parse((tx.result[0] as Cell).beginParse())
+    // console.log(dict)
     expect(tx.type).equals('success');
   });
 
   it("master run get ui variables method", async () => {
     const tx = await contract.invokeGetMethod('getUIVariables', []);
     // logs(tx);
+    const dict_asset_dynamics = asset_dynamics_parse((tx.result[0] as Cell).beginParse())
+    console.log(dict_asset_dynamics)
+    const conf = (tx.result[1] as Cell).beginParse();
+    const metadata = (conf.readRef().readBuffer(('Main evaa pool.').length).toString())
+    conf.readRef();
+    const confRef = conf.readRef();
+    const asset_config = asset_config_parse(confRef.readRef())
+    console.log(asset_config);
+    const rates = rates_parse((tx.result[2] as Cell).beginParse())
+    console.log(rates);
+    const reserves = reserves_parse((tx.result[3] as Cell).beginParse())
+    console.log(reserves);
     expect(tx.type).equals('success');
+    expect(metadata).equals('Main evaa pool.');
   });
 });
 
@@ -147,7 +171,6 @@ describe("evaa user sc tests", () => {
           .endCell(),
       }) as any
     );
-
     // logs(tx);
   });
 
@@ -160,8 +183,9 @@ describe("evaa user sc tests", () => {
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
-    }, { type: 'int', value: '1' }, { type: 'int', value: '2' }]);
+    }, { type: 'int', value: '10403094103' }, { type: 'int', value: '46619100048' }]);
     // logs(tx);
+    console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
   });
 
@@ -169,6 +193,7 @@ describe("evaa user sc tests", () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAccountBalances', [{ type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
     // logs(tx);
+    console.log(principals_parse((tx.result[0] as Cell).beginParse()))
     expect(tx.type).equals('success');
   });
 
@@ -176,6 +201,7 @@ describe("evaa user sc tests", () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAvailableToBorrow', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
     // logs(tx);
+    console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
   });
 
