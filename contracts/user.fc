@@ -111,7 +111,7 @@ int get_principal(cell principals, int asset_id) {
     return();
   }
   
-  if (op == op::withdraw) {
+  if (op == op::withdraw_user) {
     ;; todo/from master
   }
    

@@ -12,6 +12,7 @@
 #include "src/master-utils.fc";
 #include "src/master-get-methods.fc";
 #include "src/supply-message.fc";
+#include "src/withdraw-message.fc";
 
 (cell) calculate_user_init_state(slice owner_address) {
   return begin_cell()
@@ -45,7 +46,6 @@
   send_message_to_lending_wallet(owner_address, begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
 }
 
-
 ;; --------------- Supply ---------------
 
 cell process_incoming_asset(
@@ -72,7 +72,7 @@ cell process_incoming_asset(
   );
 
   asset_dynamics_collection~asset_dynamics_collection:set_packed(
-    price, s_rate, b_rate,
+    asset_master_hash, price, s_rate, b_rate,
     total_supply_principal, total_borrow_principal,
     last_accural, token_balance + amount
   );
@@ -95,7 +95,7 @@ cell process_incoming_ton(
 
 () process_withdraw_master(
   cell asset_config_collection, cell asset_dynamics_collection,
-  slice owner_address, int asset_id, int amount
+  slice owner_address, int asset_id, int amount, int query_id
 ) {
   (_, _, _, _, _,	int last_accural, _) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
 
@@ -171,7 +171,7 @@ cell process_incoming_ton(
     int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
 
     asset_dynamics_collection~asset_dynamics_collection:set_packed(
-      asset_id,
+       asset_id,
       price, s_rate, b_rate,
       total_supply_principal + supply_amount_principal,
       total_borrow_principal - repay_amount_principal,
@@ -237,7 +237,7 @@ cell process_incoming_ton(
 
     process_withdraw_master(
       asset_config_collection, asset_dynamics_collection,
-      sender_address, asset_id, amount
+      sender_address, asset_id, amount, query_id
     );
 
     ;; No need to save anything yet

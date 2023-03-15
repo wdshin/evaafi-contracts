@@ -110,8 +110,8 @@ const usdtDataCell = beginCell()
 asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
 asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
-asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
-asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
+// asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
+// asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
 const tonConfigCell = beginCell()
   .storeAddress(randomAddress('oracle'))
   .storeUint(8, 8)
@@ -149,8 +149,8 @@ const atonConfigCell = tonConfigCell
 asset_config_collection.storeCell(randomAddress('ton').hash, tonConfigCell)
 asset_config_collection.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
-asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
-asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
+// asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
+// asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
 
 const user_principals = beginDict(256);
 
@@ -173,8 +173,8 @@ const tonSecondPositionPrincipal = beginCell()
   .storeInt(-100 * 100000000, 64)
   .endCell()
 
-user_principals.storeCell(randomAddress('near').hash, tonSecondPositionPrincipal)
-user_principals.storeCell(randomAddress('sol').hash, usdtSecondPositionPrincipal)
+// user_principals.storeCell(randomAddress('near').hash, tonSecondPositionPrincipal)
+// user_principals.storeCell(randomAddress('sol').hash, usdtSecondPositionPrincipal)
 
 export const user_principals_packed_dict = user_principals.endCell()
 export const asset_config_collection_packed_dict = asset_config_collection.endCell()

@@ -218,8 +218,17 @@ describe("evaa user sc tests", () => {
   it("user run get is liquidable", async () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getIsLiquidable', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
+    // logs(tx);
+    console.log(tx.result[0]?.toString())
+    expect(tx.type).equals('success');
+  });
+
+  it("user run get agregated balances", async () => {
+    //@ts-ignore
+    const tx = await user_contract.invokeGetMethod('getAggregatedBalances', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
     logs(tx);
     console.log(tx.result[0]?.toString())
+    console.log(tx.result[1]?.toString())
     expect(tx.type).equals('success');
   });
 

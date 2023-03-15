@@ -28,4 +28,4 @@
   cell asset_dynamics_collection = ds~load_dict();
   return (meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
 }
-
+ 
