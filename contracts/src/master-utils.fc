@@ -48,9 +48,10 @@
   return (s_rate, b_rate);
 }
 
-;; TODO: refactor
-(_) accure_interest (slice asset_address) {
-  (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
+cell accure_interest (
+  cell asset_config_collection, cell asset_dynamics_collection,
+  slice asset_address
+) {
   var (_, asset_address_hash) = parse_std_addr(asset_address);
   var (asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, asset_address_hash);
 
@@ -63,8 +64,8 @@
     );
     cell updated_asset = pack_asset_dynamics(price, s_rate, b_rate, total_supply_principal, total_borrow_principal, now(), token_balance);
     asset_dynamics_collection~dict_set(256, asset_address, updated_asset.begin_parse());
-    storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
   }
+  return asset_dynamics_collection;
 }
 
 (int) get_collateral_quote (
