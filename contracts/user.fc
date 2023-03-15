@@ -75,18 +75,8 @@ int get_principal(cell principals, int asset_id) {
     int new_principal = principal_value(s_rate, b_rate, present);
     user_principals~set_principal(asset_master_hash, new_principal);
 
-    int repay_amount_principal = 0;
-    int supply_amount_principal = 0;
-    if (old_principal < 0) {
-      if (new_principal <= 0) {
-        repay_amount_principal = new_principal - old_principal;
-      } else {
-        repay_amount_principal = - old_principal;
-        supply_amount_principal = new_principal;
-      }
-    } else {
-      supply_amount_principal = new_principal - old_principal;
-    }
+    (int repay_amount_principal,
+     int supply_amount_principal) = around_zero_split(old_principal, new_principal);
 
     send_message(
       master_address, 0,
@@ -113,7 +103,10 @@ int get_principal(cell principals, int asset_id) {
     int new_principal = principal_value(s_rate, b_rate, present);
     user_principals~set_principal(asset_id, new_principal);
 
-    if (is_borrow_collateralized(asset_config_collection, asset_dynamics_collection, user_principals)) {
+    if (is_borrow_collateralized(
+      asset_config_collection, asset_dynamics_collection,
+      user_principals
+    )) {
       
     }
   }

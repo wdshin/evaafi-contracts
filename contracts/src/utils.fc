@@ -30,6 +30,23 @@
   }
 }
 
+(int, int) around_zero_split(int lower, int upper) {
+  int below = 0;
+  int above = 0;
+  
+  if (lower < 0) {
+    if (upper <= 0) {
+      below = upper - lower;
+    } else {
+      below = - lower;
+      above = upper;
+    }
+  } else {
+    above = upper - lower;
+  }
+  return (below, above);
+}
+
 (int, int) calc_supply_principals (int old_principal, int new_principal) {
   if (new_principal < old_principal) {
     return (0, 0);

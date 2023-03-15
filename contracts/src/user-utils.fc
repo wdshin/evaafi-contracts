@@ -21,10 +21,13 @@
   return (borrow_limit < borrow_amount);
 }
 
-(int) get_avaliable_to_borrow(cell asset_config_collection, cell asset_dynamics_collection) {
+(int) get_avaliable_to_borrow(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  cell user_principals
+) {
   int borrow_limit = 0;
   int borrow_amount = 0;
-  (slice master, slice user, cell user_principals) = storage::load();
+
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
   while (flag) {
     int asset_value_principal = asset_value_principal_packed~load_principal();
@@ -45,8 +48,15 @@
   return borrow_limit - borrow_amount;
 }
 
-(int) is_borrow_collateralized (cell asset_config_collection, cell asset_dynamics_collection) {
-  return (get_avaliable_to_borrow(asset_config_collection, asset_dynamics_collection) > 0); ;; TODO@sepezho: shouldn't it be >= instead of > ?
+(int) is_borrow_collateralized (
+  cell asset_config_collection, cell asset_dynamics_collection,
+  cell user_principals
+) {
+  return (get_avaliable_to_borrow(
+      asset_config_collection, asset_dynamics_collection,
+      user_principals
+    ) > 0 ;; TODO@sepezho: shouldn't it be >= instead of > ?
+  );
 }
 
 (int) get_account_asset_balance (slice asset_address, int s_rate, int b_rate) {

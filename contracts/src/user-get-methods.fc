@@ -19,7 +19,12 @@
 }
 
 (int) getAvailableToBorrow (cell asset_config_collection, cell asset_dynamics_collection) method_id {
- return get_avaliable_to_borrow(asset_config_collection, asset_dynamics_collection);
+  (_, _, cell user_principals) = storage::load();
+
+  return get_avaliable_to_borrow(
+    asset_config_collection, asset_dynamics_collection,
+    user_principals
+  );
 }
 
 (int) getIsLiquidable (cell asset_config_collection, cell asset_dynamics_collection) method_id {
