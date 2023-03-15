@@ -4,10 +4,13 @@
 	return (asset_id, amount);
 }
 
+
+;; ??? Should we send s/b-rate separately?, since it's obtainable from the asset_dynamics_collection
 cell pack_withdraw_user_message(
 	int query_id,
 	int asset_id, int withdraw_amount_current,
-	int s_rate, int b_rate
+	int s_rate, int b_rate,
+	cell asset_config_collection, cell asset_dynamics_collection
 ) {
 	return begin_cell()
 		.store_op_code(op::withdraw_user)
@@ -16,14 +19,67 @@ cell pack_withdraw_user_message(
 		.store_amount(withdraw_amount_current)
 		.store_sb_rate(s_rate)
 		.store_sb_rate(b_rate)
+		.store_dict(asset_config_collection)
+		.store_dict(asset_dynamics_collection)
 		.end_cell();
 }
 
-(int, int, int, int) parse_withdraw_user_message(slice cs) {
+(int, int, int, int, cell, cell) parse_withdraw_user_message(slice cs) {
 	return (
 		cs~load_asset_id(),
 		cs~load_amount(),
 		cs~load_sb_rate(),
-		cs~load_sb_rate()
+		cs~load_sb_rate(),
+		cs~load_dict(),
+		cs~load_dict()
 	);
+}
+
+
+cell pack_withdraw_collateralized_message(
+	int query_id, int asset_id,
+	int borrow_amount_principal, int reclaim_amount_principal
+) {
+	return begin_cell()
+		.store_op_code(op::withdraw_collateralized)
+		.store_query_id(query_id)
+		.store_asset_id(asset_id)
+		.store_principal(borrow_amount_principal)
+		.store_principal(reclaim_amount_principal)
+		.end_cell();
+}
+
+(int, int, int) parse_withdraw_collateralized_message(slice cs) {
+	return (
+		cs~load_asset_id(),
+		cs~load_principal(),
+		cs~load_principal()
+	);
+}
+
+
+cell pack_withdraw_success_message(int query_id) {
+	return begin_cell()
+		.store_op_code(op::withdraw_success)
+		.store_query_id(query_id)
+		.end_cell();
+}
+;; there is no corresponding parse function
+;; because this message has no parameters to parse
+
+cell pack_withdraw_fail_message(
+	int query_id, int asset_id, int principal_amount
+) {
+	return begin_cell()
+		.store_op_code(op::withdraw_fail)
+		.store_query_id(query_id)
+		.store_asset_id(asset_id)
+		.store_principal(amount)
+		.end_cell();
+}
+
+(int, int) parse_withdraw_fail_message(slice cs) {
+	int asset_id = cs~load_asset_id();
+	int principal_amount = cs~load_principal();
+	return (asset_id, principal_amount);
 }

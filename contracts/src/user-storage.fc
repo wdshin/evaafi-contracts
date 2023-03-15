@@ -4,20 +4,25 @@
     slice(256) jetton_address -> int(64) value
 -}
 
-() storage::save (slice master_address, slice owner_address, cell user_principals) impure {
+() storage::save (
+  slice master_address, slice owner_address,
+  cell user_principals, int locked
+) impure {
   cell data = begin_cell()
     .store_slice(master_address)
     .store_slice(owner_address)
     .store_dict(user_principals)
+    .store_bool(locked)
   .end_cell();
   set_data(data);
 }
 
-(slice, slice, cell) storage::load () {
+(slice, slice, cell, int) storage::load () {
   slice ds = get_data().begin_parse();
   slice master_address = ds~load_msg_addr();
   slice owner_address = ds~load_msg_addr();
   cell user_principals = ds~load_dict();
-  return (master_address, owner_address, user_principals);
+  int locked = ds~load_bool();
+  return (master_address, owner_address, user_principals, locked);
 }
 
