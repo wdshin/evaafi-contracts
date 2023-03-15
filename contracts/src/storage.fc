@@ -15,6 +15,22 @@ builder store_address_hash(builder b, int address_hash) inline {
 	return cs.load_uint(256);
 }
 
+builder store_asset_id(builder b, int asset_id) inline {
+	return b.store_uint(asset_id, 256);
+}
+
+(slice, int) load_asset_id(slice cs) inline {
+	return cs.load_uint(256);
+}
+
+builder store_amount(builder b, int amount) inline {
+	return b.store_uint(amount, 64);
+}
+
+(slice, int) load_amount(slice cs) inline {
+	return cs.load_uint(64);
+}
+
 builder store_balance(builder b, int balance) inline {
 	return b.store_uint(balance, 64);
 }

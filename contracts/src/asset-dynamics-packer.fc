@@ -49,10 +49,10 @@ cell pack_asset_dynamics(
 	int last_accural, int token_balance
 ) {
 	cell asset_dynamics = pack_asset_dynamics(
-			price, s_rate, b_rate,
-			total_supply_principal, total_borrow_principal,
-			last_accural, token_balance
-		);
+		price, s_rate, b_rate,
+		total_supply_principal, total_borrow_principal,
+		last_accural, token_balance
+	);
 
 	return (asset_dynamics_collection.udict_set(
 		256, asset_id, asset_dynamics.begin_parse() 
