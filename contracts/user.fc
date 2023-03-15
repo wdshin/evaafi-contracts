@@ -103,7 +103,8 @@ int get_principal(cell principals, int asset_id) {
     send_message(
       master_address, 0,
       pack_supply_success_message(
-        query_id, asset_master_hash,
+        query_id,
+        owner_address, asset_master_hash,
         repay_amount_principal, supply_amount_principal
       ),
       64 ;; ??? this mode?

@@ -20,7 +20,7 @@
   return begin_cell()
     .store_slice(my_address())
     .store_slice(owner_address)
-    .store_ref(begin_cell().end_cell())
+    .store_dict(new_dict())
     .store_bool(false)
     .end_cell(); 
 }
@@ -192,10 +192,19 @@ cell process_withdraw_master(
 
   ;; More common op codes are checked first to save a little gas
   if (op == op::supply_success) {
-    (int asset_id, int repay_amount_principal, int supply_amount_principal)
+    (slice owner_address, int asset_id,
+     int repay_amount_principal, int supply_amount_principal)
       = parse_supply_success_message(in_msg_body);
 
-    ;; TODO !!! verify the sender is indeed Lending wallet !!!
+    ;; Verify this is a message from lending-user smart contract
+    throw_unless(
+      error::supply_success_fake_sender,
+      slice_data_equal?(
+        sender_address,
+        calculate_user_address(owner_address)
+      )
+    );
+
 
     (int price, int s_rate, int b_rate,
      int total_supply_principal, int total_borrow_principal,

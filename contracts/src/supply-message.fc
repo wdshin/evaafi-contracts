@@ -1,3 +1,4 @@
+;; --------------- op::supply ---------------
 ;; Supply request message
 cell pack_supply_message(
 	int query_id,
@@ -24,23 +25,27 @@ cell pack_supply_message(
 }
 
 
+
+;; --------------- op::supply_success ---------------
 ;; Supply success (response) message
 cell pack_supply_success_message(
 	int query_id,
-	int asset_master_hash,
+	slice owner_address, int asset_master_hash,
 	int repay_amount_principal, int supply_amount_principal
 ) {
 	return begin_cell()
 		.store_op_code(op::supply_success)
 		.store_query_id(query_id)
+		.store_slice(owner_address)
 		.store_address_hash(asset_master_hash)
 		.store_principal(repay_amount_principal)
 		.store_principal(supply_amount_principal)
 		.end_cell();
 }
 
-(int, int, int) parse_supply_success_message(slice cs) {
+(slice, int, int, int) parse_supply_success_message(slice cs) {
 	return (
+		cs~load_msg_addr(), ;; owner_address
 		cs~load_address_hash(),
 		cs~load_principal(),
 		cs~load_principal()
