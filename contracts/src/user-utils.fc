@@ -45,10 +45,12 @@
   return borrow_limit - borrow_amount;
 }
 
-(int) is_borrow_collateralized (cell asset_config_collection, cell asset_dynamics_collection) {
+(int) is_borrow_collateralized (
+  cell asset_config_collection, cell asset_dynamics_collection,
+  cell user_principals
+) {
   int borrow_amount = 0;
   int borrow_limit = 0;
-  (slice master, slice user, cell user_principals) = storage::load();
   (int asset_address, slice asset_value_principal_packed, int flag) =  user_principals.udict_get_min?(256);
   while (flag) {
     int asset_value_principal = asset_value_principal_packed~load_principal();

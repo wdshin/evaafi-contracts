@@ -102,6 +102,22 @@ int get_principal(cell principals, int asset_id) {
     return ();
   }
 
+  if (op == op::withdraw) {
+    (int asset_id, int withdraw_amount_current, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
+
+    int old_principal = user_principals.get_principal(asset_id);
+    int present = present_value(s_rate, b_rate, old_principal);
+
+    present += withdraw_amount_current;
+
+    int new_principal = principal_value(s_rate, b_rate, present);
+    user_principals~set_principal(asset_id, new_principal);
+
+    if (is_borrow_collateralized(asset_config_collection, asset_dynamics_collection, user_principals)) {
+      
+    }
+  }
+
   if (op == op::init_user) {
     var (_, sender_address_hash) = parse_std_addr(sender_address);
     var (_, master_hash) = parse_std_addr(master_address);
@@ -111,9 +127,6 @@ int get_principal(cell principals, int asset_id) {
     return();
   }
   
-  if (op == op::withdraw) {
-    ;; todo/from master
-  }
    
   if (op == op::liquidate) {
     ;; todo/from master 

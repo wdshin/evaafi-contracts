@@ -19,3 +19,11 @@ cell pack_withdraw_user_message(
 		.end_cell();
 }
 
+(int, int, int, int) parse_withdraw_user_message(slice cs) {
+	return (
+		cs~load_asset_id(),
+		cs~load_amount(),
+		cs~load_sb_rate(),
+		cs~load_sb_rate()
+	);
+}
