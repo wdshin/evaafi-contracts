@@ -1,9 +1,14 @@
+;; --------------- op::withdraw_master ---------------
+
 (int, int) parse_withdraw_master_message(slice cs) {
 	int asset_id = cs~load_asset_id();
 	int amount = cs~load_amount();
 	return (asset_id, amount);
 }
 
+
+
+;; --------------- op::withdraw_user ---------------
 
 ;; ??? Should we send s/b-rate separately?, since it's obtainable from the asset_dynamics_collection
 cell pack_withdraw_user_message(
@@ -36,27 +41,39 @@ cell pack_withdraw_user_message(
 }
 
 
+
+;; --------------- op::withdraw_collateralized ---------------
+
 cell pack_withdraw_collateralized_message(
-	int query_id, int asset_id,
+	int query_id,
+	slice owner_address, int asset_id,
+	int withdraw_amount_current,
 	int borrow_amount_principal, int reclaim_amount_principal
 ) {
 	return begin_cell()
 		.store_op_code(op::withdraw_collateralized)
 		.store_query_id(query_id)
+		.store_slice(owner_address)
 		.store_asset_id(asset_id)
+		.store_amount(withdraw_amount_current)
 		.store_principal(borrow_amount_principal)
 		.store_principal(reclaim_amount_principal)
 		.end_cell();
 }
 
-(int, int, int) parse_withdraw_collateralized_message(slice cs) {
+(slice, int, int, int, int) parse_withdraw_collateralized_message(slice cs) {
 	return (
+		cs~load_msg_addr(), ;; owner_address
 		cs~load_asset_id(),
+		cs~load_amount(),
 		cs~load_principal(),
 		cs~load_principal()
 	);
 }
 
+
+
+;; --------------- op::withdraw_success ---------------
 
 cell pack_withdraw_success_message(int query_id) {
 	return begin_cell()
@@ -66,6 +83,10 @@ cell pack_withdraw_success_message(int query_id) {
 }
 ;; there is no corresponding parse function
 ;; because this message has no parameters to parse
+
+
+
+;; --------------- op::withdraw_fail ---------------
 
 cell pack_withdraw_fail_message(
 	int query_id, int asset_id, int principal_amount

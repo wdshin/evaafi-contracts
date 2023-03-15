@@ -84,7 +84,7 @@ int get_principal(cell principals, int asset_id) {
   ;; --------------- Locked area ---------------
   throw_if(error::user_is_locked, locked);
   ;; No other operations are permitted in case user contract is locked
-  
+
 
   if (op == op::supply) {
     (int asset_master_hash, int supply_amount_current, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
@@ -138,7 +138,9 @@ int get_principal(cell principals, int asset_id) {
       send_message(
         master_address, 0,
         pack_withdraw_collateralized_message(
-          query_id, asset_id,
+          query_id,
+          owner_address, asset_id,
+          withdraw_amount_current,
           borrow_amount_principal, reclaim_amount_principal
         ),
         64 ;; ??? this mode?

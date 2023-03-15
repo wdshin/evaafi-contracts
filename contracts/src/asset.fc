@@ -1,0 +1,24 @@
+() send_asset(int asset_id, slice to_address, int amount, int query_id) {
+	if (asset_id == constants::ton_dummy_hash) {
+		send_messsage(
+			to_address, amount,
+			begin_cell().end_cell(), ;; TODO: send some proper comment, with query_id?
+			64 ;; ??? this mode?
+		);
+	} else {
+		send_message(
+			calc_address_from_hash(asset_id), ;; TODO: optimize
+			constants::jetton_send_ton_attachment, ;; ton amount for network fees
+			begin_cell()
+			.store_query_id(query_id)
+			.store_grams(amount) ;; jetton amount
+			.store_slice(to_address) ;; new owner
+			.store_slice(my_address()) ;; response_destination -> get remaining TON
+			.store_maybe_ref(null()) ;; custom_payload
+			.store_grams(1) ;; minimum nano-TON amount to send transfer_notification
+			.store_bool(false) ;; forward_payload
+			.end_cell(),
+			64 ;; ??? this mode?
+		);
+	}
+}
