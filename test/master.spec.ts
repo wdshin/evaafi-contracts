@@ -143,6 +143,32 @@ describe("evaa master sc tests", () => {
     expect(tx.type).equals('success');
     expect(metadata).equals('Main evaa pool.');
   });
+
+  it("master get collateralQuote", async () => {
+    //@ts-ignore
+    const tx = await contract.invokeGetMethod('getCollateralQuote', [{
+      type: "cell_slice",
+      value: beginCell()
+        .storeAddress(randomAddress('usdt'))
+        .endCell()
+        .toBoc({ idx: false })
+        .toString("base64")
+    }, {
+      type: "cell_slice",
+      value: beginCell()
+        .storeAddress(randomAddress('ton'))
+        .endCell()
+        .toBoc({ idx: false })
+        .toString("base64")
+    }, { type: 'int', value: '200' + '000000' }]);
+    logs(tx);
+    // todo
+    console.log(tx.result[0]?.toString())
+    // const res = tx.result.map(e => BigInt(e));
+    // expect([0]).equals('success'); // todo
+    // expect(res[1]).equals('success');
+    expect(tx.type).equals('success');
+  });
 });
 
 describe("evaa user sc tests", () => {
@@ -189,6 +215,14 @@ describe("evaa user sc tests", () => {
     expect(tx.type).equals('success');
   });
 
+  it("user run get is liquidable", async () => {
+    //@ts-ignore
+    const tx = await user_contract.invokeGetMethod('getIsLiquidable', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
+    logs(tx);
+    console.log(tx.result[0]?.toString())
+    expect(tx.type).equals('success');
+  });
+
   it("user run get acc balances method", async () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAccountBalances', [{ type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
@@ -200,7 +234,7 @@ describe("evaa user sc tests", () => {
   it("user run get avl to borr method", async () => {
     //@ts-ignore
     const tx = await user_contract.invokeGetMethod('getAvailableToBorrow', [{ type: 'cell', value: asset_config_collection_packed_dict.toBoc({ idx: false }).toString('base64') }, { type: 'cell', value: asset_dynamics_collection_packed_dict.toBoc({ idx: false }).toString('base64') }]);
-    logs(tx);
+    // logs(tx);
     console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
   });

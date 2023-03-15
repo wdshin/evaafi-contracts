@@ -110,6 +110,8 @@ const usdtDataCell = beginCell()
 asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
 asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
+asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
+asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
 const tonConfigCell = beginCell()
   .storeAddress(randomAddress('oracle'))
   .storeUint(8, 8)
@@ -142,21 +144,37 @@ const usdtConfigCell = beginCell()
     .endCell())
   .endCell()
 
+const ausdtConfigCell = usdtConfigCell
+const atonConfigCell = tonConfigCell
 asset_config_collection.storeCell(randomAddress('ton').hash, tonConfigCell)
 asset_config_collection.storeCell(randomAddress('usdt').hash, usdtConfigCell)
+
+asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
+asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
 
 const user_principals = beginDict(256);
 
 const usdtPositionPrincipal = beginCell()
-  .storeInt(-200 * 100000000, 64)
+  .storeInt(-200 * 1000000, 64)
   .endCell()
 
 const tonPositionPrincipal = beginCell()
-  .storeInt(180 * 10000000000, 64)
+  .storeInt(100 * 100000000, 64)
   .endCell()
 
-user_principals.storeCell(randomAddress('ton').hash, usdtPositionPrincipal)
-user_principals.storeCell(randomAddress('usdt').hash, tonPositionPrincipal)
+user_principals.storeCell(randomAddress('ton').hash, tonPositionPrincipal)
+user_principals.storeCell(randomAddress('usdt').hash, usdtPositionPrincipal)
+
+const usdtSecondPositionPrincipal = beginCell()
+  .storeInt(200 * 1000000, 64)
+  .endCell()
+
+const tonSecondPositionPrincipal = beginCell()
+  .storeInt(-100 * 100000000, 64)
+  .endCell()
+
+user_principals.storeCell(randomAddress('near').hash, tonSecondPositionPrincipal)
+user_principals.storeCell(randomAddress('sol').hash, usdtSecondPositionPrincipal)
 
 export const user_principals_packed_dict = user_principals.endCell()
 export const asset_config_collection_packed_dict = asset_config_collection.endCell()
@@ -216,7 +234,7 @@ export const reserves_parse = (dict: any) => {
 
 export const balances_parse = (dict: any) => {
   const data_dict = parseDict(dict, 256, i => ({
-    principal: BigInt(i.readInt(65).toString()),
+    balance: BigInt(i.readInt(65).toString()),
   }));
   return data_dict;
 }

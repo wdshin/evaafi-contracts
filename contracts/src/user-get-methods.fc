@@ -22,6 +22,10 @@
  return get_avaliable_to_borrow(asset_config_collection, asset_dynamics_collection);
 }
 
+(int) getIsLiquidable (cell asset_config_collection, cell asset_dynamics_collection) method_id {
+ return is_liquidatable(asset_config_collection, asset_dynamics_collection);
+}
+
 (int) test () method_id {
   return (2);
 }
