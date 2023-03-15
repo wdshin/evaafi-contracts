@@ -127,6 +127,15 @@ cell process_incoming_ton(
 
   (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) = storage::load();
 
+  if (~ if_active) {
+    ;; TODO: process re-enabling
+
+    ;; if it's any other message
+    throw(error::disabled);
+    ;; ??? WAIT
+    ;; What if someone supplies us TONs/Jettons in a disabled state?
+  }
+
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     asset_dynamics_collection = process_incoming_ton(
       asset_config_collection, asset_dynamics_collection,
