@@ -10,8 +10,11 @@ const int op::update_config = 4;
 const int op::supply = 50;
 const int op::supply_success = 51;
 
-const int op::withdraw = 60;
-const int op::withdraw_success = 61;
-const int op::withdraw_fail = 62;
+;; Comment indicates who RECEIVES the message
+const int op::withdraw_master = 60; ;; master
+const int op::withdraw_user = 61; ;; user
+const int op::withdraw_collateralized = 62; ;; master
+const int op::withdraw_success = 63; ;; user
+const int op::withdraw_fail = 64; ;; user
 
 const int op::liquidate = 7;

@@ -46,17 +46,20 @@
 }
 
 
+;; --------------- Supply ---------------
+
 cell process_incoming_asset(
   cell asset_config_collection, cell asset_dynamics_collection,
   int asset_master_hash, slice owner_address, int amount 
 ) impure {
-  (int price, int s_rate, int b_rate,
+  (int price, _, _,
 	int total_supply_principal, int total_borrow_principal,
 	int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_master_hash);
 
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
-    calc_address_from_hash(asset_master_hash), now() - last_accural 
+    calc_address_from_hash(asset_master_hash), ;; TODO@sepezho: this assembles address from hash only to parse it in the first line of the function
+    now() - last_accural 
   );
 
   send_message_to_lending_wallet(
@@ -86,6 +89,30 @@ cell process_incoming_ton(
     constants::ton_dummy_hash, owner_address, amount
   );
   ;; ??? Do we need to withhold some amount of TONs for network fees, etc.?
+}
+
+;; --------------- Withdraw ---------------
+
+() process_withdraw_master(
+  cell asset_config_collection, cell asset_dynamics_collection,
+  slice owner_address, int asset_id, int amount
+) {
+  (_, _, _, _, _,	int last_accural, _) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+
+  (int s_rate, int b_rate) = get_current_rates(
+    asset_config_collection, asset_dynamics_collection,
+    calc_address_from_hash(asset_id), ;; TODO@sepezho: this assembles address from hash only to parse it in the first line of the function
+    now() - last_accural 
+  );
+  
+  send_message_to_lending_wallet(
+    owner_address,
+    pack_withdraw_user_message(
+      query_id,
+      asset_id, amount,
+      s_rate, b_rate
+    )
+  );
 }
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -205,12 +232,26 @@ cell process_incoming_ton(
     return ();
   }
   
-  if (op == op::withdraw) {
-    ;; todo/anyone/to user
+  if (op == op::withdraw_master) {
+    (int asset_id, int amount) = parse_withdraw_master_message(in_msg_body);
+
+    process_withdraw_master(
+      asset_config_collection, asset_dynamics_collection,
+      sender_address, asset_id, amount
+    );
+
+    ;; No need to save anything yet
+    ;; this is just a request to withdraw, no confirmation yet
+
+    return ();
+  }
+
+  if (op == op::withdraw_collateralized) {
+
   }
   
   if (op == op::transfer_notification) {
-    int query_id = in_msg_body~load_query_id(); 
+    ;; int query_id = in_msg_body~load_query_id(); (already loaded before)
     int jetton_amount = in_msg_body~load_coins(); 
     slice from_address = in_msg_body~load_msg_addr();
     
