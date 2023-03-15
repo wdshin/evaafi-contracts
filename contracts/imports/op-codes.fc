@@ -4,16 +4,16 @@ const int op::transfer_notification = 0x7362d09c;
 const int op::init_master = 1;
 const int op::init_user = 2;
 
-const int op::update_price = 3;
-const int op::update_config = 4;
+const int op::update_price = 3; ;; (from oracle)
+const int op::update_config = 4; ;; (from admin)
 
-const int op::supply = 50;
-const int op::supply_success = 51;
+const int op::supply = 50; ;; user
+const int op::supply_success = 51; ;; master (from user)
 
 ;; Comment indicates who RECEIVES the message
-const int op::withdraw_master = 60; ;; master
+const int op::withdraw_master = 60; ;; master (from owner)
 const int op::withdraw_user = 61; ;; user
-const int op::withdraw_collateralized = 62; ;; master
+const int op::withdraw_collateralized = 62; ;; master (from user)
 const int op::withdraw_success = 63; ;; user
 const int op::withdraw_fail = 64; ;; user
 
