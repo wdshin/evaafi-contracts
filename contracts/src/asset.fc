@@ -1,4 +1,4 @@
-() send_asset(int asset_id, slice to_address, int amount, int query_id) {
+() send_asset(slice to_address, int query_id, int asset_id, int amount) {
 	if (asset_id == constants::ton_dummy_hash) {
 		send_messsage(
 			to_address, amount,

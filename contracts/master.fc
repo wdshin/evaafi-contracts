@@ -14,16 +14,19 @@
 #include "src/supply-message.fc";
 #include "src/withdraw-message.fc";
 
+
+;; TODO: refactor repetition with user-storage::save
 (cell) calculate_user_init_state(slice owner_address) {
   return begin_cell()
     .store_slice(my_address())
     .store_slice(owner_address)
     .store_ref(begin_cell().end_cell())
+    .store_bool(false)
     .end_cell(); 
 }
-;; slice calculate_user_address(slice owner_address) {
-;;   return calculate_address(calculate_user_init_state(owner_address));
-;; }
+slice calculate_user_address(slice owner_address) {
+  return calculate_address(calculate_user_init_state(owner_address));
+}
 
 
 ;; ??? Do we need send-mode as a separate parameter?
@@ -287,7 +290,15 @@ cell process_withdraw_master(
      int borrow_amount_principal, int reclaim_amount_principal)
       = parse_withdraw_collateralized_message(in_msg_body);
 
-    ;; TODO !!! Add lending-user security check-challenge !!!
+    ;; Verify this is a message from lending-user smart contract
+    throw_unless(
+      error::withdraw_collateralized_fake_sender,
+      slice_data_equal?(
+        sender_address,
+        calculate_user_address(owner_address)
+      )
+    );
+    
 
     (int price, int s_rate, int b_rate,
      int total_supply_principal, int total_borrow_principal,
