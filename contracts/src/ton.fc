@@ -2,12 +2,22 @@
 
 int slice_data_equal? (slice a, slice b) asm "SDEQ";
 
+
+(slice, int) load_bool(slice cs) inline {
+	return cs.load_int(1);
+}
+builder store_bool(builder b, int v) inline {
+	return b.store_int(v, 1);
+}
+
+
 (slice, int) load_op_code(slice cs) inline {
 	return cs.load_uint(32);
 }
 builder store_op_code(builder b, int op_code) inline {
 	return b.store_uint(op_code, 32);
 }
+
 
 (slice, int) load_query_id(slice cs) inline {
 	return cs.load_uint(64);
