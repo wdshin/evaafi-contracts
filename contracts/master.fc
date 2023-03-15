@@ -96,11 +96,14 @@ cell process_incoming_ton(
 
 ;; --------------- Withdraw ---------------
 
-() process_withdraw_master(
+cell process_withdraw_master(
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int asset_id, int amount, int query_id
 ) {
-  (_, _, _, _, _,	int last_accural, _) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+  (int price, _, _,
+	 int total_supply_principal, int total_borrow_principal,
+	 int last_accural, int token_balance)
+   = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
 
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
@@ -113,9 +116,21 @@ cell process_incoming_ton(
     pack_withdraw_user_message(
       query_id,
       asset_id, amount,
-      s_rate, b_rate
+      s_rate, b_rate,
+      asset_config_collection, asset_dynamics_collection
     )
   );
+
+  asset_dynamics_collection~asset_dynamics_collection:set_packed(
+    asset_master_hash,
+    price,
+    s_rate, b_rate, ;; These are NEW (not unpacked) computed values
+    total_supply_principal, total_borrow_principal,
+    now(), ;; last_accural updated because s_rate and b_rate are new
+    token_balance ;; this doesn't change, because withdraw is not yet confirmed
+  );
+
+  return asset_dynamics_collection;
 }
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -247,13 +262,20 @@ cell process_incoming_ton(
   if (op == op::withdraw_master) {
     (int asset_id, int amount) = parse_withdraw_master_message(in_msg_body);
 
-    process_withdraw_master(
+    asset_dynamics_collection = process_withdraw_master(
       asset_config_collection, asset_dynamics_collection,
       sender_address, asset_id, amount, query_id
     );
 
-    ;; No need to save anything yet
-    ;; this is just a request to withdraw, no confirmation yet
+    ;; The only reason we save is to update s/b-rate of the corresponding asset
+    ;; this is just a request to withdraw, no confirmation yet,
+    ;; so no amounts change
+    storage::save(
+      meta, user_contract_code,
+      asset_config_collection, 
+      if_active, admin, wallet_to_master,
+      asset_dynamics_collection
+    );
 
     return ();
   }
