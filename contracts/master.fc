@@ -72,9 +72,11 @@ cell process_incoming_asset(
   );
 
   asset_dynamics_collection~asset_dynamics_collection:set_packed(
-    price, s_rate, b_rate,
+    price,
+    s_rate, b_rate, ;; These are NEW (not unpacked) computed values
     total_supply_principal, total_borrow_principal,
-    last_accural, token_balance + amount
+    now(), ;; last_accural updated because s_rate and b_rate are new
+    token_balance + amount ;; got money
   );
 
   return asset_dynamics_collection;
