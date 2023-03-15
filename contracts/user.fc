@@ -102,7 +102,7 @@ int get_principal(cell principals, int asset_id) {
     return ();
   }
 
-  if (op == op::withdraw) {
+  if (op == op::withdraw_user) {
     (int asset_id, int withdraw_amount_current, int s_rate, int b_rate) = parse_supply_message(in_msg_body);
 
     int old_principal = user_principals.get_principal(asset_id);
@@ -126,7 +126,6 @@ int get_principal(cell principals, int asset_id) {
     storage::save(master_address, owner_address, new_user_principals);
     return();
   }
-  
    
   if (op == op::liquidate) {
     ;; todo/from master 

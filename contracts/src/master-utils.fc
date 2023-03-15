@@ -83,7 +83,7 @@ cell accure_interest (
   int asset_price_discounted = mul_factor(constants::asset_coefficient_scale, collateral_price, constants::asset_coefficient_scale - liquidation_penalty);
   var (borrow_asset_dynamics, _) = asset_dynamics_collection.udict_get?(256, borrow_asset_address_hash);
   var (borrow_price, _, _, _, _, _, _) = unpack_asset_dynamics(borrow_asset_dynamics);
-  return (borrow_price * amount * collateral_decimals / asset_price_discounted / borrow_decimals);
+  return (borrow_price * amount * binpow(10, collateral_decimals) / asset_price_discounted / binpow(10, borrow_decimals));
 }
 
 (int) get_asset_reserves (
