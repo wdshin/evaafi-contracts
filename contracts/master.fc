@@ -406,6 +406,12 @@ cell process_withdraw_master(
 
     return ();
   }
+
+  if (op == op::excesses) {
+    ;; Just accept TON excesses after sending jettons
+    return ();
+  }
+
   ;; ??? Where does liquidate go?
   ;; if (op_jetton == op::liquidate) {
   ;;   ;; todo/anyone/to user/jetton
