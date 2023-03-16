@@ -1,5 +1,7 @@
 const int error::message_not_from_master = 67;
 
+const int error::master_different_workchain = 400;
+
 const int error::supply_success_fake_sender = 2020;
 const int error::withdraw_collateralized_fake_sender = 3030;
 

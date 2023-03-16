@@ -141,6 +141,8 @@ cell process_withdraw_master(
   int flags = cs~load_uint(4);
   slice sender_address = cs~load_msg_addr();
   var (wc, addr_hash) = parse_std_addr(sender_address);
+  
+  throw_unless(error::master_different_workchain, wc == workchain());
 
   if (flags & 1) { ;; note: do we need it?
 		throw(0xffff); 
