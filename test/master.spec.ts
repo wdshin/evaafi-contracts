@@ -1,8 +1,7 @@
-import { beginDict, Address, Cell, toNano, beginCell, TupleSlice } from "ton";
+import { TonClient, TupleBuilder, contractAddress, beginDict, ContractSource, Contract, Address, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import BN from 'bn.js';
 import { expect } from "chai";
-
 import { logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import { op } from "./OpCodes";
 
@@ -18,6 +17,29 @@ const oracleOnChainMetadataSpec: {
   image: 'ascii',
 };
 let contract: SmartContract;
+
+const getUSDTWallet = async (address: Address) => {
+  const jettonWalletAddressMain = 'EQDLqyBI-LPJZy-s2zEZFQMyF9AU-0DxDDSXc2fA-YXCJIIq' // todo calculate jeton wallet 
+
+  const client = new TonClient({
+    endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
+    apiKey: "49d23d98ab44004b72a7be071d615ea069bde3fbdb395a958d4dfcb4e5475f54",
+  });
+
+  const cell = new Cell();
+  cell.bits.writeAddress(address);
+
+  const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
+
+  const { stack } = await client.callGetMethod(
+    Address.parseFriendly(jettonWalletAddressMain).address,
+    'get_wallet_address',
+    [['tvm.Slice', cellBoc]]
+  )
+
+  return beginCell().storeBuffer(new Buffer(stack[0][1].object.data.b64, 'base64')).endCell().beginParse().readAddress()
+}
+let usdt = randomAddress('')
 describe("evaa master sc tests", () => {
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
@@ -30,16 +52,27 @@ describe("evaa master sc tests", () => {
 
     const to_master = beginDict(256);
     to_master.storeCell(randomAddress('ton').hash, tonConfigCell)
+
+    const userContractAddress = contractAddress({
+      workchain: 0,
+      initialCode: masterCodeCell,
+      initialData: packMasterData(userCodeCell, randomAddress('admin')),
+    });
+
+    usdt = (await getUSDTWallet(userContractAddress)) as Address
+    console.log(usdt)
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
         from: randomAddress('admin'),
         body: packInitMasterMessage(
-          asset_config_collection_packed_dict,
-          asset_dynamics_collection_packed_dict,
+          asset_config_collection_packed_dict(usdt),
+          asset_dynamics_collection_packed_dict(usdt),
         ),
       }) as any
     );
+
+
     // logs(tx);
   });
 
@@ -62,7 +95,7 @@ describe("evaa master sc tests", () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: Address.parseFriendly('EQD7TNVnRnSGHq-E0xDokOqOI8zHlJPHPqb_RmeUgaC8MXGi').address,
+        from: Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address,
         body: beginCell()
           .storeUint(op.update_price, 32)
           .storeUint(0, 64)
@@ -159,6 +192,19 @@ describe("evaa master sc tests", () => {
     // const res = tx.result.map(e => BigInt(e));
     // expect([0]).equals('success'); // todo
     // expect(res[1]).equals('success');
+    expect(tx.type).equals('success');
+  });
+
+  it("master run send tons", async () => {
+    const tx = await contract.sendInternalMessage(
+      internalMessage({
+        value: toNano(1),
+        from: randomAddress('user'),
+        body: beginCell()
+          .endCell(),
+      }) as any
+    );
+    logs(tx);
     expect(tx.type).equals('success');
   });
 });

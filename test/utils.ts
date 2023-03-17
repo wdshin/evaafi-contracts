@@ -5,7 +5,11 @@ import Prando from "prando";
 
 export const zeroAddress = new Address(0, Buffer.alloc(32, 0));
 
+
 export function randomAddress(seed: string, workchain?: number) {
+  // if (seed === 'ton') {
+  //   return new Address(workchain ?? 0, new Buffer(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a))
+  // }
   const random = new Prando(seed);
   const hash = Buffer.alloc(32);
   for (let i = 0; i < hash.length; i++) {
@@ -96,13 +100,11 @@ const usdtDataCell = beginCell()
   .storeUint(100000000, 64)
   .endCell()
 
-asset_dynamics_collection.storeCell(randomAddress('ton').hash, tonDataCell)
-asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
 // asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
 // asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
 export const tonConfigCell = beginCell()
-  .storeAddress(Address.parseFriendly('EQD7TNVnRnSGHq-E0xDokOqOI8zHlJPHPqb_RmeUgaC8MXGi').address)
+  .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
   .storeUint(8, 8)
   .storeRef(beginCell()
     .storeUint(8300, 16)
@@ -118,7 +120,7 @@ export const tonConfigCell = beginCell()
   .endCell()
 
 const usdtConfigCell = beginCell()
-  .storeAddress(Address.parseFriendly('EQD7TNVnRnSGHq-E0xDokOqOI8zHlJPHPqb_RmeUgaC8MXGi').address)
+  .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
   .storeUint(6, 8)
   .storeRef(beginCell()
     .storeUint(8000, 16)
@@ -135,8 +137,6 @@ const usdtConfigCell = beginCell()
 
 const ausdtConfigCell = usdtConfigCell
 const atonConfigCell = tonConfigCell
-asset_config_collection.storeCell(randomAddress('ton').hash, tonConfigCell)
-asset_config_collection.storeCell(randomAddress('usdt').hash, usdtConfigCell)
 
 // asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
 // asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
@@ -166,8 +166,18 @@ const tonSecondPositionPrincipal = beginCell()
 // user_principals.storeCell(randomAddress('sol').hash, usdtSecondPositionPrincipal)
 
 export const user_principals_packed_dict = user_principals.endCell()
-export const asset_config_collection_packed_dict = asset_config_collection.endCell()
-export const asset_dynamics_collection_packed_dict = asset_dynamics_collection.endCell()
+// export const asset_config_collection_packed_dict = asset_config_collection.endCell()
+// export const asset_dynamics_collection_packed_dict = asset_dynamics_collection.endCell()
+export const asset_dynamics_collection_packed_dict = (usdt: Address) => {
+  asset_dynamics_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonDataCell)
+  asset_dynamics_collection.storeCell(usdt.hash, usdtDataCell)
+  return asset_dynamics_collection.endCell()
+}
+export const asset_config_collection_packed_dict = (usdt: Address) => {
+  asset_config_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonConfigCell)
+  asset_config_collection.storeCell(usdt.hash, usdtConfigCell)
+  return asset_config_collection.endCell()
+}
 
 export const asset_dynamics_parse = (dict: any) => {
   const data_dict = parseDict(dict, 256, i => ({

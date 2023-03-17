@@ -7,8 +7,8 @@ import BN from "bn.js";
 
 // return the init Cell of the contract storage (according to load_data() contract method)
 export function initData() {
-  const masterContractAddress = Address.parse('EQDrlBKVYw4Vd8CU91s4reMIoEMhxHuTXmUeN5JgegBZKsrv');
-  const userSC = Address.parse('EQANLvezoLyfdvo3hwliAJ_4Z2z3IUH0-DKJ6Knt14Lj-J-y');
+  const masterContractAddress = Address.parse('EQC9rAR21X7UK6fF_wmoto4eUYzHxevqoj1c96YJr4vBUD97');
+  const userSC = Address.parse('EQBUL9aM4IKaBerYv8hZP1qLgRnEPnV2DYswO0aGsywZHsVW');
   return beginCell()
     .storeAddress(masterContractAddress)
     .storeAddress(userSC)
@@ -20,7 +20,7 @@ export function initData() {
 // return the op that should be sent to the contract on deployment, can be "null" to send an empty message
 export function initMessage() {
   return beginCell()
-    .storeUint(op.init_user, 32)
+    .storeUint(2, 32)
     .storeUint(0, 64)
     .storeDict(user_principals_packed_dict)
     .endCell();

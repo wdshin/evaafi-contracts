@@ -56,16 +56,18 @@ cell process_incoming_asset(
   cell asset_config_collection, cell asset_dynamics_collection,
   int asset_master_hash, slice owner_address, int amount 
 ) impure {
+~dump(99);
   (int price, _, _,
 	int total_supply_principal, int total_borrow_principal,
 	int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_master_hash);
-
+~dump(1);
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
     calc_address_from_hash(asset_master_hash), ;; TODO@sepezho: this assembles address from hash only to parse it in the first line of the function
     now() - last_accural 
   );
 
+~dump(21);
   send_message_to_lending_wallet(
     owner_address,
     pack_supply_message(
@@ -75,6 +77,7 @@ cell process_incoming_asset(
     )
   );
 
+~dump(13);
   asset_dynamics_collection~asset_dynamics_collection:set_packed(
     asset_master_hash,
     price,
@@ -84,13 +87,15 @@ cell process_incoming_asset(
     token_balance + amount ;; got money
   );
 
+~dump(1444);
   return asset_dynamics_collection;
 }
 
 cell process_incoming_ton(
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int amount
-) impure {
+) {
+~dump(constants::ton_dummy_hash);
   return process_incoming_asset(
     asset_config_collection, asset_dynamics_collection,
     constants::ton_dummy_hash, owner_address, amount
@@ -162,10 +167,12 @@ cell process_withdraw_master(
   }
 
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
+    ~dump(1);
     asset_dynamics_collection = process_incoming_ton(
       asset_config_collection, asset_dynamics_collection,
       sender_address, msg_value
     );
+    ~dump(2);
     storage::save(
       meta, user_contract_code,
       asset_config_collection, 

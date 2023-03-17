@@ -83,7 +83,7 @@ async function main() {
       console.log(` - ERROR: '${rootContract}' does not have 'initMessage()' function`);
       process.exit(1);
     }
-    const initMessageCell = deployInitScript.initMessage() as Cell | null;
+    const initMessageCell = await deployInitScript.initMessage() as Cell | null;
 
     // prepare the init code cell
     const hexArtifact = `build/${contractName}.compiled.json`;
