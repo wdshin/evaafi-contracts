@@ -5,7 +5,6 @@ Welcome to EVAA - Evaa Protocol smart cotntracts  GitHub repository! This reposi
 
 Smart contracts is written using `FunC`
 
-## Welcome to the EVAA smart contract repository
 EVAA Protocol is the first decentralized non-custodial lending protocol uniquely designed for the TON blockchain. Liquidity is provided to the market by depositors in order to earn passive income, whereas borrowers are able to obtain overcollateralized loans. At the MVP stage, it allows for lending and borrowing TON, oETH, oUSDT, oUSDC, and oWBTC. 
 
 ## Contacts 
