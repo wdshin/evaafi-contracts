@@ -28,7 +28,7 @@ async function main() {
   const minSupportFunc = "0.2.0";
   try {
     const funcVersion = child_process
-      .execSync("func -V", {shell: '/usr/local/bin/fish'})
+      .execSync("func -V")
       .toString()
       .match(/semantic version: v([0-9.]+)/)?.[1];
     if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) throw new Error("Nonexistent version or outdated");
@@ -40,8 +40,8 @@ async function main() {
   // make sure fift cli is available
   let fiftVersion = "";
   try {
-    fiftVersion = child_process.execSync("fift -V", {shell: '/usr/local/bin/fish'}).toString();
-  } catch (e) {}
+    fiftVersion = child_process.execSync("fift -V").toString();
+  } catch (e) { }
   if (!fiftVersion.includes("Fift build information")) {
     console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
     process.exit(1);
@@ -101,7 +101,7 @@ async function main() {
     console.log(` - Trying to compile '${rootContract}' with 'func' compiler..`);
     let buildErrors: string;
     try {
-      buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`, {shell: '/usr/local/bin/fish'}).toString();
+      buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`).toString();
     } catch (e) {
       buildErrors = e.stdout.toString();
     }
@@ -129,7 +129,7 @@ async function main() {
 
     // run fift cli to create the cell
     try {
-      child_process.execSync(`fift ${fiftCellArtifact}`, {shell: '/usr/local/bin/fish'});
+      child_process.execSync(`fift ${fiftCellArtifact}`);
     } catch (e) {
       console.log("FATAL ERROR: 'fift' executable failed, is FIFTPATH env variable defined?");
       process.exit(1);

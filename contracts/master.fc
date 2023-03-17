@@ -21,7 +21,7 @@
     .store_slice(my_address())
     .store_slice(owner_address)
     .store_dict(new_dict())
-    .store_bool(false)
+    ;;.store_bool(false)
     .end_cell(); 
 }
 slice calculate_user_address(slice owner_address) {
@@ -382,9 +382,9 @@ cell process_withdraw_master(
     
     ;; ---------------------
     ;;todo compile fix 
-    ;;(slice jetton_master_address_IGNORED, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
+    (slice jetton_master_address_IGNORED, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
     ;;todo compile fix
-    ;;throw_unless(error::received_unsupported_jetton, f);
+    throw_unless(error::received_unsupported_jetton, f);
     ;; ---------------------
     
     ;; Either this jetton type is not supported (whitelisted)
@@ -393,18 +393,18 @@ cell process_withdraw_master(
 
     ;; ---------------------
     ;; todo compile fix
-    ;;asset_dynamics_collection = process_incoming_asset(
-    ;;  asset_config_collection, asset_dynamics_collection,
-    ;;  addr_hash, ;; jetton_master_address, <- I am not sure we want this transformation anymore
-    ;;  from_address, jetton_amount
-    ;;);
+    asset_dynamics_collection = process_incoming_asset(
+      asset_config_collection, asset_dynamics_collection,
+      addr_hash, ;; jetton_master_address, <- I am not sure we want this transformation anymore
+      from_address, jetton_amount
+    );
     ;; ---------------------
-    ;; storage::save(
-    ;;   meta, user_contract_code,
-    ;;   asset_config_collection, 
-    ;;   if_active, admin, wallet_to_master,
-    ;;   asset_dynamics_collection
-    ;; );
+     storage::save(
+       meta, user_contract_code,
+       asset_config_collection, 
+       if_active, admin, wallet_to_master,
+       asset_dynamics_collection
+     );
 
     return ();
   }
