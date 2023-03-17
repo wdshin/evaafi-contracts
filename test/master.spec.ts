@@ -1,4 +1,4 @@
-import { beginDict, Cell, toNano, beginCell, TupleSlice } from "ton";
+import { beginDict, Address, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import { op, logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import BN from 'bn.js';
@@ -70,7 +70,7 @@ describe("evaa master sc tests", () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: randomAddress('oracle'),
+        from: Address.parseFriendly('EQD7TNVnRnSGHq-E0xDokOqOI8zHlJPHPqb_RmeUgaC8MXGi').address,
         body: beginCell()
           .storeUint(op.update_price, 32)
           .storeUint(0, 64)
@@ -180,6 +180,7 @@ describe("evaa user sc tests", () => {
         .storeAddress(randomAddress('master'))
         .storeAddress(randomAddress('user'))
         .storeDict(beginDict(256).endDict())
+        .storeInt(0, 1)
         .endCell(),
       {
         debug: true,
@@ -210,7 +211,7 @@ describe("evaa user sc tests", () => {
         .toBoc({ idx: false })
         .toString("base64")
     }, { type: 'int', value: '1000134550000000000' }, { type: 'int', value: '1000432100000000000' }]);
-    // logs(tx);
+    logs(tx);
     console.log(tx.result[0]?.toString())
     expect(tx.type).equals('success');
   });

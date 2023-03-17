@@ -4,6 +4,7 @@
 }
 
 (cell) getAccountBalances (cell asset_dynamics_collection) method_id {
+
   (slice master, slice user, cell user_principals, int locked) = storage::load();
   (int asset_address_hash, slice asset_value_principal_packed, int flag) = user_principals.udict_get_min?(256);
   cell account_balances = new_dict();
