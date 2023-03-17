@@ -36,9 +36,9 @@ slice calculate_user_address(slice owner_address) {
   slice lending_wallet_address = calculate_address(state_init);
  
   var msg = begin_cell()
-            .store_uint(0x18, 6) ;; ??? Bounceable?
+            .store_uint(0x10, 6) ;; Non-bounceable to be able to deploy
             .store_slice(lending_wallet_address)
-            .store_grams(0)
+            .store_grams(250000000) ;; ??? how much? 0.25 TON for nowß
             .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
             .store_ref(state_init)
             .store_ref(content);
