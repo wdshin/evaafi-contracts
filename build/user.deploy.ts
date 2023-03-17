@@ -7,10 +7,13 @@ import BN from "bn.js";
 
 // return the init Cell of the contract storage (according to load_data() contract method)
 export function initData() {
+  const masterContractAddress = Address.parse('EQDrlBKVYw4Vd8CU91s4reMIoEMhxHuTXmUeN5JgegBZKsrv');
+  const userSC = Address.parse('EQANLvezoLyfdvo3hwliAJ_4Z2z3IUH0-DKJ6Knt14Lj-J-y');
   return beginCell()
-    .storeAddress(randomAddress('master'))
-    .storeAddress(randomAddress('user'))
+    .storeAddress(masterContractAddress)
+    .storeAddress(userSC)
     .storeDict(beginDict(256).endDict())
+    .storeInt(new BN(0), 1)
     .endCell()
 }
 
