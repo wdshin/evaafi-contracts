@@ -104,3 +104,13 @@ cell pack_withdraw_fail_message(
 	int principal_amount = cs~load_principal();
 	return (asset_id, principal_amount);
 }
+(int, int, int, int, cell, cell) parse_withdraw_message(slice cs) {
+	return (
+		cs~load_asset_id(),
+		cs~load_amount(),
+		cs~load_sb_rate(),
+		cs~load_sb_rate(),
+		cs~load_dict(),
+		cs~load_dict()
+	);
+}

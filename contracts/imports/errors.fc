@@ -7,4 +7,5 @@ const int error::withdraw_collateralized_fake_sender = 3030;
 
 const int error::received_unsupported_jetton = 600;
 const int error::disabled = 666;
+const int error::user_is_locked = 680;
 

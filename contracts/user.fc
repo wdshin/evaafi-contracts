@@ -14,6 +14,7 @@
 #include "src/user-utils.fc";
 #include "src/supply-message.fc";
 #include "src/user-get-methods.fc";
+#include "src/withdraw-message.fc";
 
 int get_principal(cell principals, int asset_id) {
   (slice cs, int f) = principals.udict_get?(256, asset_id);
@@ -119,7 +120,7 @@ int get_principal(cell principals, int asset_id) {
     (int asset_id, int withdraw_amount_current,
      int s_rate, int b_rate,
      cell asset_config_collection, cell asset_dynamics_collection)
-     = parse_supply_message(in_msg_body);
+     = parse_withdraw_message(in_msg_body);
 
     int old_principal = user_principals.get_principal(asset_id);
     int present = present_value(s_rate, b_rate, old_principal);

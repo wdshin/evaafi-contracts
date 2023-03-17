@@ -59,18 +59,6 @@ int math::sqrt(int x) inline {
 ;;  return (x >= 0 ? 1 << x : 1 >> (x * -1));
 ;;}
 
-(int) math::exp(int number, int degree) inline {
-
-
-int multiplier = number;
-repeat(degree - 1) {
-
-    number *= multiplier;
-}
-    
-
-  return number ;
-}
 
 (int) math::log2(int x) asm "UBITSIZE DEC";
 
