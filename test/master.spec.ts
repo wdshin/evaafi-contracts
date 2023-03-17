@@ -1,10 +1,13 @@
 import { beginDict, Address, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { op, logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import BN from 'bn.js';
+import { expect } from "chai";
+
+import { logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { op } from "./OpCodes";
+
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
-import { expect } from "chai";
 
 const oracleOnChainMetadataSpec: {
   [key in any]: 'utf8' | 'ascii' | undefined;
