@@ -8,6 +8,7 @@ import { op } from "./OpCodes";
 
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
+import { packInitMasterMessage } from "./InitMasterMessage";
 
 const oracleOnChainMetadataSpec: {
   [key in any]: 'utf8' | 'ascii' | undefined;
@@ -43,12 +44,10 @@ describe("evaa master sc tests", () => {
       internalMessage({
         value: toNano(0),
         from: randomAddress('admin'),
-        body: beginCell()
-          .storeUint(op.init_master, 32)
-          .storeUint(0, 64)
-          .storeRef(asset_config_collection_packed_dict)
-          .storeRef(asset_dynamics_collection_packed_dict)
-          .endCell(),
+        body: packInitMasterMessage(
+          asset_config_collection_packed_dict,
+          asset_dynamics_collection_packed_dict,
+        ),
       }) as any
     );
     // logs(tx);
