@@ -5,3 +5,6 @@ const int error::master_different_workchain = 400;
 const int error::supply_success_fake_sender = 2020;
 const int error::withdraw_collateralized_fake_sender = 3030;
 
+const int error::received_unsupported_jetton = 600;
+const int error::disabled = 666;
+

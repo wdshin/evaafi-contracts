@@ -2,6 +2,7 @@
 #include "imports/stdlib.fc";
 #include "imports/math.fc";
 #include "imports/op-codes.fc";
+#include "imports/errors.fc";
 #include "imports/constants.fc";
 #include "src/ton.fc";
 #include "src/storage.fc";
@@ -13,7 +14,7 @@
 #include "src/master-get-methods.fc";
 #include "src/supply-message.fc";
 #include "src/withdraw-message.fc";
-
+#include "src/asset.fc";
 
 ;; TODO: refactor repetition with user-storage::save
 (cell) calculate_user_init_state(slice owner_address) {
@@ -125,7 +126,7 @@ cell process_withdraw_master(
   );
 
   asset_dynamics_collection~asset_dynamics_collection:set_packed(
-    asset_master_hash,
+    asset_id,
     price,
     s_rate, b_rate, ;; These are NEW (not unpacked) computed values
     total_supply_principal, total_borrow_principal,
@@ -141,8 +142,9 @@ cell process_withdraw_master(
   int flags = cs~load_uint(4);
   slice sender_address = cs~load_msg_addr();
   var (wc, addr_hash) = parse_std_addr(sender_address);
+  var (wc_master, _) = parse_std_addr(my_address());
   
-  throw_unless(error::master_different_workchain, wc == workchain());
+  throw_unless(error::master_different_workchain, wc == wc_master);
 
   if (flags & 1) { ;; note: do we need it?
 		throw(0xffff); 
@@ -259,7 +261,7 @@ cell process_withdraw_master(
     cell updated_asset = pack_asset_dynamics(
       new_price, s_rate, b_rate,
       total_supply_principal, total_borrow_principal,
-      now(), token_balance ;; TODO@sepezho << nns2009: I don't think you should update last_accural here, because s_rate and b_rate are not recalculated
+      last_accural, token_balance 
     );
     asset_dynamics_collection~udict_set(256, asset_address_hash, updated_asset.begin_parse());
     storage::save(meta, user_contract_code, asset_config_collection, if_active, admin, wallet_to_master, asset_dynamics_collection);
@@ -297,7 +299,7 @@ cell process_withdraw_master(
   }
 
   if (op == op::withdraw_collateralized) {
-    (slice owner_address, int asset_id, withdraw_amount_current,
+    (slice owner_address, int asset_id, int withdraw_amount_current,
      int borrow_amount_principal, int reclaim_amount_principal)
       = parse_withdraw_collateralized_message(in_msg_body);
 
@@ -329,7 +331,8 @@ cell process_withdraw_master(
         sender_address, 0,
         pack_withdraw_fail_message(
           query_id, asset_id,
-          borrow_amount_principal + reclaim_amount_principal
+          borrow_amount_principal + reclaim_amount_principal,
+           withdraw_amount_current
         ),
         64 ;; ??? this mode?
       );
@@ -382,7 +385,7 @@ cell process_withdraw_master(
     
     ;; ---------------------
     ;;todo compile fix 
-    (slice jetton_master_address_IGNORED, int f) = wallet_to_master.dict_get?(3 + 8 + 256, sender_address);
+    (slice jetton_master_address_IGNORED, int f) = wallet_to_master.udict_get?(256, addr_hash);
     ;;todo compile fix
     throw_unless(error::received_unsupported_jetton, f);
     ;; ---------------------

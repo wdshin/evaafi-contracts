@@ -89,7 +89,7 @@ cell pack_withdraw_success_message(int query_id) {
 ;; --------------- op::withdraw_fail ---------------
 
 cell pack_withdraw_fail_message(
-	int query_id, int asset_id, int principal_amount
+	int query_id, int asset_id, int principal_amount, int amount
 ) {
 	return begin_cell()
 		.store_op_code(op::withdraw_fail)

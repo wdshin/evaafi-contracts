@@ -11,7 +11,7 @@
     "deploy": "ts-node ./build/_deploy.ts",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "postinstall": "ts-node ./build/_setup.ts",
-    "start": "export FIFTPATH='/usr/local/opt/fiftlib/lib' && yarn build && yarn test"
+    "start": "export FIFTPATH='/usr/local/bin/lib' && yarn build && yarn test"
   },
   "devDependencies": {
     "@swc/core": "^1.2.177",
