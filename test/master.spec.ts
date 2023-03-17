@@ -1,10 +1,15 @@
 import { beginDict, Address, Cell, toNano, beginCell, TupleSlice } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { op, logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import BN from 'bn.js';
+import { expect } from "chai";
+
+import { logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { op } from "./OpCodes";
+
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
-import { expect } from "chai";
+import { packInitMasterMessage } from "./InitMasterMessage";
+import { packMasterData } from "./MasterData";
 
 const oracleOnChainMetadataSpec: {
   [key in any]: 'utf8' | 'ascii' | undefined;
@@ -18,17 +23,7 @@ describe("evaa master sc tests", () => {
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
       Cell.fromBoc(hex)[0] as any, // code cell from build output
-      beginCell()
-        .storeRef(beginCell().storeBuffer(new Buffer('Main evaa pool.')).endCell())
-        .storeRef(Cell.fromBoc(userHex)[0])
-        .storeRef(beginCell()
-          .storeDict(beginDict(256).endDict())
-          .storeInt(-1, 8)
-          .storeAddress(randomAddress('admin'))
-          .storeDict(beginDict(256).endDict())
-          .endCell())
-        .storeDict(beginDict(256).endDict())
-        .endCell(),
+      packMasterData(Cell.fromBoc(userHex)[0], randomAddress('admin')),
       {
         debug: true,
       }
@@ -40,12 +35,10 @@ describe("evaa master sc tests", () => {
       internalMessage({
         value: toNano(0),
         from: randomAddress('admin'),
-        body: beginCell()
-          .storeUint(op.init_master, 32)
-          .storeUint(0, 64)
-          .storeRef(asset_config_collection_packed_dict)
-          .storeRef(asset_dynamics_collection_packed_dict)
-          .endCell(),
+        body: packInitMasterMessage(
+          asset_config_collection_packed_dict,
+          asset_dynamics_collection_packed_dict,
+        ),
       }) as any
     );
     // logs(tx);
