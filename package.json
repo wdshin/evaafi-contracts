@@ -47,6 +47,8 @@
     "node": ">=16.15.0"
   },
   "dependencies": {
-    "semver": "^7.3.7"
+    "@ton-community/sandbox": "^0.6.1",
+    "semver": "^7.3.7",
+    "ton-core": "^0.48.0"
   }
 }
