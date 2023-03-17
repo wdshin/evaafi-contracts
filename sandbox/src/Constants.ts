@@ -1,0 +1,1 @@
+export const tonAssetId = 0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8an;

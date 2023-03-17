@@ -1,0 +1,16 @@
+{
+	// https://www.typescriptlang.org/tsconfig#compilerOptions
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"lib": ["es2020"],
+		"module": "ESNext",
+		"preserveConstEnums": true,
+		"moduleResolution": "node",
+		"strict": true,
+		"sourceMap": true,
+		"target": "ESNext",
+		"types": ["node"],
+		"outDir": "dist",
+		"resolveJsonModule": true
+	},
+}
