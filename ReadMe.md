@@ -24,6 +24,9 @@ All updates of user balances come through the Withdraw and Liquidate methods, an
 ### Getters Evaa Protocol
 https://docs.google.com/spreadsheets/d/16ILyjRzRv8DgOqjQRbJqXj-wSYAZsEj3vI_WafEvbXk/edit?usp=sharing
 
+### Scheme of SC interactions
+https://miro.com/app/board/uXjVMcSbNyw=/?share_link_id=873476038218
+
 
 ## Development
 Install environment https://ton.org/docs/develop/smart-contracts/environment/installation
