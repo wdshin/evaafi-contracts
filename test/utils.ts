@@ -80,64 +80,14 @@ const asset_dynamics_collection = beginDict(256);
 const asset_config_collection = beginDict(256);
 console.log(
 )
-const tonDataCell = beginCell()
-  .storeUint(2000000000, 64)
-  .storeUint(new BN("DE253E29D831800", 'hex'), 64)
-  .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
-  .storeUint(40000000000, 64)
-  .storeUint(35000000000, 64)
-  .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
-  .storeUint(10000000000, 64)
-  .endCell()
-
-const usdtDataCell = beginCell()
-  .storeUint(1000000000, 64)
-  .storeUint(new BN("DE1311304585C00", 'hex'), 64)
-  .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
-  .storeUint(500000000, 64) //todo
-  .storeUint(400000000, 64)//todo
-  .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
-  .storeUint(100000000, 64)
-  .endCell()
 
 
 // asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
 // asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
-export const tonConfigCell = beginCell()
-  .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
-  .storeUint(8, 8)
-  .storeRef(beginCell()
-    .storeUint(8300, 16)
-    .storeUint(9000, 16)
-    .storeUint(500, 16)
-    .storeUint(15854895991, 64)
-    .storeUint(25000000000, 64)
-    .storeUint(187500000000, 64)
-    .storeUint(10000000000, 64)
-    .storeUint(100000000000, 64)
-    .storeUint(new BN("B1A2BC2EC500000", 'hex'), 64) // todo move to BN
-    .endCell())
-  .endCell()
 
-const usdtConfigCell = beginCell()
-  .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
-  .storeUint(6, 8)
-  .storeRef(beginCell()
-    .storeUint(8000, 16)
-    .storeUint(8500, 16)
-    .storeUint(700, 16)
-    .storeUint(20611364789, 64)
-    .storeUint(32500000000, 64)
-    .storeUint(243750000000, 64)
-    .storeUint(13000000000, 64)
-    .storeUint(130000000000, 64)
-    .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
-    .endCell())
-  .endCell()
-
-const ausdtConfigCell = usdtConfigCell
-const atonConfigCell = tonConfigCell
-
+// const ausdtConfigCell = usdtConfigCell
+// const atonConfigCell = tonConfigCell
+//
 // asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
 // asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
 
@@ -169,11 +119,61 @@ export const user_principals_packed_dict = user_principals.endCell()
 // export const asset_config_collection_packed_dict = asset_config_collection.endCell()
 // export const asset_dynamics_collection_packed_dict = asset_dynamics_collection.endCell()
 export const asset_dynamics_collection_packed_dict = (usdt: Address) => {
+  const tonDataCell = beginCell()
+    .storeUint(2000000000, 64)
+    .storeUint(new BN("DE253E29D831800", 'hex'), 64)
+    .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
+    .storeUint(40000000000, 64)
+    .storeUint(35000000000, 64)
+    .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
+    .storeUint(10000000000, 64)
+    .endCell()
+
+  const usdtDataCell = beginCell()
+    .storeUint(1000000000, 64)
+    .storeUint(new BN("DE1311304585C00", 'hex'), 64)
+    .storeUint(new BN("DE23FB1C665E800", 'hex'), 64)
+    .storeUint(500000000, 64) //todo
+    .storeUint(400000000, 64)//todo
+    .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
+    .storeUint(100000000, 64)
+    .endCell()
   asset_dynamics_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonDataCell)
   asset_dynamics_collection.storeCell(usdt.hash, usdtDataCell)
   return asset_dynamics_collection.endCell()
 }
 export const asset_config_collection_packed_dict = (usdt: Address) => {
+  const tonConfigCell = beginCell()
+    .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
+    .storeUint(8, 8)
+    .storeRef(beginCell()
+      .storeUint(8300, 16)
+      .storeUint(9000, 16)
+      .storeUint(500, 16)
+      .storeUint(15854895991, 64)
+      .storeUint(25000000000, 64)
+      .storeUint(187500000000, 64)
+      .storeUint(10000000000, 64)
+      .storeUint(100000000000, 64)
+      .storeUint(new BN("B1A2BC2EC500000", 'hex'), 64) // todo move to BN
+      .endCell())
+    .endCell()
+
+  const usdtConfigCell = beginCell()
+    .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
+    .storeUint(6, 8)
+    .storeRef(beginCell()
+      .storeUint(8000, 16)
+      .storeUint(8500, 16)
+      .storeUint(700, 16)
+      .storeUint(20611364789, 64)
+      .storeUint(32500000000, 64)
+      .storeUint(243750000000, 64)
+      .storeUint(13000000000, 64)
+      .storeUint(130000000000, 64)
+      .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
+      .endCell())
+    .endCell()
   asset_config_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonConfigCell)
   asset_config_collection.storeCell(usdt.hash, usdtConfigCell)
   return asset_config_collection.endCell()

@@ -96,11 +96,11 @@ async function main() {
     // make sure the contract was not already deployed
     const newContractAddress = contractAddress({ workchain, initialData: initDataCell, initialCode: initCodeCell });
     console.log(` - Based on your init code+data, your new contract address is: ${newContractAddress.toFriendly()}`);
-    if (await client.isContractDeployed(newContractAddress)) {
-      console.log(` - Looks like the contract is already deployed in this address, skipping deployment`);
-      await performPostDeploymentTest(rootContract, deployInitScript, walletContract, walletKey.secretKey, newContractAddress);
-      continue;
-    }
+    // if (await client.isContractDeployed(newContractAddress)) {
+    //   console.log(` - Looks like the contract is already deployed in this address, skipping deployment`);
+    //   await performPostDeploymentTest(rootContract, deployInitScript, walletContract, walletKey.secretKey, newContractAddress);
+    //   continue;
+    // }
 
     // deploy by sending an internal message to the deploying wallet
     console.log(` - Let's deploy the contract on-chain..`);

@@ -53,11 +53,11 @@ export const initMessage = async () => {
     initialData: packMasterData(userCodeCell, randomAddress('admin')),
   });
 
-  usdt = (await getUSDTWallet(userContractAddress)) as Address
+  // usdt = (await getUSDTWallet(userContractAddress)) as Address
   const to_master = beginDict(256);
   to_master.storeCell(randomAddress('ton').hash, tonConfigCell)
-  console.log(usdt.toString())
 
+  const usdt = Address.parseFriendly('EQBOSPO9jMeJPQTmau2FKk3_NryuAucfv5pgxBXd7BxGIs5w').address
   return beginCell()
     .storeUint(1, 32)
     .storeUint(0, 64)
