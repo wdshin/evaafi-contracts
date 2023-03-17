@@ -1,0 +1,11 @@
+{
+	"type": "module",
+	"module": "es2022",
+	"dependencies": {
+		"@ton-community/sandbox": "^0.6.1",
+		"ton": "^13.4.1",
+		"ton-core": "^0.48.0",
+		"ton-crypto": "^3.2.0"
+	},
+	"devDependencies": {}
+}
