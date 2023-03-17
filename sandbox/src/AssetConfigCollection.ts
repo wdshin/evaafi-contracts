@@ -21,7 +21,7 @@ export type AssetConfig = {
 
 export const emptyConfigCollection = () => Dictionary.empty(Dictionary.Keys.BigUint(256), {
 	serialize: (src: AssetConfig, buidler: Builder) => {
-		console.log(src)
+		// console.log(src)
 		buidler.storeAddress(src.oracle);
 		buidler.storeUint(src.decimals, 8);
 

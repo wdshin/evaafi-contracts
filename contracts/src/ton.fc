@@ -31,6 +31,16 @@ builder store_query_id(builder b, int query_id) inline {
 	return (wc);
 }
 
+
+cell pack_state_init(cell code, cell data) inline {
+	return begin_cell()
+		.store_uint(0, 2)
+		.store_dict(code)
+		.store_dict(data)
+		.store_uint(0, 1)
+		.end_cell();
+}
+
 (slice) calculate_address (cell state_init) {
 	int wc = get_current_workchain();
 	return begin_cell()

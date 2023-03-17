@@ -101,3 +101,11 @@
 (int) test () method_id {
   return (1);
 }
+
+
+;; nns2009 added for debugging/analysis
+int get_asset_balance(int asset_id) method_id {
+  (_, _, _, _, _, _, cell asset_dynamics_collection) = storage::load();
+  (_, _, _, _, _, _, int balance)= asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_id);
+  return balance;
+}

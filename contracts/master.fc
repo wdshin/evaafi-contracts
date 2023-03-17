@@ -17,22 +17,27 @@
 #include "src/asset.fc";
 
 ;; TODO: refactor repetition with user-storage::save
-(cell) calculate_user_init_state(slice owner_address) {
+cell calculate_user_init_data(slice owner_address) {
   return begin_cell()
     .store_slice(my_address())
     .store_slice(owner_address)
     .store_dict(new_dict())
-    ;;.store_bool(false)
+    .store_bool(false)
     .end_cell(); 
 }
-slice calculate_user_address(slice owner_address) {
-  return calculate_address(calculate_user_init_state(owner_address));
+
+cell calculate_user_state_init(cell code, slice owner_address) {
+  return pack_state_init(code, calculate_user_init_data(owner_address));
+}
+
+slice calculate_user_address(cell code, slice owner_address) {
+  return calculate_address(calculate_user_state_init(code, owner_address));
 }
 
 
 ;; ??? Do we need send-mode as a separate parameter?
-() send_message_to_lending_wallet(slice owner_address, cell content) impure {
-  cell state_init = calculate_user_init_state(owner_address);
+() send_message_to_lending_wallet(cell code, slice owner_address, cell content) impure {
+  cell state_init = calculate_user_state_init(code, owner_address);
   slice lending_wallet_address = calculate_address(state_init);
  
   var msg = begin_cell()
@@ -46,13 +51,14 @@ slice calculate_user_address(slice owner_address) {
   send_raw_message(msg.end_cell(), 1); ;; pay transfer fees separately, revert on errors
 }
 
-() init_user (slice owner_address) impure {
-  send_message_to_lending_wallet(owner_address, begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
+() init_user (cell code, slice owner_address) impure {
+  send_message_to_lending_wallet(code, owner_address, begin_cell().end_cell()); ;; TODO set dict with key:assetaddress and zero values
 }
 
 ;; --------------- Supply ---------------
 
 cell process_incoming_asset(
+  cell code,
   cell asset_config_collection, cell asset_dynamics_collection,
   int asset_master_hash, slice owner_address, int amount 
 ) impure {
@@ -60,7 +66,7 @@ cell process_incoming_asset(
   (int price, _, _,
 	int total_supply_principal, int total_borrow_principal,
 	int last_accural, int token_balance) = asset_dynamics_collection.asset_dynamics_collection:get_unpacked(asset_master_hash);
-~dump(1);
+~dump(992);
   (int s_rate, int b_rate) = get_current_rates(
     asset_config_collection, asset_dynamics_collection,
     calc_address_from_hash(asset_master_hash), ;; TODO@sepezho: this assembles address from hash only to parse it in the first line of the function
@@ -69,7 +75,7 @@ cell process_incoming_asset(
 
 ~dump(21);
   send_message_to_lending_wallet(
-    owner_address,
+    code, owner_address,
     pack_supply_message(
       1234, ;; query_id ??? What to set it to?
       asset_master_hash, amount,
@@ -92,11 +98,13 @@ cell process_incoming_asset(
 }
 
 cell process_incoming_ton(
+  cell code,
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int amount
 ) {
 ~dump(constants::ton_dummy_hash);
   return process_incoming_asset(
+    code,
     asset_config_collection, asset_dynamics_collection,
     constants::ton_dummy_hash, owner_address, amount
   );
@@ -106,6 +114,7 @@ cell process_incoming_ton(
 ;; --------------- Withdraw ---------------
 
 cell process_withdraw_master(
+  cell code,
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int asset_id, int amount, int query_id
 ) {
@@ -121,7 +130,7 @@ cell process_withdraw_master(
   );
   
   send_message_to_lending_wallet(
-    owner_address,
+    code, owner_address,
     pack_withdraw_user_message(
       query_id,
       asset_id, amount,
@@ -169,6 +178,7 @@ cell process_withdraw_master(
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     ~dump(1);
     asset_dynamics_collection = process_incoming_ton(
+      user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       sender_address, msg_value
     );
@@ -186,6 +196,7 @@ cell process_withdraw_master(
   int op = in_msg_body~load_op_code();
   if (op == 0) { ;; TON incoming (with comment)
     asset_dynamics_collection = process_incoming_ton(
+      user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       sender_address, msg_value
     );
@@ -212,7 +223,7 @@ cell process_withdraw_master(
       error::supply_success_fake_sender,
       slice_data_equal?(
         sender_address,
-        calculate_user_address(owner_address)
+        calculate_user_address(user_contract_code, owner_address)
       )
     );
 
@@ -250,7 +261,7 @@ cell process_withdraw_master(
   }
   
   if (op == op::init_user) {
-    init_user(sender_address); 
+    init_user(user_contract_code, sender_address); 
     return ();
   }
   
@@ -288,6 +299,7 @@ cell process_withdraw_master(
     (int asset_id, int amount) = parse_withdraw_master_message(in_msg_body);
 
     asset_dynamics_collection = process_withdraw_master(
+      user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       sender_address, asset_id, amount, query_id
     );
@@ -315,7 +327,7 @@ cell process_withdraw_master(
       error::withdraw_collateralized_fake_sender,
       slice_data_equal?(
         sender_address,
-        calculate_user_address(owner_address)
+        calculate_user_address(user_contract_code, owner_address)
       )
     );
     
@@ -404,6 +416,7 @@ cell process_withdraw_master(
     ;; ---------------------
     ;; todo compile fix
     asset_dynamics_collection = process_incoming_asset(
+      user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       addr_hash, ;; jetton_master_address, <- I am not sure we want this transformation anymore
       from_address, jetton_amount

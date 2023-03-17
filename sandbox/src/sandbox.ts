@@ -95,8 +95,8 @@ configCollection.set(USDCAssetId, {
 const dynamicsCollection = emptyDynamicsCollection();
 dynamicsCollection.set(tonAssetId, {
 	price: 2000000000,
-	sRate: 1000000000000000000,
-	bRate: 1000000000000000000,
+	sRate: 1000000000000000000n,
+	bRate: 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: 0,
@@ -104,8 +104,8 @@ dynamicsCollection.set(tonAssetId, {
 });
 dynamicsCollection.set(USDCAssetId, {
 	price: 1000000000,
-	sRate: 1000000000000000000,
-	bRate: 1000000000000000000,
+	sRate: 1000000000000000000n,
+	bRate: 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: 0,
@@ -129,15 +129,18 @@ if (deployedEvent.type !== 'account_created') {
 	throw 'Impossible';
 }
 const masterAddress = deployedEvent.account;
+const master = await bc.getContract(masterAddress);
+
+
 
 console.log(`Lending master address:`, masterAddress);
 
 
 
-async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount: number | bigint) {
+async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount: bigint) {
 	const result = await owner.send({
 		to: masterAddress,
-		value: toNano(5),
+		value: nanoTonAmount,
 		bounce: true,
 		sendMode: 1,
 	});
@@ -148,8 +151,48 @@ async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount
 console.log(`Trying to supply some TON`);
 const supplyResult1 = await supplyTON(owner1, toNano(50));
 console.log(`Sup 1:`, supplyResult1);
-const supplyResult2 = await supplyTON(owner2, toNano(200));
+const supplyResult2 = await supplyTON(owner2, toNano(20));
 console.log(`Sup 2:`, supplyResult2);
+
+const tonBalance = master.get(
+	'get_asset_balance',
+	[{ type: 'int', value: tonAssetId }],
+);
+console.log(`TON balance:`, tonBalance.stack);
+
+// supply(Bob, usdc, 400000000);
+// advanceTime(10000);
+
+// withdraw(Bob, ton, 20000000000);
+// //should fail since undercollaterized
+
+// advanceTime(10000);
+// supply(Alice, ton, 10000000000);
+// advanceTime(10000);
+// withdraw(Alice, usdc, 50000000);
+// advanceTime(10000);
+// supply(Chad, ton, 15000000000);
+// advanceTime(10000);
+// supply(Chad, usdc, 200000000);
+// advanceTime(10000);
+// withdraw(Alice, usdc, 100000000);
+// advanceTime(10000);
+// withdraw(Chad, usdc, 300000000);
+// advanceTime(10000);
+// withdraw(Bob, usdc, 200000000);
+// //should fail due to lack of liquidity on master
+// advanceTime(10000);
+// supply(Alice, usdc, 150000000);
+// advanceTime(10000);
+// supply(Chad, usdc, 100000000);
+// advanceTime(10000);
+// withdraw(Bob, usdc, 400000000);
+// advanceTime(10000);
+// withdraw(Alice, ton, 10000000000);
+// //should fail since undercollaterized
+// advanceTime(10000);
+// withdraw(Chad, ton, 15000000000);
+
 
 // async function supplyJetton(owner: SandboxContract<TreasuryContract>) {
 // 	owner.
