@@ -21,6 +21,10 @@ All updates of user balances come through the Withdraw and Liquidate methods, an
 3. If the method involves sending jettons, the last master SC call verifies if there is enough liquidity for the transaction. Finally, master &SC updates protocol’s jetton balances, and writes updated Total principals.
 4. The last user SC call is for unlocking the user contract (only within Withdraw and Liquidate transactions)
 
+### Getters Evaa Protocol
+https://docs.google.com/spreadsheets/d/16ILyjRzRv8DgOqjQRbJqXj-wSYAZsEj3vI_WafEvbXk/edit?usp=sharing
+
+
 ## Development
 Install environment https://ton.org/docs/develop/smart-contracts/environment/installation
 
