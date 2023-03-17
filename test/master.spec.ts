@@ -9,6 +9,7 @@ import { op } from "./OpCodes";
 import { hex } from "../build/master.compiled.json";
 import { hex as userHex } from "../build/user.compiled.json";
 import { packInitMasterMessage } from "./InitMasterMessage";
+import { packMasterData } from "./MasterData";
 
 const oracleOnChainMetadataSpec: {
   [key in any]: 'utf8' | 'ascii' | undefined;
@@ -22,17 +23,7 @@ describe("evaa master sc tests", () => {
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
       Cell.fromBoc(hex)[0] as any, // code cell from build output
-      beginCell()
-        .storeRef(beginCell().storeBuffer(new Buffer('Main evaa pool.')).endCell())
-        .storeRef(Cell.fromBoc(userHex)[0])
-        .storeRef(beginCell()
-          .storeDict(beginDict(256).endDict())
-          .storeInt(-1, 8)
-          .storeAddress(randomAddress('admin'))
-          .storeDict(beginDict(256).endDict())
-          .endCell())
-        .storeDict(beginDict(256).endDict())
-        .endCell(),
+      packMasterData(Cell.fromBoc(userHex)[0], randomAddress('admin')),
       {
         debug: true,
       }
