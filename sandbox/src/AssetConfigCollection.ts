@@ -16,7 +16,7 @@ export type AssetConfig = {
 	borrowRateSlopeHigh: number | bigint,
 	supplyRateSlopeLow: number | bigint,
 	supplyRateSlopeHigh: number | bigint,
-	targeUtilization: number | bigint,
+	targetUtilization: number | bigint,
 }
 
 export const emptyConfigCollection = () => Dictionary.empty(Dictionary.Keys.BigUint(256), {
@@ -35,7 +35,7 @@ export const emptyConfigCollection = () => Dictionary.empty(Dictionary.Keys.BigU
 		refBuild.storeUint(src.borrowRateSlopeHigh, 64);
 		refBuild.storeUint(src.supplyRateSlopeLow, 64);
 		refBuild.storeUint(src.supplyRateSlopeHigh, 64);
-		refBuild.storeUint(src.targeUtilization, 64);
+		refBuild.storeUint(src.targetUtilization, 64);
 
 		buidler.storeRef(refBuild.endCell());
 	},
