@@ -7,11 +7,11 @@
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "node --no-experimental-fetch node_modules/mocha/bin/mocha --exit test/**/*.spec.ts",
-    "build": "export FIFTPATH='/usr/local/bin/lib/' && ts-node ./build/_build.ts",
+    "build": "export FIFTPATH='./fift/lib/' && ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "postinstall": "ts-node ./build/_setup.ts",
-    "start": "export FIFTPATH='/usr/local/bin/lib/' && yarn build && yarn test"
+    "start": "export FIFTPATH='./fift/lib/' && yarn build && yarn test"
   },
   "devDependencies": {
     "@swc/core": "^1.2.177",
