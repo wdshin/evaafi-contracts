@@ -24,9 +24,9 @@ All updates of user balances come through the Withdraw and Liquidate methods, an
 ## Development
 Install environment https://ton.org/docs/develop/smart-contracts/environment/installation
 
-`yarn - install dependences` 
-`yarn start - tests & compile`
-`yarn deploy:testnet` - will deploy SC to testnet
+- `yarn - install dependences`
+- `yarn start - tests & compile`
+- `yarn deploy:testnet` - will deploy SC to testnet
 
 
 ## Contacts 
