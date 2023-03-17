@@ -101,7 +101,7 @@ asset_dynamics_collection.storeCell(randomAddress('usdt').hash, usdtDataCell)
 
 // asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
 // asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
-const tonConfigCell = beginCell()
+export const tonConfigCell = beginCell()
   .storeAddress(Address.parseFriendly('EQD7TNVnRnSGHq-E0xDokOqOI8zHlJPHPqb_RmeUgaC8MXGi').address)
   .storeUint(8, 8)
   .storeRef(beginCell()

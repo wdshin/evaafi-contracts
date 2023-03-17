@@ -1,4 +1,4 @@
-import { beginCell, Cell } from "ton-core";
+import { beginCell, Cell } from "ton";
 
 import { op } from "./OpCodes";
 
