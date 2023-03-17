@@ -6,10 +6,9 @@ import { expect } from "chai";
 import { logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import { op } from "./OpCodes";
 
-import { hex } from "../build/master.compiled.json";
-import { hex as userHex } from "../build/user.compiled.json";
 import { packInitMasterMessage } from "./InitMasterMessage";
 import { packMasterData } from "./MasterData";
+import { masterCodeCell, userCodeCell } from "./SmartContractsCells";
 
 const oracleOnChainMetadataSpec: {
   [key in any]: 'utf8' | 'ascii' | undefined;
@@ -22,8 +21,8 @@ let contract: SmartContract;
 describe("evaa master sc tests", () => {
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
-      Cell.fromBoc(hex)[0] as any, // code cell from build output
-      packMasterData(Cell.fromBoc(userHex)[0], randomAddress('admin')),
+      masterCodeCell,
+      packMasterData(userCodeCell, randomAddress('admin')),
       {
         debug: true,
       }
@@ -168,7 +167,7 @@ describe("evaa user sc tests", () => {
   let user_contract: SmartContract;
   beforeEach(async () => {
     user_contract = await SmartContract.fromCell(
-      Cell.fromBoc(userHex)[0] as any, // code cell from build output
+      userCodeCell, // code cell from build output
       beginCell()
         .storeAddress(randomAddress('master'))
         .storeAddress(randomAddress('user'))
