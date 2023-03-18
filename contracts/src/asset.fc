@@ -1,4 +1,4 @@
-() send_asset(slice to_address, int query_id, int asset_id, int amount) {
+() send_asset(slice to_address, int query_id, int asset_id, int amount) impure {
 	if (asset_id == constants::ton_asset_id) {
 		send_message(
 			to_address, amount,
