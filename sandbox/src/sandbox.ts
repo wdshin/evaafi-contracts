@@ -10,6 +10,7 @@ import { tonAssetId } from "./Constants.js";
 import { bufferToBigInt } from "./common.js";
 import { customBuilder } from "./CustomBuilder.js";
 import { op } from "./OpCodes.js";
+import { JettonSendTonAttachment, packTransferNotification } from "./Jetton.js";
 
 
 console.log('It starts at least');
@@ -97,8 +98,8 @@ configCollection.set(USDCAssetId, {
 const dynamicsCollection = emptyDynamicsCollection();
 dynamicsCollection.set(tonAssetId, {
 	price: 2000000000,
-	sRate: 1000000000000000000n,
-	bRate: 1000000000000000000n,
+	sRate: 10**9, // 1000000000000000000n, // TODO: re-think-through s/b-rate scale
+	bRate: 10**9, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: 0,
@@ -106,8 +107,8 @@ dynamicsCollection.set(tonAssetId, {
 });
 dynamicsCollection.set(USDCAssetId, {
 	price: 1000000000,
-	sRate: 1000000000000000000n,
-	bRate: 1000000000000000000n,
+	sRate: 10**9, // 1000000000000000000n,
+	bRate: 10**9, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: 0,
@@ -139,7 +140,10 @@ console.log(`Lending master address:`, masterAddress);
 
 
 
-async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount: bigint) {
+async function supplyTON(
+	owner: SandboxContract<TreasuryContract>,
+	nanoTonAmount: bigint
+) {
 	const result = await owner.send({
 		to: masterAddress,
 		value: nanoTonAmount,
@@ -149,7 +153,25 @@ async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount
 	return result;
 }
 
-async function withdraw(owner: SandboxContract<TreasuryContract>, assetId: bigint, amountToWithdraw: bigint) {
+async function supplyJetton(
+	owner: SandboxContract<TreasuryContract>,
+	lendingJettonWallet: SandboxContract<TreasuryContract>,
+	amount: number | bigint,
+) {
+	const result = await lendingJettonWallet.send({
+		to: masterAddress,
+		value: JettonSendTonAttachment,
+		bounce: true,
+		body: packTransferNotification(34343, amount, owner.address),
+		sendMode: 1,
+	});
+	return result;
+}
+
+async function withdraw(
+	owner: SandboxContract<TreasuryContract>,
+	assetId: bigint, amountToWithdraw: bigint
+) {
 	const result = await owner.send({
 		to: masterAddress,
 		value: BigInt(3 * 10**7), // ??? How much for network fees
@@ -166,6 +188,7 @@ async function withdraw(owner: SandboxContract<TreasuryContract>, assetId: bigin
 }
 
 
+
 const owner1Balances = [];
 owner1Balances.push(await owner1.getBalance());
 
@@ -178,11 +201,20 @@ owner1Balances.push(await owner1.getBalance());
 const supplyResult2 = await supplyTON(owner2, toNano(20));
 // console.log(`Sup 2:`, supplyResult2);
 
+console.log(`Trying to supply some USDC`);
+const supplyUSDCResult = await supplyJetton(owner1, masterUSDCWallet, 300 * 10**6);
+console.log(`Sup 1 USDC:`, supplyUSDCResult);
+
 const tonBalanceSup = master.get(
 	'get_asset_balance',
 	[{ type: 'int', value: tonAssetId }],
 );
 console.log(`Sup TON balance:`, tonBalanceSup.stack);
+const usdcBalanceSup = master.get(
+	'get_asset_balance',
+	[{ type: 'int', value: USDCAssetId }],
+);
+console.log(`Sup USDC balance:`, usdcBalanceSup.stack);
 
 const withdrawResult1 = await withdraw(owner1, tonAssetId, toNano(40));
 console.log(withdrawResult1);

@@ -74,6 +74,8 @@ cell process_incoming_asset(
   );
 
 ~dump(21);
+  ~dump(s_rate);
+  ~dump(b_rate);
   send_message_to_lending_wallet(
     code, owner_address,
     pack_supply_message(
