@@ -23,7 +23,7 @@ cell calculate_user_init_data(slice owner_address) {
     .store_slice(owner_address)
     .store_dict(new_dict())
     .store_bool(false)
-    .end_cell(); 
+    .end_cell();
 }
 
 cell calculate_user_state_init(cell code, slice owner_address) {
@@ -175,6 +175,9 @@ cell process_withdraw_master(
     ;; What if someone supplies us TONs/Jettons in a disabled state?
   }
 
+  ~dump(10000);
+  ~dump(in_msg_body.slice_bits());
+
   if (in_msg_body.slice_empty?()) { ;; TON incoming (without comment)
     ~dump(1);
     asset_dynamics_collection = process_incoming_ton(
@@ -253,7 +256,7 @@ cell process_withdraw_master(
 
   if (op == op::init_master) {
     var (wc, admin_addr_hash) = parse_std_addr(admin);
-    ;; throw_unless(103, addr_hash == admin_addr_hash); ;; todo admin checker
+    ;; throw_unless(103, addr_hash == admin_addr_hash); ;; !!! todo admin checker
     cell new_asset_config_collection = in_msg_body~load_ref();
     cell new_asset_dynamics_collection = in_msg_body~load_ref();
     storage::save(meta, user_contract_code, new_asset_config_collection, if_active, admin, wallet_to_master, new_asset_dynamics_collection);
@@ -296,14 +299,17 @@ cell process_withdraw_master(
   }
   
   if (op == op::withdraw_master) {
+    ~dump(5000);
     (int asset_id, int amount) = parse_withdraw_master_message(in_msg_body);
 
+    ~dump(5001);
     asset_dynamics_collection = process_withdraw_master(
       user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       sender_address, asset_id, amount, query_id
     );
 
+    ~dump(5002);
     ;; The only reason we save is to update s/b-rate of the corresponding asset
     ;; this is just a request to withdraw, no confirmation yet,
     ;; so no amounts change
@@ -314,14 +320,18 @@ cell process_withdraw_master(
       asset_dynamics_collection
     );
 
+    ~dump(5003);
+
     return ();
   }
 
   if (op == op::withdraw_collateralized) {
+    ~dump(6200);
     (slice owner_address, int asset_id, int withdraw_amount_current,
      int borrow_amount_principal, int reclaim_amount_principal)
       = parse_withdraw_collateralized_message(in_msg_body);
 
+    ~dump(6210);
     ;; Verify this is a message from lending-user smart contract
     throw_unless(
       error::withdraw_collateralized_fake_sender,
@@ -331,7 +341,7 @@ cell process_withdraw_master(
       )
     );
     
-
+    ~dump(6220);
     (int price, int s_rate, int b_rate,
      int total_supply_principal, int total_borrow_principal,
      int last_accural, int token_balance)
@@ -339,6 +349,7 @@ cell process_withdraw_master(
 
     ;; TODO: think about more sofisticated formula from Vlad
     if (withdraw_amount_current > token_balance) {
+      ~dump(6230);
       ;; User withdraw request is collateralized, but unfortunately ...
       ;; we just DON'T have enough of the corresponding token to send it
       ;; "No money, but hang on"
@@ -355,7 +366,9 @@ cell process_withdraw_master(
         ),
         64 ;; ??? this mode?
       );
+      ~dump(6240);
     } else {
+      ~dump(6250);
       ;; User withdraw request is collateralized
       ;; and we HAVE enough of asset to satisfy it
       asset_dynamics_collection~asset_dynamics_collection:set_packed(
@@ -366,8 +379,10 @@ cell process_withdraw_master(
         last_accural, token_balance - withdraw_amount_current
       );
 
+      ~dump(6260);
       send_asset(owner_address, query_id, asset_id, withdraw_amount_current);
 
+      ~dump(6270);
       ;; We also need to send op::withdraw_success message to the user smart contract
       ;; to let it unlock itself
       send_message(
@@ -376,12 +391,15 @@ cell process_withdraw_master(
         64 ;; ??? this mode?
       );
 
+      ~dump(6280);
       storage::save(
         meta, user_contract_code,
         asset_config_collection, 
         if_active, admin, wallet_to_master,
         asset_dynamics_collection
       );      
+
+      ~dump(6290);
     }
     ;; We only accept op::withdraw_collateralized from lending-user smart contracts,
     ;; which means the corresponding lending-user smart contract
