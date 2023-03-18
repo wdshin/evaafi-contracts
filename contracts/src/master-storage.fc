@@ -1,7 +1,13 @@
 ;;todo protocol_balance_by_token
-() storage::save (cell meta, cell user_contract_code, cell asset_config_collection, int if_active, slice admin, cell wallet_to_master, cell asset_dynamics_collection) impure {
+() storage::save (
+  cell meta, cell user_contract_code,
+  cell asset_config_collection,
+  int if_active, slice admin,
+  cell wallet_to_master, ;; TODO: Likely to deprecate
+  cell asset_dynamics_collection
+) impure {
   cell data = begin_cell()
-    .store_ref(meta) 
+    .store_ref(meta)
     .store_ref(user_contract_code)
     .store_ref(
       begin_cell()
