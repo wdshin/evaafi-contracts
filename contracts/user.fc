@@ -96,6 +96,8 @@ int get_principal(cell principals, int asset_id) {
     present += supply_amount_current;
 
     int new_principal = principal_value(s_rate, b_rate, present);
+    ;; ~dump(540);
+    ;; ~dump(new_principal);
     user_principals~set_principal(asset_master_hash, new_principal);
 
     (int repay_amount_principal,
@@ -125,9 +127,16 @@ int get_principal(cell principals, int asset_id) {
     int old_principal = user_principals.get_principal(asset_id);
     int present = present_value(s_rate, b_rate, old_principal);
 
+    ~dump(613);
+    ~dump(present);
+    ~dump(withdraw_amount_current);
     present -= withdraw_amount_current;
+    ~dump(present);
 
     int new_principal = principal_value(s_rate, b_rate, present);
+    ~dump(614);
+    ~dump(old_principal);
+    ~dump(new_principal);
     user_principals~set_principal(asset_id, new_principal);
 
     if (is_borrow_collateralized(
