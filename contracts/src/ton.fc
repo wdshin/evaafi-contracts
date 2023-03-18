@@ -68,7 +68,7 @@ slice calc_address_from_hash (int addr_hash) inline { ;; todo do we need this fu
 		.store_uint(0x10, 6) ;; ??? Sends non-bounceable. Does it need to be a parameter?
 		.store_slice(to_address)
 		.store_grams(nano_ton_amount)
-		.store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+		.store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
 		.store_ref(content);
 
 	send_raw_message(msg.end_cell(), mode);
