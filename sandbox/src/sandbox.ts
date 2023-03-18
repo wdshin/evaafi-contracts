@@ -174,7 +174,7 @@ async function withdraw(
 ) {
 	const result = await owner.send({
 		to: masterAddress,
-		value: BigInt(3 * 10**7), // ??? How much for network fees
+		value: BigInt(8 * 10**7), // ??? How much for network fees
 		bounce: true,
 		body: customBuilder()
 			.storeOpCode(op.withdraw_master)
