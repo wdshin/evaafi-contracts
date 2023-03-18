@@ -1,5 +1,5 @@
 () send_asset(slice to_address, int query_id, int asset_id, int amount) {
-	if (asset_id == constants::ton_dummy_hash) {
+	if (asset_id == constants::ton_asset_id) {
 		send_message(
 			to_address, amount,
 			begin_cell().end_cell(), ;; TODO: send some proper comment, with query_id?

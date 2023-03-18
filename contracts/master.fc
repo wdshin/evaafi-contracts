@@ -102,11 +102,11 @@ cell process_incoming_ton(
   cell asset_config_collection, cell asset_dynamics_collection,
   slice owner_address, int amount
 ) {
-~dump(constants::ton_dummy_hash);
+~dump(constants::ton_asset_id);
   return process_incoming_asset(
     code,
     asset_config_collection, asset_dynamics_collection,
-    constants::ton_dummy_hash, owner_address, amount
+    constants::ton_asset_id, owner_address, amount
   );
   ;; ??? Do we need to withhold some amount of TONs for network fees, etc.?
 }
