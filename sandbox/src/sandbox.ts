@@ -8,6 +8,8 @@ import { emptyConfigCollection } from "./AssetConfigCollection.js";
 import { emptyDynamicsCollection } from "./AssetDynamicsCollection.js";
 import { tonAssetId } from "./Constants.js";
 import { bufferToBigInt } from "./common.js";
+import { customBuilder } from "./CustomBuilder.js";
+import { op } from "./OpCodes.js";
 
 
 console.log('It starts at least');
@@ -147,18 +149,44 @@ async function supplyTON(owner: SandboxContract<TreasuryContract>, nanoTonAmount
 	return result;
 }
 
+async function withdraw(owner: SandboxContract<TreasuryContract>, assetId: bigint, amountToWithdraw: bigint) {
+	const result = await owner.send({
+		to: masterAddress,
+		value: BigInt(3 * 10**7), // ??? How much for network fees
+		bounce: true,
+		body: customBuilder()
+			.storeOpCode(op.withdraw_master)
+			.storeQueryId(59595)
+			.storeAssetId(assetId)
+			.storeAmount(amountToWithdraw)
+			.endCell(), /// TODO: refactor
+		sendMode: 1,
+	});
+	return result;
+}
+
 
 console.log(`Trying to supply some TON`);
 const supplyResult1 = await supplyTON(owner1, toNano(50));
-console.log(`Sup 1:`, supplyResult1);
+// console.log(`Sup 1:`, supplyResult1);
 const supplyResult2 = await supplyTON(owner2, toNano(20));
-console.log(`Sup 2:`, supplyResult2);
+// console.log(`Sup 2:`, supplyResult2);
 
-const tonBalance = master.get(
+const tonBalanceSup = master.get(
 	'get_asset_balance',
 	[{ type: 'int', value: tonAssetId }],
 );
-console.log(`TON balance:`, tonBalance.stack);
+console.log(`Sup TON balance:`, tonBalanceSup.stack);
+
+const withdrawResult1 = await withdraw(owner1, tonAssetId, toNano(40));
+console.log(withdrawResult1);
+
+
+const tonBalanceWith = master.get(
+	'get_asset_balance',
+	[{ type: 'int', value: tonAssetId }],
+);
+console.log(`With TON balance:`, tonBalanceWith.stack);
 
 // supply(Bob, usdc, 400000000);
 // advanceTime(10000);
