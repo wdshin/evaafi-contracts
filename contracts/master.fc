@@ -421,26 +421,20 @@ cell process_withdraw_master(
     ;; (which received money and notified us)
     ;; we need to find which jetton_type this wallet corresponds to
     
-    ;; ---------------------
-    ;;todo compile fix 
-    (slice jetton_master_address_IGNORED, int f) = wallet_to_master.udict_get?(256, addr_hash);
-    ;;todo compile fix
+    int f = asset_dynamics_collection.asset_dynamics_collection:has?(addr_hash);
     throw_unless(error::received_unsupported_jetton, f);
-    ;; ---------------------
     
     ;; Either this jetton type is not supported (whitelisted)
     ;; (??? Should we refund them? Is it even technically possible?)
     ;; or someone just tried to hack-send us a transfer_notification from a random address
 
-    ;; ---------------------
-    ;; todo compile fix
     asset_dynamics_collection = process_incoming_asset(
       user_contract_code,
       asset_config_collection, asset_dynamics_collection,
       addr_hash, ;; jetton_master_address, <- I am not sure we want this transformation anymore
       from_address, jetton_amount
     );
-    ;; ---------------------
+
      storage::save(
        meta, user_contract_code,
        asset_config_collection, 

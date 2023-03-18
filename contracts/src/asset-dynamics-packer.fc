@@ -69,3 +69,10 @@ cell pack_asset_dynamics(
 		256, asset_id, asset_dynamics.begin_parse() 
 	), ());
 }
+
+int asset_dynamics_collection:has?(
+	cell asset_dynamics_collection, int asset_id
+) {
+	(_, int f) = asset_dynamics_collection.udict_get?(256, asset_id);
+	return f;
+}
