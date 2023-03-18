@@ -43,6 +43,8 @@ async function deploy(
 
 
 const bc = await Blockchain.create();
+bc.now = 10000;
+
 
 const admin = await bc.treasury('admin', { balance: toNano(10)});
 
@@ -102,7 +104,7 @@ dynamicsCollection.set(tonAssetId, {
 	bRate: 10**9, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
-	lastAccural: 0,
+	lastAccural: bc.now,
 	balance: 0,
 });
 dynamicsCollection.set(USDCAssetId, {
@@ -111,7 +113,7 @@ dynamicsCollection.set(USDCAssetId, {
 	bRate: 10**9, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
-	lastAccural: 0,
+	lastAccural: bc.now,
 	balance: 0,
 });
 
