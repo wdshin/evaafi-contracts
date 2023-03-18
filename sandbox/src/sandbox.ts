@@ -166,9 +166,15 @@ async function withdraw(owner: SandboxContract<TreasuryContract>, assetId: bigin
 }
 
 
+const owner1Balances = [];
+owner1Balances.push(await owner1.getBalance());
+
+
 console.log(`Trying to supply some TON`);
 const supplyResult1 = await supplyTON(owner1, toNano(50));
+owner1Balances.push(await owner1.getBalance());
 // console.log(`Sup 1:`, supplyResult1);
+
 const supplyResult2 = await supplyTON(owner2, toNano(20));
 // console.log(`Sup 2:`, supplyResult2);
 
@@ -180,6 +186,7 @@ console.log(`Sup TON balance:`, tonBalanceSup.stack);
 
 const withdrawResult1 = await withdraw(owner1, tonAssetId, toNano(40));
 console.log(withdrawResult1);
+owner1Balances.push(await owner1.getBalance());
 
 
 const tonBalanceWith = master.get(
@@ -187,6 +194,8 @@ const tonBalanceWith = master.get(
 	[{ type: 'int', value: tonAssetId }],
 );
 console.log(`With TON balance:`, tonBalanceWith.stack);
+
+console.log(`Owner1 balances:`, owner1Balances);
 
 // supply(Bob, usdc, 400000000);
 // advanceTime(10000);

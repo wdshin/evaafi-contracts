@@ -386,9 +386,10 @@ cell process_withdraw_master(
       ;; We also need to send op::withdraw_success message to the user smart contract
       ;; to let it unlock itself
       send_message(
-        sender_address, 0,
+        sender_address,
+        20000000, ;; TODO: think about attached TON amount
         pack_withdraw_success_message(query_id),
-        64 ;; ??? this mode?
+        1 ;; ??? this mode?
       );
 
       ~dump(6280);
