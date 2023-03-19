@@ -18,8 +18,10 @@ export function randomAddress(seed: string, workchain?: number) {
 }
 
 // export const ton = new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10))
-export const ton = randomAddress('ton')
+// export const ton = randomAddress('ton')
+export const ton = Address.parseRaw('0:1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a')
 
+// console.log(ton.toString())
 // used with ton-contract-executor (unit tests) to sendInternalMessage easily
 export function internalMessage(params: { from?: Address; to?: Address; value?: BN; bounce?: boolean; body?: Cell }) {
   const message = params.body ? new CellMessage(params.body) : undefined;

@@ -2,7 +2,7 @@ import { Address, beginCell, beginDict, Cell } from "ton";
 
 export function packMasterData(userCodeCell: Cell, adminAddress: Address): Cell {
 	return beginCell()
-		.storeRef(beginCell().storeBuffer(new Buffer('Main evaa testnet pool #1.')).endCell())
+		.storeRef(beginCell().storeBuffer(new Buffer('Main evaa testnet pool v0.2')).endCell())
 		.storeRef(userCodeCell)
 		.storeRef(
 			beginCell()

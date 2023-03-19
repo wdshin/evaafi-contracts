@@ -8,11 +8,12 @@ import { op } from "../test/OpCodes";
 import { packMasterData } from "../test/MasterData";
 
 const admin = Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address
+
 export function initData() {
   return packMasterData(userCodeCell, admin)
 }
 
-const convertedAddress = Address.parseFriendly('EQAEhbzes0dtFwVAu-m07-7sz6Rnz7jrZ-w3K3_BZbawskXl').address.toFriendly({ urlSafe: true, bounceable: false })
+// const convertedAddress = Address.parseFriendly('EQAEhbzes0dtFwVAu-m07-7sz6Rnz7jrZ-w3K3_BZbawskXl').address.toFriendly({ urlSafe: true, bounceable: false })
 
 export const initMessage = async () => {
   const userContractAddress = contractAddress({
