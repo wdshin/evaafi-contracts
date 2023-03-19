@@ -2,76 +2,51 @@ import { TonClient, TupleBuilder, contractAddress, beginDict, ContractSource, Co
 import { SmartContract } from "ton-contract-executor";
 import BN from 'bn.js';
 import { expect } from "chai";
-import { logs, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
+import { getUSDTWallet, logs, ton, balances_parse, reserves_parse, rates_parse, hex2a, asset_config_parse, asset_dynamics_parse, internalMessage, randomAddress, tonConfigCell, asset_config_collection_packed_dict, asset_dynamics_collection_packed_dict, user_principals_packed_dict } from "./utils";
 import { op } from "./OpCodes";
 
 import { packInitMasterMessage } from "./InitMasterMessage";
 import { packMasterData } from "./MasterData";
 import { masterCodeCell, userCodeCell } from "./SmartContractsCells";
 
-const oracleOnChainMetadataSpec: {
-  [key in any]: 'utf8' | 'ascii' | undefined;
-} = {
-  name: 'utf8',
-  description: 'utf8',
-  image: 'ascii',
-};
 let contract: SmartContract;
 
-const getUSDTWallet = async (address: Address) => {
-  const jettonWalletAddressMain = 'EQDLqyBI-LPJZy-s2zEZFQMyF9AU-0DxDDSXc2fA-YXCJIIq' // todo calculate jeton wallet 
-
-  const client = new TonClient({
-    endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
-    apiKey: "49d23d98ab44004b72a7be071d615ea069bde3fbdb395a958d4dfcb4e5475f54",
-  });
-
-  const cell = new Cell();
-  cell.bits.writeAddress(address);
-
-  const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
-
-  const { stack } = await client.callGetMethod(
-    Address.parseFriendly(jettonWalletAddressMain).address,
-    'get_wallet_address',
-    [['tvm.Slice', cellBoc]]
-  )
-
-  return beginCell().storeBuffer(new Buffer(stack[0][1].object.data.b64, 'base64')).endCell().beginParse().readAddress()
-}
 let usdt = randomAddress('')
+const admin = Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address
+const oracle = admin;
+
 describe("evaa master sc tests", () => {
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
       masterCodeCell,
-      packMasterData(userCodeCell, randomAddress('admin')),
+      packMasterData(userCodeCell, admin),
       {
         debug: true,
       }
     );
 
-    const to_master = beginDict(256);
-    to_master.storeCell(randomAddress('ton').hash, tonConfigCell)
-
     const userContractAddress = contractAddress({
       workchain: 0,
       initialCode: masterCodeCell,
-      initialData: packMasterData(userCodeCell, randomAddress('admin')),
+      initialData: packMasterData(userCodeCell, admin),
     });
 
+    console.log(userContractAddress.toFriendly())
+    // usdt = randomAddress('usdt')
     usdt = (await getUSDTWallet(userContractAddress)) as Address
-    console.log(usdt)
+    // usdt = new Address(0, usdt.hash);
+
+    console.log(usdt.toFriendly())
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: randomAddress('admin'),
+        from: admin,
         body: packInitMasterMessage(
           asset_config_collection_packed_dict(usdt),
           asset_dynamics_collection_packed_dict(usdt),
         ),
       }) as any
     );
-
 
     // logs(tx);
   });
@@ -80,11 +55,11 @@ describe("evaa master sc tests", () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: randomAddress('admin'),
-        body: beginCell()
-          .storeUint(op.init_user, 32)
-          .storeUint(0, 64)
-          .endCell(),
+        from: admin,
+        body: packInitMasterMessage(
+          asset_config_collection_packed_dict(usdt),
+          asset_dynamics_collection_packed_dict(usdt),
+        ),
       }) as any
     );
     // logs(tx);
@@ -92,14 +67,15 @@ describe("evaa master sc tests", () => {
   });
 
   it("master run update token price", async () => {
+    // TODO TON ADDRESS
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address,
+        from: oracle,
         body: beginCell()
           .storeUint(op.update_price, 32)
           .storeUint(0, 64)
-          .storeAddress(randomAddress('ton')) // new price
+          .storeAddress(ton) // new price
           .storeUint(100, 64) // new price
           .endCell(),
       }) as any
@@ -112,11 +88,11 @@ describe("evaa master sc tests", () => {
     const tx = await contract.sendInternalMessage(
       internalMessage({
         value: toNano(0),
-        from: randomAddress('admin'),
+        from: admin,
         body: beginCell()
           .storeUint(op.update_config, 32)
           .storeUint(0, 64)
-          .storeRef(asset_config_collection_packed_dict)
+          .storeRef(asset_config_collection_packed_dict(usdt))
           .endCell(),
       }) as any
     );
@@ -174,14 +150,14 @@ describe("evaa master sc tests", () => {
     const tx = await contract.invokeGetMethod('getCollateralQuote', [{
       type: "cell_slice",
       value: beginCell()
-        .storeAddress(randomAddress('usdt'))
+        .storeAddress(usdt)
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
     }, {
       type: "cell_slice",
       value: beginCell()
-        .storeAddress(randomAddress('ton'))
+        .storeAddress(ton)
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")
@@ -232,7 +208,7 @@ describe("evaa user sc tests", () => {
         body: beginCell()
           .storeUint(op.init_user, 32)
           .storeUint(0, 64)
-          .storeDict(user_principals_packed_dict)
+          .storeDict(user_principals_packed_dict(usdt))
           .endCell(),
       }) as any
     );
@@ -244,7 +220,7 @@ describe("evaa user sc tests", () => {
     const tx = await user_contract.invokeGetMethod('getAccountAssetBalance', [{
       type: "cell_slice",
       value: beginCell()
-        .storeAddress(randomAddress('usdt'))
+        .storeAddress(usdt)
         .endCell()
         .toBoc({ idx: false })
         .toString("base64")

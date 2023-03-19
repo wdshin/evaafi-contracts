@@ -1,10 +1,9 @@
 import BN from "bn.js";
-import { beginCell, parseDict, beginDict, Address, Cell, CellMessage, InternalMessage, CommonMessageInfo, WalletContract, SendMode, Wallet } from "ton";
+import { beginCell, TonClient, parseDict, DictBuilder, BitString, beginDict, Address, Cell, CellMessage, InternalMessage, CommonMessageInfo, WalletContract, SendMode, Wallet } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import Prando from "prando";
 
 export const zeroAddress = new Address(0, Buffer.alloc(32, 0));
-
 
 export function randomAddress(seed: string, workchain?: number) {
   // if (seed === 'ton') {
@@ -17,6 +16,9 @@ export function randomAddress(seed: string, workchain?: number) {
   }
   return new Address(workchain ?? 0, hash);
 }
+
+// export const ton = new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10))
+export const ton = randomAddress('ton')
 
 // used with ton-contract-executor (unit tests) to sendInternalMessage easily
 export function internalMessage(params: { from?: Address; to?: Address; value?: BN; bounce?: boolean; body?: Cell }) {
@@ -76,57 +78,33 @@ export const logs = (tx: any) => {
   console.log('--------------')
 }
 
-const asset_dynamics_collection = beginDict(256);
-const asset_config_collection = beginDict(256);
-console.log(
-)
+export const user_principals_packed_dict = (usdt: Address) => {
+  const user_principals = beginDict(256);
 
+  const usdtPositionPrincipal = beginCell()
+    .storeInt(-200 * 1000000, 64)
+    .endCell()
 
-// asset_dynamics_collection.storeCell(randomAddress('near').hash, tonDataCell)
-// asset_dynamics_collection.storeCell(randomAddress('sol').hash, usdtDataCell)
+  const tonPositionPrincipal = beginCell()
+    .storeInt(100 * 100000000, 64)
+    .endCell()
 
-// const ausdtConfigCell = usdtConfigCell
-// const atonConfigCell = tonConfigCell
-//
-// asset_config_collection.storeCell(randomAddress('near').hash, atonConfigCell)
-// asset_config_collection.storeCell(randomAddress('sol').hash, ausdtConfigCell)
+  user_principals.storeCell(ton.hash, tonPositionPrincipal)
+  user_principals.storeCell(usdt.hash, usdtPositionPrincipal)
 
-const user_principals = beginDict(256);
+  return user_principals.endCell()
+}
 
-const usdtPositionPrincipal = beginCell()
-  .storeInt(-200 * 1000000, 64)
-  .endCell()
-
-const tonPositionPrincipal = beginCell()
-  .storeInt(100 * 100000000, 64)
-  .endCell()
-
-user_principals.storeCell(randomAddress('ton').hash, tonPositionPrincipal)
-user_principals.storeCell(randomAddress('usdt').hash, usdtPositionPrincipal)
-
-const usdtSecondPositionPrincipal = beginCell()
-  .storeInt(200 * 1000000, 64)
-  .endCell()
-
-const tonSecondPositionPrincipal = beginCell()
-  .storeInt(-100 * 100000000, 64)
-  .endCell()
-
-// user_principals.storeCell(randomAddress('near').hash, tonSecondPositionPrincipal)
-// user_principals.storeCell(randomAddress('sol').hash, usdtSecondPositionPrincipal)
-
-export const user_principals_packed_dict = user_principals.endCell()
-// export const asset_config_collection_packed_dict = asset_config_collection.endCell()
-// export const asset_dynamics_collection_packed_dict = asset_dynamics_collection.endCell()
-export const asset_dynamics_collection_packed_dict = (usdt: Address) => {
+export const asset_dynamics_collection_packed_dict = (usdt: Address, deploy?: boolean) => {
+  const asset_dynamics_collection = new DictBuilder(256);
   const tonDataCell = beginCell()
-    .storeUint(2000000000, 64)
-    .storeUint(new BN("DE253E29D831800", 'hex'), 64)
-    .storeUint(new BN("DE31F56D48C6000", 'hex'), 64)
-    .storeUint(40000000000, 64)
-    .storeUint(35000000000, 64)
+    .storeUint(deploy ? 0 : 2000000000, 64)
+    .storeUint(new BN(deploy ? "DE0B6B3A7640000" : "DE253E29D831800", 'hex'), 64)
+    .storeUint(new BN(deploy ? "DE0B6B3A7640000" : "DE31F56D48C6000", 'hex'), 64)
+    .storeUint(deploy ? 0 : 40000000000, 64)
+    .storeUint(deploy ? 0 : 35000000000, 64)
     .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
-    .storeUint(10000000000, 64)
+    .storeUint(deploy ? 0 : 10000000000, 64)
     .endCell()
 
   const usdtDataCell = beginCell()
@@ -138,11 +116,17 @@ export const asset_dynamics_collection_packed_dict = (usdt: Address) => {
     .storeUint(Math.floor((new Date()).getTime() / 1000), 32)
     .storeUint(100000000, 64)
     .endCell()
-  asset_dynamics_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonDataCell)
+  asset_dynamics_collection.storeCell(ton.hash, tonDataCell)
   asset_dynamics_collection.storeCell(usdt.hash, usdtDataCell)
   return asset_dynamics_collection.endCell()
 }
+export function bufferToBigInt(buffer: Buffer): bigint {
+  const bufferHex = buffer.toString('hex');
+  // Seems stupid to have string as an intermediate step
+  return BigInt('0x' + bufferHex);
+}
 export const asset_config_collection_packed_dict = (usdt: Address) => {
+  const asset_config_collection = new DictBuilder(256);
   const tonConfigCell = beginCell()
     .storeAddress(Address.parseFriendly('EQDEckMP_6hTVhBLcsdMYmPDm6bLGYOTCkhqP7QrBg-1KaaD').address)
     .storeUint(8, 8)
@@ -174,7 +158,10 @@ export const asset_config_collection_packed_dict = (usdt: Address) => {
       .storeUint(new BN("C7D713B49DA0000", 'hex'), 64)
       .endCell())
     .endCell()
-  asset_config_collection.storeCell(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)), tonConfigCell)
+
+  // console.log(usdt.hash.length)
+  asset_config_collection.storeCell(ton.hash, tonConfigCell)
+  // console.log(new BN(0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a.toString(10)).bitLength())
   asset_config_collection.storeCell(usdt.hash, usdtConfigCell)
   return asset_config_collection.endCell()
 }
@@ -244,4 +231,26 @@ export function hex2a(hexx: any) {
   for (var i = 0; i < hex.length; i += 2)
     str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
   return str;
+}
+
+export const getUSDTWallet = async (address: Address) => {
+  const jettonWalletAddressMain = 'EQDLqyBI-LPJZy-s2zEZFQMyF9AU-0DxDDSXc2fA-YXCJIIq' // todo calculate jeton wallet 
+  const client = new TonClient({
+    endpoint: 'https://testnet.toncenter.com/api/v2/jsonRPC',
+    apiKey: "49d23d98ab44004b72a7be071d615ea069bde3fbdb395a958d4dfcb4e5475f54",
+  });
+
+  const cell = new Cell();
+  cell.bits.writeAddress(address);
+  const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
+  const { stack } = await client.callGetMethod(
+    Address.parseFriendly(jettonWalletAddressMain).address,
+    'get_wallet_address',
+    [['tvm.Slice', cellBoc]]
+  )
+
+  return Cell
+    .fromBoc(Buffer.from(stack[0][1].bytes, 'base64'))[0]
+    .beginParse()
+    .readAddress()
 }
