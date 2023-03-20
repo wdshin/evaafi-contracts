@@ -1,7 +1,10 @@
 const int constants::factor_scale = 1000000000000000000; ;; todo change to 10^^18
 const int constants::asset_coefficient_scale = 10000;
 const int constants::price_scale = 1000000000;
-const int constants::base_index_scale = 1000000000000000000;
 const int constants::ton_asset_id = 0x1a4219fe5e60d63af2a3cc7dce6fec69b45c6b5718497a6148e7c232ac87bd8a; ;; sha256('TON')
 const int constants::jetton_send_ton_attachment = 50000000; ;; 0.05 TON
 
+const int constants::base_index_scale = 1000000000000000000; ;; 10^18
+;; TODO@sepezho . nns2009:
+;; ^ Unused. It was named this way in .sol file, but is used as factor_scale now
+;; Am I correct? Should we remove it?
