@@ -1,5 +1,5 @@
-const int op::transfer_notification = 0x7362d09c;
-const int op::excesses = 0xd53276db;
+const int jetton_op::transfer_notification = 0x7362d09c;
+const int jetton_op::excesses = 0xd53276db;
 
 ;; todo change to best-practice opcodes generated from tlb schema
 const int op::init_master = 1;

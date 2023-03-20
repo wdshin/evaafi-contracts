@@ -414,7 +414,7 @@ cell process_withdraw_master(
     return ();
   }
   
-  if (op == op::transfer_notification) {
+  if (op == jetton_op::transfer_notification) {
     ;; int query_id = in_msg_body~load_query_id(); (already loaded before)
     int jetton_amount = in_msg_body~load_coins(); 
     slice from_address = in_msg_body~load_msg_addr();
@@ -447,7 +447,7 @@ cell process_withdraw_master(
     return ();
   }
 
-  if (op == op::excesses) {
+  if (op == jetton_op::excesses) {
     ;; Just accept TON excesses after sending jettons
     return ();
   }
