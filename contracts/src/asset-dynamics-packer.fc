@@ -15,22 +15,17 @@ cell pack_asset_dynamics(
 }
 
 (int, int, int, int, int, int, int) unpack_asset_dynamics(slice asset_dynamics) {
-~dump(12391723);	
-~dump( asset_dynamics);	
 	int price = asset_dynamics~load_uint(64);
-~dump(1239172388888);	
 	int asset_s_rate = asset_dynamics~load_sb_rate();
 	int asset_b_rate = asset_dynamics~load_sb_rate();
-~dump(12391723);	
+	
 	int total_supply_principal = asset_dynamics~load_uint(64); ;; todo encapsulate this part // we dont need load_int here
-~dump(12391723);	
 	int total_borrow_principal = asset_dynamics~load_uint(64);
-~dump(12391723);	
+	
 	int last_accural = asset_dynamics~load_timestamp();
-~dump(12391723);	
 	int token_balance = asset_dynamics~load_balance();
 	;; todo make token_balance updates on deposit and withdrawal
-~dump(12391723);	
+	
 	return (
 		price, asset_s_rate,
 		asset_b_rate, total_supply_principal,
