@@ -44,6 +44,12 @@ async function deploy(
 
 const bc = await Blockchain.create();
 bc.now = 10000;
+bc.verbosity = {
+	debugLogs: false,
+	blockchainLogs: false,
+	print: true,
+	vmLogs: "none",
+};
 
 
 const admin = await bc.treasury('admin', { balance: toNano(10)});
@@ -100,8 +106,8 @@ configCollection.set(USDCAssetId, {
 const dynamicsCollection = emptyDynamicsCollection();
 dynamicsCollection.set(tonAssetId, {
 	price: 2000000000,
-	sRate: 10**9, // 1000000000000000000n, // TODO: re-think-through s/b-rate scale
-	bRate: 10**9, // 1000000000000000000n,
+	sRate: 10**12, // 1000000000000000000n, // TODO: re-think-through s/b-rate scale
+	bRate: 10**12, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: bc.now,
@@ -109,8 +115,8 @@ dynamicsCollection.set(tonAssetId, {
 });
 dynamicsCollection.set(USDCAssetId, {
 	price: 1000000000,
-	sRate: 10**9, // 1000000000000000000n,
-	bRate: 10**9, // 1000000000000000000n,
+	sRate: 10**12, // 1000000000000000000n,
+	bRate: 10**12, // 1000000000000000000n,
 	totalSupplyPrincipal: 0,
 	totalBorrowPrincipal: 0,
 	lastAccural: bc.now,
@@ -172,7 +178,7 @@ async function supplyJetton(
 
 async function withdraw(
 	owner: SandboxContract<TreasuryContract>,
-	assetId: bigint, amountToWithdraw: bigint
+	assetId: bigint, amountToWithdraw: number | bigint
 ) {
 	const result = await owner.send({
 		to: masterAddress,
@@ -189,47 +195,112 @@ async function withdraw(
 	return result;
 }
 
+async function balanceOf(assetId: bigint) {
+	const balanceResult = master.get(
+		'get_asset_balance',
+		[{ type: 'int', value: assetId }],
+	);
+	if (balanceResult.exitCode !== 0 &&
+		balanceResult.exitCode !== 1) {
+		throw new Error(`Can't get asset balance of "${assetId}"`);
+	}
+
+	const balance = balanceResult.stackReader.readBigNumber();
+	if (balanceResult.stackReader.remaining !== 0) {
+		throw new Error(`get_asset_balance return stack has more than one element for some reason (assetId: ${assetId})`);
+	}
+
+	return balance;
+}
 
 
-const owner1Balances = [];
-owner1Balances.push(await owner1.getBalance());
 
 
-console.log(`Trying to supply some TON`);
-const supplyResult1 = await supplyTON(owner1, toNano(50));
-owner1Balances.push(await owner1.getBalance());
-// console.log(`Sup 1:`, supplyResult1);
-
-const supplyResult2 = await supplyTON(owner2, toNano(20));
-// console.log(`Sup 2:`, supplyResult2);
-
-console.log(`Trying to supply some USDC`);
-const supplyUSDCResult = await supplyJetton(owner1, masterUSDCWallet, 300 * 10**6);
-console.log(`Sup 1 USDC:`, supplyUSDCResult);
-
-const tonBalanceSup = master.get(
-	'get_asset_balance',
-	[{ type: 'int', value: tonAssetId }],
-);
-console.log(`Sup TON balance:`, tonBalanceSup.stack);
-const usdcBalanceSup = master.get(
-	'get_asset_balance',
-	[{ type: 'int', value: USDCAssetId }],
-);
-console.log(`Sup USDC balance:`, usdcBalanceSup.stack);
-
-const withdrawResult1 = await withdraw(owner1, tonAssetId, toNano(40));
-console.log(withdrawResult1);
-owner1Balances.push(await owner1.getBalance());
+if (false) {
+	const owner1Balances = [];
+	owner1Balances.push(await owner1.getBalance());
 
 
-const tonBalanceWith = master.get(
-	'get_asset_balance',
-	[{ type: 'int', value: tonAssetId }],
-);
-console.log(`With TON balance:`, tonBalanceWith.stack);
+	console.log(`Trying to supply some TON`);
+	const supplyResult1 = await supplyTON(owner1, toNano(50));
+	owner1Balances.push(await owner1.getBalance());
+	// console.log(`Sup 1:`, supplyResult1);
 
-console.log(`Owner1 balances:`, owner1Balances);
+	const supplyResult2 = await supplyTON(owner2, toNano(20));
+	// console.log(`Sup 2:`, supplyResult2);
+
+	console.log(`Trying to supply some USDC`);
+	const supplyUSDCResult = await supplyJetton(owner1, masterUSDCWallet, 300 * 10**6);
+	console.log(`Sup 1 USDC:`, supplyUSDCResult);
+
+	const tonBalanceSup = master.get(
+		'get_asset_balance',
+		[{ type: 'int', value: tonAssetId }],
+	);
+	console.log(`Sup TON balance:`, tonBalanceSup.stack);
+	const usdcBalanceSup = master.get(
+		'get_asset_balance',
+		[{ type: 'int', value: USDCAssetId }],
+	);
+	console.log(`Sup USDC balance:`, usdcBalanceSup.stack);
+
+	const withdrawResult1 = await withdraw(owner1, tonAssetId, toNano(40));
+	console.log(withdrawResult1);
+	owner1Balances.push(await owner1.getBalance());
+
+
+	const tonBalanceWith = master.get(
+		'get_asset_balance',
+		[{ type: 'int', value: tonAssetId }],
+	);
+	console.log(`With TON balance:`, tonBalanceWith.stack);
+
+	console.log(`Owner1 balances:`, owner1Balances);
+}
+
+{
+	bc.verbosity = {
+		debugLogs: false,
+		blockchainLogs: false,
+		print: true,
+		vmLogs: "none",
+	};
+
+	console.log(`Supplying 200 USDC`);
+	const sup1_1result = await supplyJetton(owner1, masterUSDCWallet, 200 * 10**6);
+	console.log(sup1_1result.events);
+
+	const usdcBalance1 = await balanceOf(USDCAssetId);
+	console.log(`USDC balance:`, usdcBalance1);
+
+	console.log(`Supplying 500 USDC`)
+	const sup1_2result = await supplyJetton(owner1, masterUSDCWallet, 500 * 10**6);
+	console.log(sup1_2result.events);
+
+	const usdcBalance2 = await balanceOf(USDCAssetId);
+	console.log(`USDC balance:`, usdcBalance2);
+
+	console.log(`Withdrawing 300 USDC`);
+	const with1_1result = await withdraw(owner1, USDCAssetId, 300 * 10**6);
+	console.log(with1_1result.events);
+
+	const usdcBalance3 = await balanceOf(USDCAssetId);
+	console.log(`USDC balance:`, usdcBalance3);
+	
+	console.log(`Withdrawing 450 USDC`);
+	const with1_2result = await withdraw(owner1, USDCAssetId, 450 * 10**6);
+	console.log(with1_2result.events);
+	
+	const usdcBalance4 = await balanceOf(USDCAssetId);
+	console.log(`USDC balance:`, usdcBalance4);
+
+	console.log(`Withdrawing 350 USDC`);
+	const with1_3result = await withdraw(owner1, USDCAssetId, 350 * 10**6);
+	console.log(with1_3result.events);
+
+	const usdcBalance5 = await balanceOf(USDCAssetId);
+	console.log(`USDC balance:`, usdcBalance5);
+}
 
 // supply(Bob, usdc, 400000000);
 // advanceTime(10000);
