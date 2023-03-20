@@ -1,3 +1,4 @@
+const int jetton_op::transfer = 0x0f8a7ea5;
 const int jetton_op::transfer_notification = 0x7362d09c;
 const int jetton_op::excesses = 0xd53276db;
 
