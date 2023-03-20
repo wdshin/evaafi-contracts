@@ -19,14 +19,20 @@
     utilization = total_borrow * constants::factor_scale / total_supply;
   }
   if (utilization <= target_utilization) {
-    supply_rate = mul_factor(constants::factor_scale, supply_rate_slope_low, utilization);
+    supply_rate =
+      mul_factor(constants::factor_scale, supply_rate_slope_low, utilization);
   } else {
-    supply_rate = mul_factor(constants::factor_scale, supply_rate_slope_low, target_utilization) + mul_factor(constants::factor_scale, supply_rate_slope_high, (utilization - target_utilization));
+    supply_rate =
+      mul_factor(constants::factor_scale, supply_rate_slope_low, target_utilization)
+      + mul_factor(constants::factor_scale, supply_rate_slope_high, (utilization - target_utilization));
   }
-  if (utilization <= target_utilization){
-    borrow_rate = base_borrow_rate + mul_factor(constants::factor_scale, borrow_rate_slope_low, utilization); 
+  if (utilization <= target_utilization) {
+    borrow_rate = base_borrow_rate
+      + mul_factor(constants::factor_scale, borrow_rate_slope_low, utilization); 
   } else {
-    borrow_rate = base_borrow_rate + mul_factor(constants::factor_scale, borrow_rate_slope_low, target_utilization) + mul_factor(constants::factor_scale, borrow_rate_slope_high, (utilization - target_utilization));
+    borrow_rate = base_borrow_rate
+      + mul_factor(constants::factor_scale, borrow_rate_slope_low, target_utilization)
+      + mul_factor(constants::factor_scale, borrow_rate_slope_high, (utilization - target_utilization));
   }
   return (supply_rate, borrow_rate); ;; TODO@sepezho: rename to supply_interest and borrow_interest?
 }
